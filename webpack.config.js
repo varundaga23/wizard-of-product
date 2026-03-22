@@ -30,6 +30,21 @@ module.exports = {
     ],
   },
 
+  resolve: {
+    fallback: {
+      zlib: false,
+      util: false,
+      url: false,
+      stream: false,
+      http: false,
+      https: false,
+      assert: false,
+      crypto: false,
+      os: false,
+      path: false,
+    },
+  },
+
   plugins: [
     new webpack.DefinePlugin({
       CANVAS_RENDERER: JSON.stringify(true),
