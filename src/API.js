@@ -1,5 +1,3 @@
-const fetch = require('node-fetch');
-
 const createGame = async () => {
   const name = {
     name: 'Forest-Defender',
