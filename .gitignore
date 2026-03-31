@@ -1,1 +1,10 @@
 /node_modules
+.env
+.env.local
+.vercel
+.env*.local
+.next/
+.DS_Store
+tsconfig.tsbuildinfo
+build/project.bundle.js
+build/project.bundle.js.LICENSE.txt

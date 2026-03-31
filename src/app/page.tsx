@@ -1,0 +1,1439 @@
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+import { toPng } from 'html-to-image'
+import posthog from 'posthog-js'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+type Screen = 'landing' | 'oracle' | 'archetype' | 'duel' | 'spellwin' | 'tower_cleared' | 'game_over' | 'lenny_loss' | 'playbook' | 'summons' | 'final' | 'grand'
+type SummonsVariant = 'easter_egg' | 'prefinal'
+
+type BlessingState = {
+  phase: 'loading' | 'question' | 'result'
+  q: DuelQuestion | null
+  answeredIndex: number | null
+  isCorrect: boolean | null
+  tIdx: number
+  pIdx: number
+  tOrd: TowerKey[]
+}
+type ArchetypeKey = 'V' | 'M' | 'B'
+type TowerKey = 'pm' | 'strategy' | 'ai'
+
+type DuelQuestion = {
+  id: string
+  professor: string
+  question: string
+  options: string[]        // ["A. text", "B. text", "C. text", "D. text"]
+  correct_answer: string   // "A" | "B" | "C" | "D"
+  explanation: string
+  difficulty: 'basic' | 'advanced'
+}
+
+type OracleQuestion = {
+  scenario: string
+  text: string
+  options: { text: string; archetype: ArchetypeKey }[]
+}
+
+type ProfessorDef = {
+  key: string
+  name: string
+  title: string
+  tower: TowerKey
+  isBoss?: boolean
+}
+
+// ─── Game Data ────────────────────────────────────────────────────────────────
+
+const TOWER_ORDER_BY_ARCHETYPE: Record<ArchetypeKey, TowerKey[]> = {
+  V: ['pm', 'strategy', 'ai'],
+  M: ['strategy', 'pm', 'ai'],
+  B: ['ai', 'pm', 'strategy'],
+}
+
+const TOWERS: Record<TowerKey, { name: string; professors: ProfessorDef[] }> = {
+  pm: {
+    name: 'PM Tower',
+    professors: [
+      { key: 'gibson_biddle',  name: 'Gibson Biddle',  title: 'The DHM Keeper',             tower: 'pm' },
+      { key: 'julie_zhuo',     name: 'Julie Zhuo',     title: 'Enchantress of Design',      tower: 'pm' },
+      { key: 'teresa_torres',  name: 'Teresa Torres',  title: 'Oracle of Discovery',        tower: 'pm' },
+      { key: 'shreyas_doshi',  name: 'Shreyas Doshi',  title: 'Master of Strategic Spells', tower: 'pm' },
+      { key: 'jules_walter',   name: 'Jules Walter',   title: 'The Influence Enchanter',    tower: 'pm' },
+      { key: 'april_dunford',  name: 'April Dunford',  title: 'The Positioning Sage',       tower: 'pm' },
+      { key: 'marty_cagan',    name: 'Marty Cagan',    title: 'The Ancient Sage',           tower: 'pm', isBoss: true },
+    ],
+  },
+  strategy: {
+    name: 'Strategy Tower',
+    professors: [
+      { key: 'chandra_janakiraman', name: 'Chandra Janakiraman', title: 'The Strategy Blocks Sage', tower: 'strategy' },
+      { key: 'roger_martin',        name: 'Roger Martin',        title: 'Wizard of Winning Choices', tower: 'strategy' },
+      { key: 'christopher_lochhead',name: 'Christopher Lochhead',title: 'The Category Pirate',      tower: 'strategy' },
+      { key: 'marc_andreessen',     name: 'Marc Andreessen',     title: 'The Contrarian Archmage',  tower: 'strategy' },
+      { key: 'hamilton_helmer',     name: 'Hamilton Helmer',     title: 'Master of the 7 Powers',   tower: 'strategy', isBoss: true },
+    ],
+  },
+  ai: {
+    name: 'AI Tower',
+    professors: [
+      { key: 'tal_raviv',   name: 'Tal Raviv',     title: 'Wizard of Modern Tools',         tower: 'ai' },
+      { key: 'aman_khan',   name: 'Aman Khan',     title: 'The Eval Conjurer',              tower: 'ai' },
+      { key: 'claire_vo',   name: 'Claire Vo',     title: 'Conjurer of Agentic Arts',       tower: 'ai' },
+      { key: 'nick_turley', name: 'Nick Turley',   title: 'Keeper of the Crystal',          tower: 'ai' },
+      { key: 'hamel_husain',name: 'Hamel Husain',  title: 'The Grand Evaluator',            tower: 'ai' },
+      { key: 'chip_huyen',  name: 'Chip Huyen',    title: 'Architect of AI Systems',        tower: 'ai' },
+      { key: 'fei_fei_li',  name: 'Dr. Fei-Fei Li',title: 'The Godmother of Intelligence', tower: 'ai', isBoss: true },
+    ],
+  },
+}
+
+const SPELL_NAMES: Record<string, string> = {
+  gibson_biddle:         'DHM Principle',
+  julie_zhuo:            'The Design Mirror',
+  teresa_torres:         'Continuous Discovery',
+  shreyas_doshi:         'Upstream Thinking',
+  jules_walter:          'The Influence Pact',
+  april_dunford:         'The Positioning Code',
+  marty_cagan:           'The Empowered Team',
+  chandra_janakiraman:   'The Strategy Block',
+  roger_martin:          'The Winning Wager',
+  christopher_lochhead:  'Category Design',
+  marc_andreessen:       'The Contrarian Lens',
+  hamilton_helmer:       'The 7 Powers',
+  tal_raviv:             'The Modern Toolkit',
+  aman_khan:             'The Eval Rite',
+  claire_vo:             'The Agentic Art',
+  nick_turley:           'The Trust Protocol',
+  hamel_husain:          'The Eval Stack',
+  chip_huyen:            'Systems Sight',
+  fei_fei_li:            'The Intelligence Arc',
+}
+
+const PROFESSOR_WIN_LINES: Record<string, string> = {
+  gibson_biddle:         "DHM is not a framework. It's a discipline. You're starting to understand the difference.",
+  julie_zhuo:            "Great design is not about aesthetics. It's about showing you understand the human. You do.",
+  teresa_torres:         "You asked the right questions before reaching for solutions. That is the whole game.",
+  shreyas_doshi:         "Upstream thinking is the rarest skill in product. You're already using it.",
+  jules_walter:          "Influence without authority is the true PM superpower. You've found yours.",
+  april_dunford:         "Bad positioning is invisible — until a competitor eats your lunch. You can see it now.",
+  marty_cagan:           "Empowered teams need empowered PMs. You might be ready to lead one.",
+  chandra_janakiraman:   "A roadmap without a strategy is just a list of wishes. You know the difference now.",
+  roger_martin:          "Every strategy is a bet. You now know which bets are worth making.",
+  christopher_lochhead:  "Category designers don't compete — they define the game. Go define yours.",
+  marc_andreessen:       "The contrarian question is always: what does everyone else believe that is wrong? Now ask it.",
+  hamilton_helmer:       "Power without strategy is fragile. Strategy without power is irrelevant. You understand both.",
+  tal_raviv:             "AI doesn't replace great PMs. It makes them terrifying. You're becoming terrifying.",
+  aman_khan:             "Vibes aren't evals. You know the difference now. That's more than most.",
+  claire_vo:             "AI-native is not a feature — it's a different way of thinking about what's possible.",
+  nick_turley:           "At scale, trust is your product. You've started building it.",
+  hamel_husain:          "Evals are product discovery for AI. You've just unlocked the whole stack.",
+  chip_huyen:            "The engineering trade-off is also a product trade-off. You can see the whole board now.",
+  fei_fei_li:            "The future belongs to those who augment human judgment — not replace it.",
+}
+
+const PROFESSOR_LOSS_LINES: Record<string, string> = {
+  gibson_biddle:         "The DHM model only works if you apply it — not memorise it. Come back when you've sat with it.",
+  julie_zhuo:            "Great teams come from clear thinking. Yours wasn't clear enough today.",
+  teresa_torres:         "You're still thinking in solutions. Come back when you're thinking in opportunities.",
+  shreyas_doshi:         "That's an output answer. I was looking for an outcome answer. There's a difference.",
+  jules_walter:          "Knowing a framework and using it to influence are two different things. Think about it.",
+  april_dunford:         "Wrong positioning kills good products. What makes this the best at something specific?",
+  marty_cagan:           "That's feature team thinking. Come back when you're thinking like an empowered team.",
+  chandra_janakiraman:   "Strategy without sequence is a list of wishes. Think about the order.",
+  roger_martin:          "A strategy that doesn't say no to things isn't a strategy. Think again.",
+  christopher_lochhead:  "You're competing. I asked you to create. That's a completely different question.",
+  marc_andreessen:       "That answer was conventional wisdom. I'm looking for something a contrarian would say.",
+  hamilton_helmer:       "That's operational excellence. It can be copied. Come back when you've found a real moat.",
+  tal_raviv:             "You're still doing this manually. Think about what an agent could handle for you.",
+  aman_khan:             "A vibe check isn't an eval. Come back with an actual measurement framework.",
+  claire_vo:             "That's a feature. I'm looking for a product rethink. What changes with AI at the core?",
+  nick_turley:           "You're optimising for the wrong constraint. What's actually blocking speed here?",
+  hamel_husain:          "You shipped without measuring. That's how you lose trust in AI systems permanently.",
+  chip_huyen:            "You understand the model. You don't understand the system. Come back.",
+  fei_fei_li:            "Intelligence is a human question as much as a technical one. Keep thinking.",
+}
+
+// Real Oracle's Rite questions from PRD
+const ORACLE_QUESTIONS: OracleQuestion[] = [
+  {
+    scenario: 'The DAU Drop',
+    text: "Your product's daily active users dropped 15% overnight. No deployment happened. What's your first move?",
+    options: [
+      { text: "Talk to users immediately — find five who churned and understand what happened", archetype: 'V' },
+      { text: "Pull the data — segment by cohort, feature usage, and acquisition source before drawing conclusions", archetype: 'M' },
+      { text: "Ship a fix — you've seen this pattern before and you know what causes it. Move fast.", archetype: 'B' },
+    ],
+  },
+  {
+    scenario: 'The Competitor',
+    text: "A direct competitor just shipped the feature you've been building for three months. What do you do?",
+    options: [
+      { text: "Reframe the vision — if a competitor can do it, it's table stakes now. What's the bigger opportunity?", archetype: 'V' },
+      { text: "Scope the tradeoffs — what's the minimum version that gets 80% of the value? Map it out before deciding.", archetype: 'M' },
+      { text: "Find a way to ship something in two weeks — imperfect and fast beats perfect and late", archetype: 'B' },
+    ],
+  },
+  {
+    scenario: 'The New Segment',
+    text: "You're building for small teams, but 20% of your signups are unexpectedly enterprise. What's your next step?",
+    options: [
+      { text: "Follow the new segment — unexpected traction is the universe telling you something about the real opportunity", archetype: 'V' },
+      { text: "Analyse both segments deeply before doing anything — understand whether this is signal or noise", archetype: 'M' },
+      { text: "Keep shipping for your core users — don't get distracted by early noise, stay focused on what's working", archetype: 'B' },
+    ],
+  },
+  {
+    scenario: 'The CEO Request',
+    text: "Your CEO asks you to add a feature 'by end of quarter' that isn't on the roadmap. What do you do?",
+    options: [
+      { text: "Ask why — there's something they're seeing that you're not. Understanding their vision might change yours.", archetype: 'V' },
+      { text: "Bring the data — show the strategic context, opportunity cost, and what you'd deprioritise. Make it a structured decision.", archetype: 'M' },
+      { text: "Negotiate scope — find the smallest version that satisfies the intent and slot it in without derailing the team", archetype: 'B' },
+    ],
+  },
+  {
+    scenario: 'The Launch Decision',
+    text: "Your product is 80% done. The team wants two more months. Marketing wants to launch now. What do you decide?",
+    options: [
+      { text: "Ask what story you want to tell — a product that launches too early can define itself wrongly before it's found its real form", archetype: 'V' },
+      { text: "Define what done actually means — is the missing 20% table stakes or nice to have? That determines everything.", archetype: 'M' },
+      { text: "Launch — you'll learn more from real users in two weeks than from two more months of internal debate", archetype: 'B' },
+    ],
+  },
+]
+
+const ARCHETYPES: Record<ArchetypeKey, { name: string; desc: string; tagline: string; tower: TowerKey; towerName: string }> = {
+  V: {
+    name: 'Visionary',
+    desc: 'You think in systems, futures, and possibilities before anyone else has caught up. Your superpower is the vision. Your challenge is bringing others with you.',
+    tagline: "You see what others don't — yet.",
+    tower: 'pm',
+    towerName: 'PM Tower',
+  },
+  M: {
+    name: 'Mastermind',
+    desc: "You think in frameworks, data, and structured reasoning. Your superpower is making the complex clear. Your challenge is knowing when good enough is good enough.",
+    tagline: "You build the map before anyone knows they're lost.",
+    tower: 'strategy',
+    towerName: 'Strategy Tower',
+  },
+  B: {
+    name: 'Builder',
+    desc: "You ship. While others deliberate, you're already iterating. Your superpower is momentum. Your challenge is stopping long enough to ask if you're building the right thing.",
+    tagline: "Done is better than perfect — until it isn't.",
+    tower: 'ai',
+    towerName: 'AI Tower',
+  },
+}
+
+const LANDING_PROFESSORS = [
+  { name: 'Teresa Torres', title: 'Product Discovery Master' },
+  { name: 'Shreyas Doshi', title: 'Strategy & Execution' },
+  { name: 'April Dunford', title: 'Positioning Powerhouse' },
+  { name: 'Marc Andreessen', title: 'Software Eats the World' },
+]
+
+
+const LENNY_PROF: ProfessorDef = {
+  key: 'lenny_oracle',
+  name: 'Lenny Rachitsky',
+  title: 'The Keeper of Product Lore',
+  tower: 'pm',
+  isBoss: true,
+}
+
+const SPELL_EMOJIS: Record<string, string> = {
+  gibson_biddle:         '📐',
+  julie_zhuo:            '🪞',
+  teresa_torres:         '🔍',
+  shreyas_doshi:         '⚡',
+  jules_walter:          '🎭',
+  april_dunford:         '🎯',
+  marty_cagan:           '⚔️',
+  chandra_janakiraman:   '🧱',
+  roger_martin:          '♟️',
+  christopher_lochhead:  '🗺️',
+  marc_andreessen:       '🔮',
+  hamilton_helmer:       '⭐',
+  tal_raviv:             '🛠️',
+  aman_khan:             '📊',
+  claire_vo:             '🤖',
+  nick_turley:           '🏰',
+  hamel_husain:          '🔬',
+  chip_huyen:            '⚙️',
+  fei_fei_li:            '🧠',
+}
+
+const RANKS = [
+  { label: 'Muggle', min: 0 },
+  { label: 'Apprentice', min: 100 },
+  { label: 'Scholar', min: 500 },
+  { label: 'Wizard', min: 1000 },
+  { label: 'Archmage', min: 2000 },
+  { label: 'Grand Wizard', min: 5000 },
+]
+
+const LETTERS = ['A', 'B', 'C', 'D']
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function shuffle<T>(arr: T[]): T[] {
+  return [...arr].sort(() => Math.random() - 0.5)
+}
+
+function getRank(sp: number): string {
+  return [...RANKS].reverse().find(r => sp >= r.min)?.label ?? 'Muggle'
+}
+
+
+// ─── Component ────────────────────────────────────────────────────────────────
+export default function Home() {
+  // Navigation
+  // Scale game to fit any screen size
+  useEffect(() => {
+    function updateScale() {
+      const scale = Math.min(window.innerWidth / 960, window.innerHeight / 540)
+      document.documentElement.style.setProperty('--game-scale', String(Math.min(scale, 1)))
+    }
+    updateScale()
+    window.addEventListener('resize', updateScale)
+    return () => window.removeEventListener('resize', updateScale)
+  }, [])
+
+  const [screen, setScreen] = useState<Screen>('landing')
+
+  // Player identity
+  const [playerName, setPlayerName] = useState('')
+  const [archetype, setArchetype] = useState<ArchetypeKey>('V')
+
+  // Oracle state — 1 question per session, answer = archetype
+  const [oracleQ, setOracleQ] = useState<OracleQuestion | null>(null)
+  const [oracleSelected, setOracleSelected] = useState<ArchetypeKey | null>(null)
+
+  // Global game state
+  const [hearts, setHearts] = useState(5)
+  const [sp, setSp] = useState(0)
+  const [defeatedProfessors, setDefeatedProfessors] = useState<Set<string>>(new Set())
+
+  // Tower progression
+  const [towerOrder, setTowerOrder] = useState<TowerKey[]>(['pm', 'strategy', 'ai'])
+  const [towerIndex, setTowerIndex] = useState(0)
+  const [profIndex, setProfIndex] = useState(0)
+
+  // Duel state
+  const [duelQs, setDuelQs] = useState<DuelQuestion[]>([])
+  const [duelLoading, setDuelLoading] = useState(false)
+  const [duelError, setDuelError] = useState(false)
+  const [qIndex, setQIndex] = useState(0)
+  const [answeredIndex, setAnsweredIndex] = useState<number | null>(null)
+  const [lastResult, setLastResult] = useState<'correct' | 'wrong' | null>(null)
+  const [lastSpGained, setLastSpGained] = useState(0)
+
+  // Spell win state
+  const [wonSpell, setWonSpell] = useState('')
+  const [wonProfKey, setWonProfKey] = useState('')
+  const [wonProfIsBoss, setWonProfIsBoss] = useState(false)
+  const [wonTowerIndex, setWonTowerIndex] = useState(0)
+  const [wonProfIndex, setWonProfIndex] = useState(0)
+
+  // Playbook state — tracks which screen to return to
+  const [playbookReturn, setPlaybookReturn] = useState<Screen>('duel')
+
+  // Summons letter state
+  const [summonsVariant, setSummonsVariant] = useState<SummonsVariant>('easter_egg')
+  const [summonsClosing, setSummonsClosing] = useState(false)
+
+  // Final boss state
+  const [finalBossActive, setFinalBossActive] = useState(false)
+  const [lennyHearts, setLennyHearts] = useState(3)
+  const [gameOverProfKey, setGameOverProfKey] = useState('')
+
+  // Heart hint — shown once on first heart lost
+  const [heartHintVisible, setHeartHintVisible] = useState(false)
+  const [hasShownHeartHint, setHasShownHeartHint] = useState(false)
+
+  // Lenny's Blessing
+  const [blessing, setBlessing] = useState<BlessingState | null>(null)
+
+  // Rank up ceremony
+  const [rankUpInfo, setRankUpInfo] = useState<{ label: string; color: string } | null>(null)
+
+  const RANK_COLORS: Record<string, string> = {
+    Apprentice: '#c8922a',
+    Scholar: '#4080c0',
+    Wizard: '#8040c0',
+    Archmage: '#c03040',
+  }
+  const RANK_ACHIEVEMENTS: Record<string, string> = {
+    Apprentice: 'The Oracle has sorted you.',
+    Scholar: 'Your primary tower stands defeated.',
+    Wizard: 'Two towers. Two domains mastered.',
+    Archmage: 'Three towers cleared. One duel remains.',
+  }
+
+  // Share / download
+  const gwCardRef = useRef<HTMLDivElement>(null)
+  const goCardRef = useRef<HTMLDivElement>(null)
+  const pbCardRef = useRef<HTMLDivElement>(null)
+  const [copyLabel, setCopyLabel] = useState('✦ SHARE YOUR JOURNEY ✦')
+  const [pbCopyLabel, setPbCopyLabel] = useState('COPY LINK')
+
+  function handleCopyLink() {
+    const archetypeNames = { V: 'Visionary', M: 'Mastermind', B: 'Builder' }
+    const text = `${displayName} just became a Grand Wizard of Product as a ${archetypeNames[archetype]}! 🧙 I defeated 19 professors across 3 towers and earned ${sp.toLocaleString()} SP in Spellcraft. Can you beat my score?`
+    const url = window.location.href.split('?')[0]
+    navigator.clipboard.writeText(`${text}\n\n${url}`).then(() => {
+      posthog.capture('link_copied', { screen: 'grand_wizard', sp_total: sp })
+      setCopyLabel('✓ COPIED!')
+      setTimeout(() => setCopyLabel('✦ SHARE YOUR JOURNEY ✦'), 2500)
+    })
+  }
+
+  async function handleDownloadPlaybook() {
+    if (!gwCardRef.current) return
+    posthog.capture('playbook_downloaded', { screen: 'grand_wizard', sp_total: sp })
+    try {
+      const dataUrl = await toPng(gwCardRef.current, { cacheBust: true, pixelRatio: 2 })
+      const link = document.createElement('a')
+      link.download = 'spellcraft-playbook.png'
+      link.href = dataUrl
+      link.click()
+    } catch (e) {
+      console.error('Download failed', e)
+    }
+  }
+
+  async function handleDownloadGameOver() {
+    if (!goCardRef.current) return
+    try {
+      const dataUrl = await toPng(goCardRef.current, { cacheBust: true, pixelRatio: 2 })
+      const link = document.createElement('a')
+      link.download = 'spellcraft-run.png'
+      link.href = dataUrl
+      link.click()
+    } catch (e) {
+      console.error('Download failed', e)
+    }
+  }
+
+  function handleCopyPlaybookLink() {
+    const archetypeNames = { V: 'Visionary', M: 'Mastermind', B: 'Builder' }
+    const text = `${displayName} has collected ${defeatedProfessors.size} spell${defeatedProfessors.size !== 1 ? 's' : ''} so far in Spellcraft as a ${archetypeNames[archetype]} — earning ${sp.toLocaleString()} SP. Still duelling. Can you keep up?`
+    const url = window.location.href.split('?')[0]
+    navigator.clipboard.writeText(`${text}\n\n${url}`).then(() => {
+      posthog.capture('link_copied', { screen: 'playbook', sp_total: sp, spells_collected: defeatedProfessors.size })
+      setPbCopyLabel('✓ COPIED!')
+      setTimeout(() => setPbCopyLabel('COPY LINK'), 2500)
+    })
+  }
+
+  async function handleDownloadPlaybookCard() {
+    if (!pbCardRef.current) return
+    posthog.capture('playbook_downloaded', { screen: 'playbook', sp_total: sp, spells_collected: defeatedProfessors.size })
+    try {
+      const dataUrl = await toPng(pbCardRef.current, { cacheBust: true, pixelRatio: 2 })
+      const link = document.createElement('a')
+      link.download = 'spellcraft-playbook.png'
+      link.href = dataUrl
+      link.click()
+    } catch (e) {
+      console.error('Download failed', e)
+    }
+  }
+
+  // ── Derived ──────────────────────────────────────────────────────────────────
+  const ARCHETYPE_FALLBACK_NAMES: Record<ArchetypeKey, string> = { V: 'The Dreamer', M: 'The Tactician', B: 'The Maker' }
+  const displayName = playerName.trim() || ARCHETYPE_FALLBACK_NAMES[archetype]
+
+  const arc = ARCHETYPES[archetype]
+  const rank = getRank(sp)
+  const currentQ = duelQs[qIndex]
+  const currentTowerKey = towerOrder[towerIndex]
+  const currentTower = currentTowerKey ? TOWERS[currentTowerKey] : null
+  const currentProf: ProfessorDef | null = finalBossActive ? LENNY_PROF : (currentTower?.professors[profIndex] ?? null)
+
+  // ── Oracle handlers ───────────────────────────────────────────────────────────
+  function beginOracle() {
+    posthog.capture('game_started')
+    const q = shuffle([...ORACLE_QUESTIONS])[0]
+    setOracleQ(q)
+    setOracleSelected(null)
+    setScreen('oracle')
+  }
+
+  function submitOracleAnswer() {
+    if (!oracleSelected) return
+    posthog.capture('archetype_assigned', { archetype: oracleSelected })
+    const order = TOWER_ORDER_BY_ARCHETYPE[oracleSelected]
+    setArchetype(oracleSelected)
+    setTowerOrder(order)
+    setTowerIndex(0)
+    setProfIndex(0)
+    setScreen('archetype')
+  }
+
+  // ── Duel handlers ─────────────────────────────────────────────────────────────
+  async function launchDuel(tIdx: number, pIdx: number, tOrd: TowerKey[]) {
+    const towerKey = tOrd[tIdx]
+    const prof = TOWERS[towerKey]?.professors[pIdx]
+    if (!prof) return
+
+    setTowerIndex(tIdx)
+    setProfIndex(pIdx)
+    setDuelQs([])
+    setQIndex(0)
+    setAnsweredIndex(null)
+    setLastResult(null)
+    setLastSpGained(0)
+    setDuelLoading(true)
+    setDuelError(false)
+    setScreen('duel')
+    if (tOrd !== towerOrder) setTowerOrder(tOrd)
+
+    try {
+      const res = await fetch(`/api/questions?professor=${prof.key}`)
+      const data = await res.json()
+      const qs = Array.isArray(data) ? data : []
+      if (qs.length === 0) setDuelError(true)
+      setDuelQs(qs)
+    } catch {
+      setDuelError(true)
+      setDuelQs([])
+    } finally {
+      setDuelLoading(false)
+    }
+  }
+
+  function startFirstDuel() {
+    const order = TOWER_ORDER_BY_ARCHETYPE[archetype]
+    launchDuel(0, 0, order)
+  }
+
+  function handleAnswer(optionIndex: number) {
+    if (answeredIndex !== null || !currentQ || !currentProf) return
+
+    const isCorrect = LETTERS[optionIndex] === currentQ.correct_answer
+    setAnsweredIndex(optionIndex)
+
+    let newHearts = hearts
+    let newLennyHearts = lennyHearts
+    let newSp = sp
+    let gained = 0
+
+    if (isCorrect) {
+      gained = currentQ.difficulty === 'advanced' ? 200 : 100
+      newSp = sp + gained
+      const oldRank = getRank(sp)
+      const newRank = getRank(newSp)
+      setSp(newSp)
+      setLastResult('correct')
+      if (newRank !== oldRank && newRank !== 'Grand Wizard') {
+        setRankUpInfo({ label: newRank, color: RANK_COLORS[newRank] ?? '#f0c060' })
+        setTimeout(() => setRankUpInfo(null), 5000)
+      }
+    } else {
+      if (finalBossActive) {
+        newLennyHearts = lennyHearts - 1
+        setLennyHearts(newLennyHearts)
+      } else {
+        newHearts = hearts - 1
+        setHearts(newHearts)
+        if (!hasShownHeartHint) {
+          setHasShownHeartHint(true)
+          setHeartHintVisible(true)
+          setTimeout(() => setHeartHintVisible(false), 4000)
+        }
+      }
+      setLastResult('wrong')
+      posthog.capture('heart_lost', { professor: currentProf.key, hearts_remaining: finalBossActive ? newLennyHearts : newHearts, difficulty: currentQ.difficulty })
+    }
+    posthog.capture('answer_submitted', { professor: currentProf.key, correct: isCorrect, difficulty: currentQ.difficulty, sp_total: newSp })
+    setLastSpGained(gained)
+
+    // Snapshot values used inside timeout to avoid stale closures
+    const nextQIndex = qIndex + 1
+    const profKey = currentProf.key
+    const isBoss = currentProf.isBoss ?? false
+    const snapTowerIndex = towerIndex
+    const snapProfIndex = profIndex
+    const snapTowerOrder = towerOrder
+
+    setTimeout(() => {
+      if (finalBossActive && newLennyHearts <= 0) {
+        setScreen('lenny_loss')
+        return
+      }
+      if (!finalBossActive && newHearts <= 0) {
+        posthog.capture('game_over', { professor: profKey, sp_total: newSp, spells_collected: defeatedProfessors.size })
+        setGameOverProfKey(profKey)
+        setScreen('game_over')
+        return
+      }
+      if (nextQIndex < duelQs.length) {
+        // Next question in same duel
+        setQIndex(nextQIndex)
+        setAnsweredIndex(null)
+        setLastResult(null)
+        setLastSpGained(0)
+        return
+      }
+      // All 5 answered — professor defeated
+      if (finalBossActive) {
+        posthog.capture('grand_wizard', { archetype, sp_total: newSp })
+        setScreen('grand')
+        return
+      }
+      posthog.capture('spell_won', { professor: profKey, is_boss: isBoss, sp_total: newSp })
+      setDefeatedProfessors(prev => new Set([...prev, profKey]))
+      setWonSpell(SPELL_NAMES[profKey] ?? 'Unknown Spell')
+      setWonProfKey(profKey)
+      setWonProfIsBoss(isBoss)
+      setWonTowerIndex(snapTowerIndex)
+      setWonProfIndex(snapProfIndex)
+      setScreen('spellwin')
+    }, 1500)
+  }
+
+  // ── Lenny's Blessing ──────────────────────────────────────────────────────────
+  function triggerBlessing(tIdx: number, pIdx: number, tOrd: TowerKey[]) {
+    setBlessing({ phase: 'loading', q: null, answeredIndex: null, isCorrect: null, tIdx, pIdx, tOrd })
+    fetch('/api/questions?professor=lenny_oracle')
+      .then(r => r.json())
+      .then((data: DuelQuestion[]) => {
+        const qs = Array.isArray(data) ? data : []
+        if (qs.length === 0) {
+          setBlessing(null)
+          launchDuel(tIdx, pIdx, tOrd)
+          return
+        }
+        setBlessing(prev => prev ? { ...prev, phase: 'question', q: qs[0] } : null)
+      })
+      .catch(() => {
+        setBlessing(null)
+        launchDuel(tIdx, pIdx, tOrd)
+      })
+  }
+
+  function handleBlessingAnswer(optionIndex: number) {
+    if (!blessing || blessing.answeredIndex !== null || !blessing.q) return
+    const isCorrect = LETTERS[optionIndex] === blessing.q.correct_answer
+    const { tIdx, pIdx, tOrd } = blessing
+    setBlessing(prev => prev ? { ...prev, phase: 'result', answeredIndex: optionIndex, isCorrect } : null)
+    if (isCorrect) {
+      setSp(prev => prev + 500)
+      posthog.capture('lenny_blessing_correct', { sp_gained: 500 })
+    } else {
+      posthog.capture('lenny_blessing_wrong', {})
+    }
+    setTimeout(() => {
+      setBlessing(null)
+      launchDuel(tIdx, pIdx, tOrd)
+    }, isCorrect ? 2500 : 1200)
+  }
+
+  // ── Tower progression ─────────────────────────────────────────────────────────
+  function advanceAfterSpellWin() {
+    advanceFromState(wonProfIsBoss, wonTowerIndex, wonProfIndex, towerOrder)
+  }
+
+  function advanceFromState(
+    isBoss: boolean,
+    tIdx: number = towerIndex,
+    pIdx: number = profIndex,
+    tOrd: TowerKey[] = towerOrder,
+  ) {
+    const towerKey = tOrd[tIdx]
+    const tower = TOWERS[towerKey]
+
+    if (isBoss) {
+      const nextTIdx = tIdx + 1
+      if (nextTIdx >= tOrd.length) {
+        // All 3 towers cleared — show pre-final Summons Letter → Final Revelation
+        openSummonsPrefinal()
+        return
+      }
+      // Show tower cleared, then auto-advance to first professor of next tower
+      posthog.capture('tower_cleared', { tower: towerKey, sp_total: sp })
+      setTowerIndex(nextTIdx)
+      setProfIndex(0)
+      setScreen('tower_cleared')
+      setTimeout(() => launchDuel(nextTIdx, 0, tOrd), 2500)
+    } else {
+      const nextPIdx = pIdx + 1
+      if (nextPIdx < tower.professors.length) {
+        if (Math.random() < 0.1) {
+          triggerBlessing(tIdx, nextPIdx, tOrd)
+        } else {
+          launchDuel(tIdx, nextPIdx, tOrd)
+        }
+      } else {
+        // Safety fallback — treat last professor as boss
+        launchDuel(tIdx, pIdx, tOrd)
+      }
+    }
+  }
+
+  // ── Summons handlers ──────────────────────────────────────────────────────────
+  function openSummonsEasterEgg() {
+    setSummonsVariant('easter_egg')
+    setScreen('summons')
+  }
+
+  function openSummonsPrefinal() {
+    setSummonsVariant('prefinal')
+    setScreen('summons')
+  }
+
+  function dismissSummons() {
+    setSummonsClosing(true)
+    setTimeout(() => {
+      setSummonsClosing(false)
+      if (summonsVariant === 'easter_egg') {
+        setScreen('landing')
+      } else {
+        setScreen('final')
+      }
+    }, 480)
+  }
+
+  // ── Playbook handlers ─────────────────────────────────────────────────────────
+  function openPlaybook(from: Screen) {
+    setPlaybookReturn(from)
+    setScreen('playbook')
+  }
+
+  function closePlaybook() {
+    setScreen(playbookReturn)
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────────
+  return (
+    <div className="game-container">
+
+      {/* ══════════════════════════════════
+          S1 — LANDING
+      ══════════════════════════════════ */}
+      <div id="s-landing" className={`screen${screen === 'landing' || screen === 'summons' ? ' active' : ''}${screen === 'summons' ? ' landing-under' : ''}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bg" src="/assets/Landing_Page_Background.png" alt="" />
+        <div style={{ position:'absolute', inset:0, zIndex:1, pointerEvents:'none',
+          background:'radial-gradient(ellipse 80% 75% at 50% 50%, transparent 30%, rgba(0,0,0,.35) 100%)' }} />
+
+        <div className="landing-top-banner">Welcome to Lorethorn — the Academy of Product Spellcraft.</div>
+
+        <div className="landing-logo-block">
+          <div className="landing-logo-title">Spellcraft</div>
+          <div className="landing-logo-sub">Wizard of Product</div>
+        </div>
+
+        <div className="prof-grid">
+          {LANDING_PROFESSORS.map((p) => (
+            <div key={p.name} className="prof-card">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="prof-card-img" src="/assets/professor_placeholder.png" alt={p.name} />
+              <div className="prof-card-overlay">
+                <div className="pname">{p.name.toUpperCase()}</div>
+                <div className="ptitle">{p.title.toUpperCase()}</div>
+              </div>
+            </div>
+          ))}
+          <div className="prof-card final" onClick={openSummonsEasterEgg} style={{ cursor: 'pointer' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="prof-card-img" src="/assets/professors/lenny_rachitsky.jpg" alt="Lenny Rachitsky" />
+            <div className="prof-card-overlay">
+              <div className="pname">LENNY RACHITSKY</div>
+              <div className="ptitle">KEEPER OF THE PRODUCT LORE</div>
+              <div className="final-badge">FINAL DUEL</div>
+            </div>
+          </div>
+          <div className="prof-card more">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="prof-card-img" src="/assets/professor_placeholder.png" alt="" style={{ opacity:.8 }} />
+            <div className="prof-card-overlay">
+              <div className="pname" style={{ color:'#a08040', letterSpacing:'.8px' }}>MORE LEGENDS AWAIT...</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="scroll-overlay">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="scroll-img" src="/assets/scroll_no_bg.png" alt="Parchment scroll" />
+        </div>
+
+        <div className="orb-wrap">
+          <input
+            className="orb-name-input"
+            type="text"
+            placeholder="What shall we call you, mage?"
+            maxLength={30}
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') beginOracle() }}
+          />
+          <div className="orb-assembly" onClick={beginOracle}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="orb-btn-img" src="/assets/orb_button_transparent.png" alt="Begin" />
+          </div>
+        </div>
+
+        <div className="curator-bar">
+          <div className="curator-bar-text">
+            Curated from <strong>LENNY&apos;S</strong>&nbsp; Newsletter &amp; Podcast
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════
+          S2 — ORACLE'S RITE
+          Multi-question: 3 of 5 shown, archetype tallied
+      ══════════════════════════════════ */}
+      <div id="s-oracle" className={`screen${screen === 'oracle' ? ' active' : ''}`}>
+        <div className="oracle-bg" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="oracle-hat" src="/assets/sorting_hat_cropped.png" alt="The Codex Oracle" />
+        <div className="oracle-title-block">
+          <div className="oracle-title-main">The Codex Oracle</div>
+        </div>
+        <div className="oracle-wrap">
+          <div className="oracle-qcard-outer">
+            <div className="oracle-qcard">
+              <div className="oracle-eyebrow">✦ SORTING CEREMONY ✦</div>
+              {oracleQ && (
+                <>
+                  <div className="oracle-q">{oracleQ.text}</div>
+                  <div className="oracle-q-divider" />
+                  <div className="oracle-opts">
+                    {oracleQ.options.map((opt, i) => (
+                      <div
+                        key={opt.archetype}
+                        className={`oracle-opt${oracleSelected === opt.archetype ? ' selected' : ''}`}
+                        onClick={() => setOracleSelected(opt.archetype)}
+                      >
+                        <div className="oracle-opt-letter">
+                          {oracleSelected === opt.archetype ? '' : LETTERS[i]}
+                        </div>
+                        <div className="oracle-opt-text">{opt.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    className={`oracle-submit${oracleSelected ? ' visible' : ''}`}
+                    onClick={submitOracleAnswer}
+                  >
+                    Reveal What the Oracle Has Decided
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════
+          S3 — ARCHETYPE REVEAL
+      ══════════════════════════════════ */}
+      <div id="s-archetype" className={`screen${screen === 'archetype' ? ' active' : ''}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bg" src="/assets/Archetype_BG.png" alt="" />
+        <div className="ar-swirl" />
+        <div className="ar-col">
+          <div className="ar-scroll">
+            <div className="ar-content">
+              <div className="ar-herald">The Oracle Has Spoken</div>
+              <div className="ar-name">{arc.name}</div>
+              <div className="ar-rule" />
+              <div className="ar-desc">{arc.desc}</div>
+              <div className="ar-tagline">{arc.tagline}</div>
+            </div>
+          </div>
+          <div className="ar-tower-label">✦ Your Tower: {arc.towerName} ✦</div>
+          <button className="ar-cta" onClick={startFirstDuel}>
+            Enter {arc.towerName} ✦
+          </button>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════
+          S4 — DUEL SCREEN
+      ══════════════════════════════════ */}
+      <div id="s-duel" className={`screen${screen === 'duel' ? ' active' : ''}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bg" src="/assets/Game_Background.png" alt="" />
+
+        {/* HUD */}
+        <div className="duel-hud">
+          <div className="duel-hud-hearts">
+            {Array.from({ length: finalBossActive ? 3 : 5 }).map((_, i) => (
+              <span key={i} className={`duel-heart${i < (finalBossActive ? lennyHearts : hearts) ? ' full' : ' empty'}`}>♥</span>
+            ))}
+          </div>
+          <div className="duel-hud-center">
+            <div className="duel-tower-name">{currentTower?.name.toUpperCase()}</div>
+            <div className="duel-tower-sub">Dueling {currentProf?.name}</div>
+          </div>
+          <div className="duel-hud-right">
+            <div className="duel-sp">{sp.toLocaleString()} SP</div>
+            <div className="duel-rank">WIZARD RANK: {rank.toUpperCase()}</div>
+          </div>
+          <button className="hud-playbook-btn" onClick={() => openPlaybook('duel')}>
+            📖 Playbook
+          </button>
+        </div>
+
+        {/* Professor area — left */}
+        <div className="duel-prof-area">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="duel-prof-portrait"
+            src={`/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}.jpg`}
+            alt={currentProf?.name}
+            onError={(e) => { (e.target as HTMLImageElement).src = '/assets/professor_placeholder.png' }}
+          />
+          <div className="duel-prof-name">{currentProf?.name.toUpperCase()}</div>
+          <div className="duel-prof-title">{currentProf?.title}</div>
+          {currentProf?.isBoss && (
+            <div className="final-badge" style={{ marginTop: 4 }}>TOWER BOSS</div>
+          )}
+        </div>
+
+        {/* Player silhouette */}
+        <div className="duel-player" />
+
+        {/* Question scroll */}
+        <div className="duel-question-area">
+          <div className="duel-q-scroll">
+            {duelError ? (
+              <div className="duel-q-loading" style={{ color: 'var(--red-wrong)' }}>
+                The archive is unreachable. Please check your connection and refresh.
+              </div>
+            ) : duelLoading || !currentQ ? (
+              <div className="duel-q-loading">Summoning questions...</div>
+            ) : (
+              <>
+                <div className="duel-q-eyebrow">
+                  <span>✦ QUESTION {qIndex + 1} OF {duelQs.length} ✦</span>
+                  <div className="duel-q-pips">
+                    {Array.from({ length: duelQs.length }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`duel-q-pip${i < qIndex ? ' done' : i === qIndex ? ' active' : ''}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="duel-q-text">{currentQ.question}</div>
+                {answeredIndex !== null && currentQ.explanation && (
+                  <div className="duel-q-explanation">{currentQ.explanation}</div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Feedback toast */}
+        {lastResult && (
+          <div className={`duel-feedback visible ${lastResult}`}>
+            {lastResult === 'correct'
+              ? `✓ Correct! +${lastSpGained} SP`
+              : `✗ Wrong! −1 Heart`}
+          </div>
+        )}
+
+        {/* First heart lost hint */}
+        {heartHintVisible && (
+          <div className="heart-hint-toast">
+            💡 Lose all 5 hearts? Spend 500 SP to refill and keep going.
+          </div>
+        )}
+
+        {/* Answer buttons */}
+        {currentQ && !duelLoading && (
+          <div className="duel-answers">
+            {currentQ.options.map((opt, i) => {
+              const isCorrectOpt = LETTERS[i] === currentQ.correct_answer
+              const optText = opt.replace(/^[A-D]\.\s*/, '')
+              let cls = 'duel-ans'
+              if (answeredIndex !== null) {
+                if (i === answeredIndex) cls += isCorrectOpt ? ' correct' : ' wrong'
+                else if (isCorrectOpt) cls += ' reveal-correct'
+                else cls += ' answered'
+              }
+              return (
+                <div key={i} className={cls} onClick={() => handleAnswer(i)}>
+                  <div className="duel-ans-letter">{LETTERS[i]}</div>
+                  <div className="duel-ans-text">{optText}</div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════
+          S5 — SPELL WIN
+      ══════════════════════════════════ */}
+      <div id="s-spellwin" className={`screen${screen === 'spellwin' ? ' active' : ''}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bg" src="/assets/Game_Background.png" alt="" />
+        <div className="spellwin-center">
+          <div className="spellwin-eyebrow">✦ SPELL EARNED ✦</div>
+          <div className="spellwin-spell">{wonSpell}</div>
+          <div className="spellwin-sub">
+            {PROFESSOR_WIN_LINES[wonProfKey] ?? `${wonProfKey} has been defeated.`}
+          </div>
+          <div className="spellwin-sp">{sp.toLocaleString()} SP total</div>
+          <button className="ar-cta" onClick={advanceAfterSpellWin}>
+            {wonProfIsBoss ? 'Tower Cleared — Onward ✦' : 'Next Duel ✦'}
+          </button>
+          <button className="playbook-link" onClick={() => openPlaybook('spellwin')}>
+            View Playbook →
+          </button>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════
+          S6 — TOWER CLEARED (flow step — auto-advances)
+      ══════════════════════════════════ */}
+      <div id="s-tower-cleared" className={`screen${screen === 'tower_cleared' ? ' active' : ''}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bg" src="/assets/Game_Background.png" alt="" />
+        <div className="spellwin-center">
+          <div className="spellwin-eyebrow">✦ TOWER CLEARED ✦</div>
+          <div className="spellwin-spell" style={{ fontSize: 40 }}>
+            {towerOrder[towerIndex - 1] ? TOWERS[towerOrder[towerIndex - 1]].name : ''}
+          </div>
+          <div className="spellwin-sub">
+            The tower falls. The next awaits.<br />
+            Entering {currentTower?.name}...
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════
+          S7 — PLAYBOOK
+      ══════════════════════════════════ */}
+      <div id="s-playbook" className={`screen${screen === 'playbook' ? ' active' : ''}`}>
+        <div className="playbook-bg" />
+
+        <div className="playbook-header">
+          <button className="playbook-back" onClick={closePlaybook}>← Back</button>
+          <div className="playbook-title">{displayName}&apos;s Playbook</div>
+          <div className="playbook-count">{defeatedProfessors.size} / 19 Spells</div>
+        </div>
+
+        <div className="playbook-columns" ref={pbCardRef}>
+          {(['pm', 'strategy', 'ai'] as TowerKey[]).map((towerKey) => {
+            const tower = TOWERS[towerKey]
+            const towerColor = towerKey === 'pm' ? '#4a90d9' : towerKey === 'strategy' ? '#e67e22' : '#9b59b6'
+            return (
+              <div key={towerKey} className="playbook-col">
+                <div className="playbook-col-header" style={{ borderColor: towerColor, color: towerColor }}>
+                  {tower.name.toUpperCase()}
+                </div>
+                {tower.professors.map((prof) => {
+                  const collected = defeatedProfessors.has(prof.key)
+                  return (
+                    <div
+                      key={prof.key}
+                      className={`pb-card${collected ? ' collected' : ' locked'}${prof.isBoss ? ' boss' : ''}`}
+                      style={prof.isBoss ? { borderColor: 'rgba(200,60,60,.6)' } : undefined}
+                    >
+                      {collected ? (
+                        <>
+                          <div className="pb-card-spell">{SPELL_NAMES[prof.key]}</div>
+                          <div className="pb-card-prof">{prof.name}</div>
+                          <div className="pb-card-ribbon">COLLECTED</div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="pb-card-locked-name">{prof.name}</div>
+                          <div className="pb-card-lock">🔒</div>
+                          <div className="pb-card-locked-hint">Defeat to unlock</div>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="playbook-footer">
+          <button className="gw-btn-secondary" onClick={handleDownloadPlaybookCard}>DOWNLOAD YOUR PLAYBOOK</button>
+          <button className="gw-btn-text" onClick={handleCopyPlaybookLink}>{pbCopyLabel}</button>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════
+          S8 — SUMMONS LETTER
+          Tap anywhere to dismiss
+      ══════════════════════════════════ */}
+      <div
+        id="s-summons"
+        className={`screen${screen === 'summons' ? ' active' : ''} ${screen === 'summons' ? (summonsClosing ? 'sl-slide-down' : 'sl-slide-up') : ''}`}
+        onClick={dismissSummons}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bg" src="/assets/Summo_letter_background.jpg" alt="" />
+        <div className="sl-tint" />
+
+        <div className="sl-scroll-inner">
+          <div className="sl-card">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="sl-crest" src="/assets/Lorethron_crest.png" alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            <div className="sl-school">LORETHORN SCHOOL</div>
+            <div className="sl-school-sub">OF PRODUCT SPELLCRAFT</div>
+            <div className="sl-rule" />
+
+            {summonsVariant === 'easter_egg' ? (
+              <div className="sl-body">
+                <p>You weren&apos;t supposed to find this.</p>
+                <p>Most mages pass through Lorethorn without ever looking for me. You did.</p>
+                <p>That&apos;s either curiosity or ambition. I haven&apos;t decided which yet.</p>
+                <p>Finish what you started. Then we&apos;ll talk.</p>
+              </div>
+            ) : (
+              <div className="sl-body">
+                <p>You&apos;ve done it.</p>
+                <p>Nineteen professors. Three towers. Every framework, every model, every hard question the Academy could throw at you.</p>
+                <p>I&apos;ve been watching. They all told me you were different.</p>
+                <p>There is one duel left. Not a test of what you know — a test of what you believe.</p>
+                <p>Come find me.</p>
+              </div>
+            )}
+
+            <div className="sl-sig-wrap">
+              <div className="sl-sig">
+                {summonsVariant === 'easter_egg' ? '— L.R.' : '— Lenny Rachitsky'}
+              </div>
+            </div>
+            <div className="sl-footer">
+              AUTHOR, LENNY&apos;S NEWSLETTER · HOST, LENNY&apos;S PODCAST · KEEPER OF PRODUCT LORE
+            </div>
+            <div className="sl-tap-hint">TAP ANYWHERE TO {summonsVariant === 'easter_egg' ? 'DISMISS' : 'PROCEED'}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════
+          S9 — FINAL REVELATION
+          No HUD — pure cinematic
+      ══════════════════════════════════ */}
+      <div id="s-final" className={`screen${screen === 'final' ? ' active' : ''}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bg" src="/assets/Game_Background.png" alt="" />
+        <div className="fr-vignette" />
+        <div className="fr-title-bar">✦ &nbsp; THE FINAL REVELATION &nbsp; ✦</div>
+
+        {/* Scene — left / center / right */}
+        <div className="fr-scene">
+
+          {/* Left — player silhouette */}
+          <div className="fr-left">
+            <div className="fr-player-glow" />
+            <div className="fr-rune" style={{ top:'18%', left:'8%', animationDelay:'0s' }}>📋</div>
+            <div className="fr-rune" style={{ top:'14%', right:'10%', animationDelay:'1.3s' }}>⚡</div>
+            <div className="fr-rune" style={{ bottom:'22%', left:'12%', animationDelay:'2.1s' }}>🎯</div>
+            <div className="fr-silhouette" />
+            <div className="fr-player-label">{rank.toUpperCase()}</div>
+          </div>
+
+          {/* Center — energy orb + beams */}
+          <div className="fr-center">
+            <div className="fr-beam-wrap">
+              <div className="fr-beam-l" />
+              <div className="fr-beam-r" />
+            </div>
+            <div className="fr-orb" />
+          </div>
+
+          {/* Right — Lenny */}
+          <div className="fr-right">
+            <div className="fr-lenny-glow" />
+            <div className="fr-rune" style={{ top:'16%', right:'9%', animationDelay:'.6s' }}>📊</div>
+            <div className="fr-rune" style={{ top:'12%', left:'8%', animationDelay:'1.9s' }}>🧠</div>
+            <div className="fr-rune" style={{ bottom:'20%', right:'11%', animationDelay:'2.7s' }}>💡</div>
+            <div className="fr-ring">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="fr-portrait"
+                src="/assets/professors/lenny_rachitsky.jpg"
+                alt="Lenny Rachitsky"
+                onError={(e) => { (e.target as HTMLImageElement).style.opacity = '.3' }}
+              />
+            </div>
+            <div className="fr-lenny-name">Lenny Rachitsky</div>
+            <div className="fr-lenny-title">THE KEEPER OF PRODUCT LORE</div>
+          </div>
+        </div>
+
+        {/* Bottom — quote + CTA */}
+        <div className="fr-bottom">
+          <div className="fr-quote">
+            &ldquo;You&apos;ve read the frameworks. Learned the models. Bested nineteen masters.<br />
+            Now I need to know what you actually believe.&rdquo;
+          </div>
+          <button
+            className="fr-cta"
+            onClick={async () => {
+              setFinalBossActive(true)
+              setLennyHearts(3)
+              setDuelQs([])
+              setQIndex(0)
+              setAnsweredIndex(null)
+              setLastResult(null)
+              setLastSpGained(0)
+              setDuelLoading(true)
+              setScreen('duel')
+              try {
+                const res = await fetch('/api/questions?professor=lenny_oracle')
+                const data = await res.json()
+                setDuelQs(Array.isArray(data) ? data : [])
+              } catch {
+                setDuelQs([])
+              } finally {
+                setDuelLoading(false)
+              }
+            }}
+          >
+            ✦ BEGIN THE FINAL REVELATION ✦
+          </button>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════
+          S10 — GRAND WIZARD COMPLETION
+      ══════════════════════════════════ */}
+      <div id="s-grand" className={`screen${screen === 'grand' ? ' active' : ''}`}>
+        <div className="gw-bg" />
+        <div className="gw-shimmer" />
+
+        <div className="gw-inner" ref={gwCardRef}>
+          <div className="gw-grand-title">Grand Wizard of Product</div>
+          <div className="gw-grand-sub">✦ {displayName.toUpperCase()}&apos;S PLAYBOOK &nbsp;·&nbsp; 19 / 19 SPELLS COLLECTED ✦</div>
+
+          {/* 3-column spell roster */}
+          <div className="gw-columns">
+            {([
+              { key: 'pm' as TowerKey,       label: '🏰 PM TOWER' },
+              { key: 'strategy' as TowerKey, label: '⚔️ STRATEGY TOWER' },
+              { key: 'ai' as TowerKey,       label: '🤖 AI TOWER' },
+            ]).map(({ key, label }) => (
+              <div key={key} className="gw-col">
+                <div className="gw-col-label">{label}</div>
+                {TOWERS[key].professors.map((prof) => (
+                  <div key={prof.key} className={`gw-spell-row${prof.isBoss ? ' boss' : ''}`}>
+                    <span className="gw-spell-emoji">{SPELL_EMOJIS[prof.key]}</span>
+                    <div className="gw-spell-info">
+                      <div className="gw-spell-name">{SPELL_NAMES[prof.key]}</div>
+                      <div className="gw-spell-prof">{prof.name}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="gw-footer">
+            <div className="gw-stats-line">
+              {sp.toLocaleString()} SP &nbsp;·&nbsp; 19 Professors Defeated &nbsp;·&nbsp; 3 Towers Cleared
+            </div>
+            <div className="gw-lenny-quote">
+              &ldquo;Most PMs read one framework and call it wisdom. You read nineteen.<br />
+              You didn&apos;t just learn the game — you earned the right to change it.&rdquo;
+            </div>
+            <div className="gw-share-row">
+              <button className="gw-btn-primary" onClick={handleCopyLink}>{copyLabel}</button>
+              <button className="gw-btn-secondary" onClick={handleDownloadPlaybook}>DOWNLOAD YOUR PLAYBOOK</button>
+              <button className="gw-btn-text" onClick={() => {
+                setFinalBossActive(false)
+                setHearts(5)
+                setSp(0)
+                setDefeatedProfessors(new Set())
+                setTowerOrder(['pm', 'strategy', 'ai'])
+                setTowerIndex(0)
+                setProfIndex(0)
+                setArchetype('V')
+                setScreen('landing')
+              }}>
+                Return to the Academy
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════
+          LENNY LOSS
+      ══════════════════════════════════ */}
+      <div id="s-lenny-loss" className={`screen${screen === 'lenny_loss' ? ' active' : ''}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bg" src="/assets/Game_Background.png" alt="" />
+        <div className="spellwin-center">
+          <div className="spellwin-eyebrow" style={{ color: '#c8922a' }}>✦ THE KEEPER PREVAILS ✦</div>
+          <div className="spellwin-spell" style={{ fontSize: 28 }}>The archive remembers.</div>
+          <div className="spellwin-sub" style={{ fontStyle: 'italic', color: 'rgba(240,192,96,.75)' }}>
+            &ldquo;Come back when you&apos;re ready — I&apos;ll have different questions.&rdquo;
+          </div>
+          <div className="spellwin-sub" style={{ fontSize: 12, marginTop: 4 }}>
+            {sp.toLocaleString()} SP &nbsp;·&nbsp; {defeatedProfessors.size} Spells earned
+          </div>
+          <button
+            className="ar-cta"
+            onClick={async () => {
+              setLennyHearts(3)
+              setDuelQs([])
+              setQIndex(0)
+              setAnsweredIndex(null)
+              setLastResult(null)
+              setLastSpGained(0)
+              setDuelLoading(true)
+              setScreen('duel')
+              try {
+                const res = await fetch('/api/questions?professor=lenny_oracle')
+                const data = await res.json()
+                setDuelQs(Array.isArray(data) ? data : [])
+              } catch {
+                setDuelQs([])
+              } finally {
+                setDuelLoading(false)
+              }
+            }}
+          >
+            ✦ Face the Keeper Again ✦
+          </button>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════
+          GAME OVER
+      ══════════════════════════════════ */}
+      <div id="s-game-over" className={`screen${screen === 'game_over' ? ' active' : ''}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bg" src="/assets/Game_Background.png" alt="" />
+        <div className="spellwin-center" ref={goCardRef}>
+          <div className="spellwin-eyebrow" style={{ color:'#e84030' }}>✦ DEFEATED ✦</div>
+          <div className="spellwin-spell" style={{ fontSize: 36 }}>Your Hearts Run Out</div>
+          {gameOverProfKey && PROFESSOR_LOSS_LINES[gameOverProfKey] && (
+            <div className="spellwin-sub" style={{ fontStyle:'italic', color:'rgba(240,192,96,.7)', marginBottom: 4 }}>
+              &ldquo;{PROFESSOR_LOSS_LINES[gameOverProfKey]}&rdquo;
+            </div>
+          )}
+          <div className="spellwin-sub">
+            You earned <strong style={{ color:'var(--gold)' }}>{sp.toLocaleString()} SP</strong> and
+            collected <strong style={{ color:'var(--gold)' }}>{defeatedProfessors.size}</strong> spell
+            {defeatedProfessors.size !== 1 ? 's' : ''}.<br />
+            The Academy awaits your return.
+          </div>
+          <button
+            className={`go-refill-btn${sp < 500 ? ' go-refill-disabled' : ''}`}
+            disabled={sp < 500}
+            onClick={() => {
+              if (sp < 500) return
+              setSp(prev => prev - 500)
+              setHearts(5)
+              launchDuel(towerIndex, profIndex, towerOrder)
+            }}
+          >
+            ✦ Continue Your Journey — 500 SP ✦
+          </button>
+          {sp < 500 && (
+            <div className="go-refill-hint">
+              Earn {(500 - sp).toLocaleString()} more SP to unlock this
+            </div>
+          )}
+          <div className="go-divider" />
+          <div className="go-actions">
+            <button className="gw-btn-secondary" onClick={handleDownloadGameOver}>DOWNLOAD YOUR PROGRESS</button>
+            <button className="gw-btn-text" onClick={() => {
+              setHearts(5)
+              setSp(0)
+              setDefeatedProfessors(new Set())
+              setTowerOrder(['pm', 'strategy', 'ai'])
+              setTowerIndex(0)
+              setProfIndex(0)
+              setArchetype('V')
+              setScreen('landing')
+            }}>
+              Return to the Academy
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Lenny's Blessing Overlay ── */}
+      {blessing && (
+        <div className={`blessing-overlay${blessing.phase === 'result' && !blessing.isCorrect ? ' blessing-dismiss' : ''}`}>
+          <div className="blessing-burst" />
+          <div className="blessing-content">
+
+            <div className={`blessing-portrait-ring${blessing.phase === 'result' && blessing.isCorrect ? ' blessing-nod' : ''}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/assets/professors/lenny_rachitsky.jpg"
+                alt="Lenny Rachitsky"
+                className="blessing-portrait-img"
+                onError={(e) => { (e.target as HTMLImageElement).src = '/assets/professor_placeholder.png' }}
+              />
+            </div>
+
+            {blessing.phase === 'loading' && (
+              <div className="blessing-loading-text">A message from the Keeper…</div>
+            )}
+
+            {(blessing.phase === 'question' || blessing.phase === 'result') && blessing.q && (
+              <>
+                <div className="blessing-opening">
+                  &ldquo;I have one question. From the archive. No one else gets this — just you, right now.&rdquo;
+                </div>
+                <div className="blessing-question-panel">
+                  <div className="blessing-eyebrow">✦ THE KEEPER&apos;S QUESTION ✦</div>
+                  <div className="blessing-question-text">{blessing.q.question}</div>
+                </div>
+                <div className="blessing-answers">
+                  {blessing.q.options.map((opt, i) => {
+                    const isCorrectOpt = LETTERS[i] === blessing.q!.correct_answer
+                    const optText = opt.replace(/^[A-D]\.\s*/, '')
+                    let cls = 'blessing-ans'
+                    if (blessing.answeredIndex !== null) {
+                      if (i === blessing.answeredIndex) cls += isCorrectOpt ? ' b-correct' : ' b-wrong'
+                      else if (isCorrectOpt) cls += ' b-reveal'
+                      else cls += ' b-answered'
+                    }
+                    return (
+                      <div key={i} className={cls} onClick={() => handleBlessingAnswer(i)}>
+                        <div className="blessing-ans-letter">{LETTERS[i]}</div>
+                        <div className="blessing-ans-text">{optText}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {blessing.phase === 'result' && blessing.isCorrect && (
+                  <div className="blessing-sp-reward">+500 SP</div>
+                )}
+              </>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* ── Rank Up Ceremony Overlay ── */}
+      {rankUpInfo && (
+        <div className="rank-up-overlay" style={{ '--rank-color': rankUpInfo.color } as React.CSSProperties}>
+          <div className="rank-up-rays" />
+          <div className="rank-up-content">
+            <div className="rank-up-eyebrow">✦ RANK ACHIEVED ✦</div>
+            <div className="rank-up-name" style={{ color: rankUpInfo.color }}>{rankUpInfo.label.toUpperCase()}</div>
+            <div className="rank-up-divider" style={{ background: rankUpInfo.color }} />
+            <div className="rank-up-achievement">{RANK_ACHIEVEMENTS[rankUpInfo.label]}</div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+}
