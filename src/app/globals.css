@@ -89,14 +89,15 @@ body {
   position: absolute;
   top: 0; left: 0; right: 0;
   z-index: 20;
-  padding: 6px 0;
+  padding: 7px 0;
   text-align: center;
-  font-family: 'EB Garamond', serif;
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: var(--gold);
-  background: rgba(6,3,1,.80);
-  border-bottom: 1px solid rgba(200,146,42,.3);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  color: rgba(240,195,85,.9);
+  background: rgba(10,6,2,.72);
+  border-bottom: 1px solid rgba(200,146,42,.35);
+  text-shadow: 0 1px 4px rgba(0,0,0,.8);
 }
 
 .landing-logo-block {
@@ -111,7 +112,7 @@ body {
 }
 .landing-logo-title {
   font-family: 'HarryP', cursive;
-  font-size: 76px;
+  font-size: 84px;
   line-height: 1;
   letter-spacing: 2px;
   background: linear-gradient(180deg, #fff8c0 0%, #f5d060 18%, #c8880a 48%, #e8b840 62%, #7a4a04 80%, #c89030 100%);
@@ -141,6 +142,15 @@ body {
     drop-shadow(0 2px 4px rgba(0,0,0,.8))
     drop-shadow(0 0 16px rgba(200,140,20,.55));
   margin-top: -4px;
+}
+.landing-logo-tagline {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  color: rgba(240,200,100,.95);
+  margin-top: 6px;
+  text-shadow: 0 1px 6px rgba(0,0,0,.9), 0 0 20px rgba(0,0,0,.8);
 }
 
 /* Professor grid — 2×3 left side */

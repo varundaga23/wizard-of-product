@@ -15,17 +15,17 @@ Add raw notes as you play. Tell Claude "address the feedback file" when ready fo
 
 ## Open
 
-**Screen:** Title
-**Issue:** Background too dark. Font feels boring/uninspiring. "Three towers. Nineteen professors. One Keeper." line is unreadable. First impression needs to grab attention — this is the hook.
-**Priority:** high
-**Status:** in progress
-
 
 ---
 
 ## Done
 
 <!-- Completed items move here -->
+
+**Screen:** Landing
+**Issue:** Background too dark, font boring, "Three towers. Nineteen professors. One Keeper." tagline unreadable (was missing entirely from JSX).
+**Fix:** Added tagline div + CSS, reduced vignette opacity (0.35→0.22), bumped logo title 76→84px, switched banner to Cinzel font.
+**Status:** done
 
 **TODO — Professor Photos**
 Drop headshot JPGs into `assets/professors/` named by professor key (e.g. `gibson_biddle.jpg`, `lenny_rachitsky.jpg`).

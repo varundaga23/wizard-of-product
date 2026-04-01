@@ -731,13 +731,14 @@ export default function Home() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="bg" src="/assets/Landing_Page_Background.png" alt="" />
         <div style={{ position:'absolute', inset:0, zIndex:1, pointerEvents:'none',
-          background:'radial-gradient(ellipse 80% 75% at 50% 50%, transparent 30%, rgba(0,0,0,.35) 100%)' }} />
+          background:'radial-gradient(ellipse 80% 75% at 50% 50%, transparent 40%, rgba(0,0,0,.22) 100%)' }} />
 
         <div className="landing-top-banner">Welcome to Lorethorn — the Academy of Product Spellcraft.</div>
 
         <div className="landing-logo-block">
           <div className="landing-logo-title">Spellcraft</div>
           <div className="landing-logo-sub">Wizard of Product</div>
+          <div className="landing-logo-tagline">Three towers. Nineteen professors. One Keeper.</div>
         </div>
 
         <div className="prof-grid">
