@@ -2,7 +2,7 @@
 
 ## What This Project Is
 
-A wizarding school browser duel game where product managers duel real product experts (Lenny Rachitsky, Shreyas Doshi, Chip Huyen, etc.) by answering multiple-choice questions drawn from Lenny's Newsletter and Podcast archive. Players get sorted by archetype, clear three towers, and face Lenny in a final duel.
+A wizarding school browser duel game where product managers duel real product experts (Lenny Rachitsky, Shreyas Doshi, Chip Huyen, etc.) by answering questions drawn from Lenny's Newsletter and Podcast archive. Players get sorted by archetype, clear three towers, and face Lenny in a final duel.
 
 **One-line pitch:** Hogwarts for product people. Get sorted. Duel real product legends. Earn Spells. Build a Playbook. Face Lenny in the final duel.
 
@@ -24,7 +24,7 @@ These decisions are final. Do not suggest building skipped screens or features.
 | Landing | Built — needs design polish | Open FEEDBACK.md item — background, font, tagline readability |
 | Oracle's Rite | Done | |
 | Archetype Reveal | Done | |
-| Duel | Done | Tower roster left panel deferred |
+| Duel | Done | Tower roster left panel deferred to v2 |
 | Spell Win | Done | |
 | Tower Cleared | Done | |
 | Lenny Loss | Done | Dedicated 3-heart final boss loss screen with retry |
@@ -36,9 +36,11 @@ These decisions are final. Do not suggest building skipped screens or features.
 | Rank Up Ceremony | Done | Overlay (not a screen), 5s display, auto-dismisses |
 | Lenny's Blessing | Done | Overlay, ~10% between duels, +500 SP, no heart cost |
 
-### Game Mechanics Built (April 2026)
+### Game Mechanics Built
 | Mechanic | Detail |
 |---------|--------|
+| 2-option duel format | Each question shows exactly 2 choices: correct answer + best distractor. Shuffled randomly each load. **Do not revert to 4 options.** |
+| Best distractor | Claude-curated per question. Stored in `best_distractor` column in Supabase. One-time migration done (549 questions). |
 | Rank Up Ceremony | Overlay at z-index 100, 5s, rank-coloured rays. Apprentice=amber, Scholar=blue, Wizard=purple, Archmage=crimson |
 | Lenny's Blessing | Overlay at z-index 99, 10% random after non-boss duel win. Fetches `lenny_oracle` from Supabase. Correct=+500 SP + nod. Wrong=no heart cost, fades 1.2s |
 | Professor win/loss one-liners | Hardcoded in `PROFESSOR_WIN_LINES` and `PROFESSOR_LOSS_LINES` in page.tsx. Loss line shown on game over screen |
@@ -47,7 +49,7 @@ These decisions are final. Do not suggest building skipped screens or features.
 | First heart lost hint | One-time toast on first heart lost: "Lose all 5 hearts? Spend 500 SP to refill and keep going." Fades after 4s, never repeats |
 
 ### Parked — Needs Setup First (come back to these)
-- **Rate limiting on `/api/questions`** — needs Vercel CLI + Upstash Redis. Steps: `npm i -g vercel` → `vercel link` → `vercel integration add upstash` → `vercel env pull .env.local` → install `@upstash/ratelimit` → implement sliding window 60 req/min per IP in route.ts
+- **Rate limiting on `/api/questions`** — needs: `vercel integration add upstash` → `vercel env pull .env.local` → install `@upstash/ratelimit` → implement sliding window 60 req/min per IP in route.ts
 
 ### Deferred to v2 (do not build in v1)
 - Archetype SP bonus (+50 SP in primary tower) — questions table has no archetype_tag
@@ -61,24 +63,23 @@ These decisions are final. Do not suggest building skipped screens or features.
 - **No Supabase leaderboard** — score submission not being built
 - **No duel retry button** — the 500 SP refill mechanic IS the retry. Free retry would undercut it
 - **Professor one-liners are hardcoded** — static copy, no reason to put in Supabase
+- **2 options per question (not 4)** — feels like a duel, not a quiz. Best distractor is Claude-curated. Do not change back.
 - **Design Spec v3 calls for 14 screens — we are building ~12** (deliberate scope reduction)
 
 ---
 
 ## Tech Stack (LOCKED — decided March 27 2026)
 
-**DO NOT continue building with Phaser.** The production app is a Next.js web app.
-
-- **Framework:** Next.js (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **UI:** React + CSS (all visual effects are CSS — animations, clip-path, gradients)
-- **Database:** Supabase (player names, scores)
-- **Deployment:** Vercel
-- **Content:** Static JSON for all 19 professors, questions, spell names
-- **AI:** Vercel AI SDK (post-v1, if adaptive questions added)
+- **Database:** Supabase (questions, best_distractor)
+- **Deployment:** Vercel (`wizard-of-product.vercel.app`)
+- **Content:** Static JS for all 19 professors, spell names, archetypes (`src/data/professors.js`)
+- **AI:** Anthropic SDK used for one-time Supabase migrations (scripts only, not at runtime)
 
-The `src/Scenes/` Phaser code is legacy and will be replaced. `prototype_v3.html` is the design source of truth — each screen becomes a Next.js page/component. CSS ports directly.
+**Phaser is fully removed.** All legacy `src/Scenes/`, `src/Config/`, `index.html`, `webpack.config.js` deleted. Do not reference or rebuild Phaser.
 
-**Current prototype state:** Landing page (s-landing) is fully designed. All other screens (s-oracle, s-archetype, s-duel, s-spellwin, s-cleared, s-playbook, s-summons, s-final, s-grand) have scaffold/structure but are not yet fully fleshed out.
+`prototype_v3.html` is the design source of truth — each screen is a Next.js component. CSS ports directly.
 
 ---
 
@@ -87,12 +88,14 @@ The `src/Scenes/` Phaser code is legacy and will be replaced. `prototype_v3.html
 | File | Purpose |
 |------|---------|
 | `prototype_v3.html` | THE working design file — source of truth for all screens |
-| `src/app/` | Next.js App Router (production target) |
-| `src/data/professors.js` | Game content: towers, professors, questions, archetypes |
-| `src/GameState.js` | Global game state singleton |
-| `src/supabase.js` | Supabase client + DB queries |
-| `assets/` | All game images (see asset rules below) |
-| `FEEDBACK.md` | Live feedback log — check before starting work |
+| `src/app/page.tsx` | ALL screens, ALL game logic, ALL PostHog events |
+| `src/app/globals.css` | ALL CSS |
+| `src/app/layout.tsx` | Fonts, OG metadata, PostHog provider |
+| `src/app/api/questions/route.ts` | Supabase fetch (professor key → 5 shuffled questions with best_distractor) |
+| `src/data/professors.js` | Game content: towers, professors, archetypes, spell names, win/loss lines |
+| `scripts/` | One-time migration scripts (generate questions, add best_distractor, etc.) |
+| `public/assets/` | All game images — `professors/` subdir for portraits |
+| `FEEDBACK.md` | Live bug/polish log — check before starting work |
 | `/Users/vdaga/Documents/Claude/Wizard_of_Product_PRD_Final_March26.docx` | Full PRD |
 | `/Users/vdaga/Documents/Claude/Spellcraft_Design_Spec_v3.docx` | Full design spec |
 
@@ -104,28 +107,29 @@ The `src/Scenes/` Phaser code is legacy and will be replaced. `prototype_v3.html
 npm run dev      # Start dev server (localhost:3000)
 npm run build    # Production build
 npm run lint     # ESLint
+vercel --prod    # Deploy to production
 ```
 
 ---
 
-## Screen Inventory (9 screens in prototype_v3.html)
+## Screen Inventory
 
-| ID | Screen | Template |
-|----|--------|---------|
-| s-landing | Landing | A |
-| s-oracle | Oracle's Rite | C |
-| s-archetype | Archetype Reveal | C (dark ceremony) |
-| s-duel | Duel Screen | C |
-| s-spellwin | Spell Win | C |
-| s-cleared | Tower Cleared | C — flow step only, not a nav destination |
-| s-playbook | Playbook | Dark wood gradient |
-| s-summons | Summons Letter | B |
-| s-final | Final Revelation | C + intense gold |
-| s-grand | Grand Wizard Completion | C + maximum gold |
-
-**Still to build:** Grand Wizard Completion (s-grand)
-
-**Removed:** Tower Overview and Tower Chamber screens (were in v3 spec, removed from prototype after design discussion — go directly from landing/playbook to duel).
+| ID | Screen | Status |
+|----|--------|--------|
+| s-landing | Landing | Built — design polish pending |
+| s-oracle | Oracle's Rite | Done |
+| s-archetype | Archetype Reveal | Done |
+| s-duel | Duel Screen | Done |
+| s-spellwin | Spell Win | Done |
+| s-cleared | Tower Cleared | Done |
+| s-playbook | Playbook | Built — design polish pending |
+| s-summons | Summons Letter | Done |
+| s-final | Final Revelation | Done — design sign-off pending |
+| s-grand | Grand Wizard Completion | Done |
+| — | Lenny Loss | Done (overlay flow) |
+| — | Game Over | Done |
+| — | Rank Up Ceremony | Done (overlay) |
+| — | Lenny's Blessing | Done (overlay) |
 
 ---
 
@@ -151,55 +155,28 @@ npm run lint     # ESLint
 | Cinzel Decorative | Titles and archetype names |
 | EB Garamond | Body text |
 | Pinyon Script | Summons Letter only |
-| HarryP | Logo only (`assets/fonts/HarryP.woff`) |
+| HarryP | Logo only (`public/assets/fonts/HarryP.woff`) |
 
 ---
 
 ## Screen Templates
 
 ### Template A — Landing Screen
-- Background: `assets/Landing_Page_Background.png` — full brightness, edge vignette only
+- Background: `public/assets/Landing_Page_Background.png` — full brightness, edge vignette only
 - Logo: "Spellcraft" in HarryP font, gold gradient, STATIC (no float)
-- Professor grid LEFT: 2-col × 3-row portrait cards (placeholder: `assets/professor_placeholder.png`)
-- Parchment scroll RIGHT: uses `assets/scroll_no_bg.png` image
-- Name input + orb CTA BOTTOM CENTER: orb button = `assets/orb_button_transparent.png`
+- Professor grid LEFT: 2-col × 3-row portrait cards (placeholder: `public/assets/professor_placeholder.png`)
+- Parchment scroll RIGHT: uses `public/assets/scroll_no_bg.png` image
+- Name input + orb CTA BOTTOM CENTER: orb button = `public/assets/orb_button_transparent.png`
 - Lenny card: gold border + FINAL DUEL badge
 
 ### Template B — Summons Letter
-- Background: `assets/Summo_letter_background.jpg` — full brightness
+- Background: `public/assets/Summo_letter_background.jpg` — full brightness
 - NEVER shown on first launch
 - Two placements ONLY: (1) Easter egg tapping Lenny portrait, (2) cutscene before Final Revelation
 - Lenny's title: **The Keeper of Product Lore**
-- **Tone/wording marked for revision** — copy is locked for now, refine later
-
-#### Easter egg letter (tap Lenny on landing — cryptic tease)
-> You weren't supposed to find this.
->
-> Most mages pass through Lorethorn without ever looking for me. You did.
->
-> That's either curiosity or ambition. I haven't decided which yet.
->
-> Finish what you started. Then we'll talk.
->
-> — L.R.
-> The Keeper of Product Lore
-
-#### Pre-Final Revelation letter (automatic cutscene — formal summons)
-> You've done it.
->
-> Nineteen professors. Three towers. Every framework, every model, every hard question the Academy could throw at you.
->
-> I've been watching. They all told me you were different.
->
-> There is one duel left. Not a test of what you know — a test of what you believe.
->
-> Come find me.
->
-> — Lenny Rachitsky
-> The Keeper of Product Lore
 
 ### Template C — All Game Screens
-- Background: `assets/Game_Background.png` — full brightness, NO overlay on image
+- Background: `public/assets/Game_Background.png` — full brightness, NO overlay on image
 - Dark panels float on top for contrast
 - HUD always visible: Hearts (left) · SP (center) · Rank badge (right)
 
@@ -209,45 +186,37 @@ npm run lint     # ESLint
 
 | Screen | Background |
 |--------|-----------|
-| s-landing, s-archetype | `assets/Landing_Page_image.png` |
-| s-oracle | Oracle sorting example image (oracle figure + atmosphere baked in; HTML adds interactive question card overlay only) |
-| s-duel, s-spellwin, s-cleared, s-final, s-grand | `assets/Game_Background.png` |
-| s-summons | `assets/Summo_letter_background.jpg` |
+| s-landing, s-archetype | `public/assets/Landing_Page_image.png` |
+| s-oracle | `public/assets/oracle_bg_clean.png` |
+| s-duel, s-spellwin, s-cleared, s-final, s-grand | `public/assets/Game_Background.png` |
+| s-summons | `public/assets/Summo_letter_background.jpg` |
 | s-playbook, grand wizard | Dark wood CSS gradient (no image) |
 
 ---
 
-## Game Mechanics (PRD spec)
+## Game Mechanics (implemented)
 
 ### Duel Structure
 | Element | Detail |
 |---------|--------|
-| Questions per duel | 5 drawn randomly from professor's 18-question pool |
+| Questions per duel | 5 drawn randomly from professor's pool (27 per professor, 36 for Gibson Biddle) |
+| Answer format | **2 options only** — correct answer + best_distractor, randomly shuffled |
 | Winning | Complete all 5 questions with ≥1 heart remaining globally |
 | Losing | Run out of hearts before completing all 5 questions |
 | Professor defeated | All 5 completed with hearts remaining → spell awarded |
-| Retry | Immediate, questions reshuffled |
 | SP earned | Per correct answer, even if duel lost — SP is never taken back |
 
 ### Scoring
 - Basic question: 100 SP
 - Advanced question: 200 SP
-- ~~Archetype bonus: 50 SP (if question matches player's archetype)~~ — **deferred to v2** (questions table has no archetype_tag; domain-as-proxy would make bonus fire constantly, adding no meaningful differentiation)
-- Lenny's Blessing (correct): +500 SP — **deferred to v2** (see below)
-
-### Lenny's Blessing (v2 — not yet built)
-Lenny appears as a rare **golden encounter** (~1 in 10 duels) between any two professor duels within a tower. He is not on the professor roster — this is a surprise cameo.
-- One question only
-- Correct answer: +500 SP (enough to jump a full rank)
-- Wrong answer: **no heart cost** — the only exception in the game
-- Triggering logic: after each professor duel completes, ~10% random chance fires before launching the next professor duel
-- Needs its own screen/card distinct from normal duel UI
-- Source: PRD §3 and §5.2
+- ~~Archetype bonus: 50 SP~~ — deferred to v2
+- Lenny's Blessing (correct): +500 SP
 
 ### Hearts
-- 5 hearts globally per session
+- 5 hearts globally per session (normal duels)
+- 3 hearts for Lenny final boss (separate counter)
 - Hearts deducted on wrong answer (not per-duel)
-- 0 hearts = session over
+- 0 hearts = Game Over (normal) or Lenny Loss screen (final boss)
 
 ### Archetypes (Oracle's Rite output)
 | Archetype | Key | Primary Tower |
@@ -320,6 +289,7 @@ Muggle → Apprentice → Scholar → Wizard → Archmage → Grand Wizard
 - The player picks one of three answers (A / B / C); that answer's archetype is the result directly — no tallying, no multi-step
 - Archetypes: A = Visionary (V), B = Mastermind (M), C = Builder (B) — but the mapping is per-question, not fixed to letters
 - Submit button label: "Reveal What the Oracle Has Decided" (single label — no "Next Question" state)
+- **Oracle's Rite keeps 3 options** — archetype sorting requires 3 distinct choices. The 2-option change applies to duels only.
 
 ## Oracle's Rite Question Card (locked)
 - CHAMFERED corners (clip-path octagon) — outer wrapper = amber border, inner card clips same shape
@@ -362,15 +332,25 @@ Muggle → Apprentice → Scholar → Wizard → Archmage → Grand Wizard
 ---
 
 ## Supabase Schema
-- **questions table:** `professor` (key), question text, options, correct answer, difficulty, archetype tag
-- **leaderboard table:** `player_name`, `character` (archetype), `score`, `domain_breakdown`
+- **questions table:** `id`, `professor` (key), `question`, `options` (array of 4), `correct_answer` (letter A-D), `explanation`, `difficulty` (basic/advanced), `best_distractor` (full text of best wrong option — Claude-curated, one-time migration done)
+- **leaderboard table:** exists in DB but NOT being used — no score submission in v1
 
-Env vars: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (in `.env`)
+Env vars: `SUPABASE_URL`, `SUPABASE_ANON_KEY`
 
 ---
 
 ## Professor Photos
-Drop headshot JPGs into `assets/professors/` named by professor key (e.g. `gibson_biddle.jpg`, `lenny_rachitsky.jpg`). Tell Claude "wire up professor photos" once files are in place.
+Drop headshot JPGs into `public/assets/professors/` named by professor key (e.g. `gibson_biddle.jpg`).
+Midjourney prompts: `/Users/vdaga/Documents/Personal OS/Knowledge/Prompts/spellcraft-midjourney-prompts.md`
+Tell Claude "wire up professor photos" once files are in place.
+
+---
+
+## Deployment
+- **Live URL:** https://wizard-of-product.vercel.app/
+- **Branch:** `development` → auto-deploys to production via `vercel --prod`
+- **Env vars set on Vercel:** `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`
+- **vercel.json** sets `framework: nextjs` and `outputDirectory: .next` (required — old project had wrong defaults)
 
 ---
 
