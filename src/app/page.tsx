@@ -28,6 +28,8 @@ type DuelQuestion = {
   correct_answer: string   // "A" | "B" | "C" | "D"
   explanation: string
   difficulty: 'basic' | 'advanced'
+  best_distractor: string
+  displayOptions: { text: string; isCorrect: boolean }[]
 }
 
 type OracleQuestion = {
@@ -275,7 +277,17 @@ const RANKS = [
   { label: 'Grand Wizard', min: 5000 },
 ]
 
-const LETTERS = ['A', 'B', 'C', 'D']
+const LETTERS = ['A', 'B']
+
+function buildDisplayOptions(q: Omit<DuelQuestion, 'displayOptions'>): { text: string; isCorrect: boolean }[] {
+  const correctText = q.options.find(o => o.startsWith(q.correct_answer + '.'))?.replace(/^[A-D]\.\s*/, '') ?? ''
+  const distractorText = (q.best_distractor ?? '').replace(/^[A-D]\.\s*/, '')
+  const opts = [
+    { text: correctText, isCorrect: true },
+    { text: distractorText, isCorrect: false },
+  ]
+  return Math.random() < 0.5 ? opts : [opts[1], opts[0]]
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function shuffle<T>(arr: T[]): T[] {
@@ -496,7 +508,7 @@ export default function Home() {
       const data = await res.json()
       const qs = Array.isArray(data) ? data : []
       if (qs.length === 0) setDuelError(true)
-      setDuelQs(qs)
+      setDuelQs(qs.map((q: Omit<DuelQuestion, 'displayOptions'>) => ({ ...q, displayOptions: buildDisplayOptions(q) })))
     } catch {
       setDuelError(true)
       setDuelQs([])
@@ -513,7 +525,7 @@ export default function Home() {
   function handleAnswer(optionIndex: number) {
     if (answeredIndex !== null || !currentQ || !currentProf) return
 
-    const isCorrect = LETTERS[optionIndex] === currentQ.correct_answer
+    const isCorrect = currentQ.displayOptions[optionIndex].isCorrect
     setAnsweredIndex(optionIndex)
 
     let newHearts = hearts
@@ -607,7 +619,8 @@ export default function Home() {
           launchDuel(tIdx, pIdx, tOrd)
           return
         }
-        setBlessing(prev => prev ? { ...prev, phase: 'question', q: qs[0] } : null)
+        const q = { ...qs[0], displayOptions: buildDisplayOptions(qs[0]) }
+        setBlessing(prev => prev ? { ...prev, phase: 'question', q } : null)
       })
       .catch(() => {
         setBlessing(null)
@@ -617,7 +630,7 @@ export default function Home() {
 
   function handleBlessingAnswer(optionIndex: number) {
     if (!blessing || blessing.answeredIndex !== null || !blessing.q) return
-    const isCorrect = LETTERS[optionIndex] === blessing.q.correct_answer
+    const isCorrect = blessing.q.displayOptions[optionIndex].isCorrect
     const { tIdx, pIdx, tOrd } = blessing
     setBlessing(prev => prev ? { ...prev, phase: 'result', answeredIndex: optionIndex, isCorrect } : null)
     if (isCorrect) {
@@ -950,19 +963,17 @@ export default function Home() {
         {/* Answer buttons */}
         {currentQ && !duelLoading && (
           <div className="duel-answers">
-            {currentQ.options.map((opt, i) => {
-              const isCorrectOpt = LETTERS[i] === currentQ.correct_answer
-              const optText = opt.replace(/^[A-D]\.\s*/, '')
+            {currentQ.displayOptions.map((opt, i) => {
               let cls = 'duel-ans'
               if (answeredIndex !== null) {
-                if (i === answeredIndex) cls += isCorrectOpt ? ' correct' : ' wrong'
-                else if (isCorrectOpt) cls += ' reveal-correct'
+                if (i === answeredIndex) cls += opt.isCorrect ? ' correct' : ' wrong'
+                else if (opt.isCorrect) cls += ' reveal-correct'
                 else cls += ' answered'
               }
               return (
                 <div key={i} className={cls} onClick={() => handleAnswer(i)}>
                   <div className="duel-ans-letter">{LETTERS[i]}</div>
-                  <div className="duel-ans-text">{optText}</div>
+                  <div className="duel-ans-text">{opt.text}</div>
                 </div>
               )
             })}
@@ -1190,7 +1201,8 @@ export default function Home() {
               try {
                 const res = await fetch('/api/questions?professor=lenny_oracle')
                 const data = await res.json()
-                setDuelQs(Array.isArray(data) ? data : [])
+                const qs = Array.isArray(data) ? data : []
+                setDuelQs(qs.map((q: Omit<DuelQuestion, 'displayOptions'>) => ({ ...q, displayOptions: buildDisplayOptions(q) })))
               } catch {
                 setDuelQs([])
               } finally {
@@ -1295,7 +1307,8 @@ export default function Home() {
               try {
                 const res = await fetch('/api/questions?professor=lenny_oracle')
                 const data = await res.json()
-                setDuelQs(Array.isArray(data) ? data : [])
+                const qs = Array.isArray(data) ? data : []
+                setDuelQs(qs.map((q: Omit<DuelQuestion, 'displayOptions'>) => ({ ...q, displayOptions: buildDisplayOptions(q) })))
               } catch {
                 setDuelQs([])
               } finally {
@@ -1394,19 +1407,17 @@ export default function Home() {
                   <div className="blessing-question-text">{blessing.q.question}</div>
                 </div>
                 <div className="blessing-answers">
-                  {blessing.q.options.map((opt, i) => {
-                    const isCorrectOpt = LETTERS[i] === blessing.q!.correct_answer
-                    const optText = opt.replace(/^[A-D]\.\s*/, '')
+                  {blessing.q.displayOptions.map((opt, i) => {
                     let cls = 'blessing-ans'
                     if (blessing.answeredIndex !== null) {
-                      if (i === blessing.answeredIndex) cls += isCorrectOpt ? ' b-correct' : ' b-wrong'
-                      else if (isCorrectOpt) cls += ' b-reveal'
+                      if (i === blessing.answeredIndex) cls += opt.isCorrect ? ' b-correct' : ' b-wrong'
+                      else if (opt.isCorrect) cls += ' b-reveal'
                       else cls += ' b-answered'
                     }
                     return (
                       <div key={i} className={cls} onClick={() => handleBlessingAnswer(i)}>
                         <div className="blessing-ans-letter">{LETTERS[i]}</div>
-                        <div className="blessing-ans-text">{optText}</div>
+                        <div className="blessing-ans-text">{opt.text}</div>
                       </div>
                     )
                   })}

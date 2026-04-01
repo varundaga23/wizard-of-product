@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('questions')
-    .select('id, professor, question, options, correct_answer, explanation, difficulty')
+    .select('id, professor, question, options, correct_answer, explanation, difficulty, best_distractor')
     .eq('professor', professor)
     .limit(60)
 
