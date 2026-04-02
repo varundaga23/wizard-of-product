@@ -116,16 +116,16 @@ vercel --prod    # Deploy to production
 
 | ID | Screen | Status |
 |----|--------|--------|
-| s-landing | Landing | Built — design polish pending |
-| s-oracle | Oracle's Rite | Done |
-| s-archetype | Archetype Reveal | Done |
+| s-landing | Landing | Done — new grand hall BG, assets updated April 2026 |
+| s-oracle | Oracle's Rite | Done — Codex Oracle illustrated face, updated title/eyebrow/submit |
+| s-archetype | Archetype Reveal | Done — parchment scroll with fire/energy effects |
 | s-duel | Duel Screen | Done |
-| s-spellwin | Spell Win | Done |
+| s-spellwin | Spell Win | Done — redesigned April 2026: Lorethorn header, professor portrait, green-glow spell scroll |
 | s-cleared | Tower Cleared | Done |
-| s-playbook | Playbook | Built — design polish pending |
+| s-playbook | Playbook | Done — open book background |
 | s-summons | Summons Letter | Done |
 | s-final | Final Revelation | Done — design sign-off pending |
-| s-grand | Grand Wizard Completion | Done |
+| s-grand | Grand Wizard Completion | Done — open book background (matches Playbook) |
 | — | Lenny Loss | Done (overlay flow) |
 | — | Game Over | Done |
 | — | Rank Up Ceremony | Done (overlay) |
@@ -155,7 +155,8 @@ vercel --prod    # Deploy to production
 | Cinzel Decorative | Titles and archetype names |
 | EB Garamond | Body text |
 | Pinyon Script | Summons Letter only |
-| HarryP | Logo only (`public/assets/fonts/HarryP.woff`) |
+| HarryP | Logo + Lorethorn header in Spell Win (`public/assets/fonts/HarryP.woff`) |
+| Lumos | Available (`public/assets/fonts/Lumos.woff`) — not yet used |
 
 ---
 
@@ -186,11 +187,12 @@ vercel --prod    # Deploy to production
 
 | Screen | Background |
 |--------|-----------|
-| s-landing, s-archetype | `public/assets/Landing_Page_image.png` |
-| s-oracle | `public/assets/oracle_bg_clean.png` |
-| s-duel, s-spellwin, s-cleared, s-final, s-grand | `public/assets/Game_Background.png` |
+| s-landing | `public/assets/Landing_Page_Background.png` (grand hall with orb pedestal) |
+| s-archetype | `public/assets/Archetype_BG.png` + parchment scroll (`parchment_scroll.png`) |
+| s-oracle | `public/assets/Archetype_BG.png` + Codex Oracle illustrated face (`codex_oracle.png`) |
+| s-duel, s-spellwin, s-cleared, s-final | `public/assets/Game_Background.png` |
 | s-summons | `public/assets/Summo_letter_background.jpg` |
-| s-playbook, grand wizard | Dark wood CSS gradient (no image) |
+| s-playbook, s-grand | `public/assets/playbook_bg.png` (open parchment book, night sky) + `rgba(8,5,2,.35)` overlay |
 
 ---
 

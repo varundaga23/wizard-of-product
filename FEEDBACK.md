@@ -27,6 +27,19 @@ Add raw notes as you play. Tell Claude "address the feedback file" when ready fo
 **Fix:** Added tagline div + CSS, reduced vignette opacity (0.35→0.22), bumped logo title 76→84px, switched banner to Cinzel font.
 **Status:** done
 
+**Screen:** All screens
+**Issue:** Design polish pass — new assets and redesigned screens.
+**Fix:** Swapped in new asset pack (April 2026):
+- Landing: new grand hall background with orb pedestal
+- Oracle: illustrated Codex Oracle face, title/eyebrow/submit text updated
+- Archetype Reveal: parchment scroll with fire/energy effects
+- Spell Win: full redesign — Lorethorn header bar, professor portrait (left), playbook progress badge (top right), green-glow spell scroll, SP pill + green continue button
+- Playbook: open parchment book background
+- Grand Wizard: same open parchment book background (matches Playbook)
+- Lorethron crest updated to transparent version
+- Lumos font added to assets (not yet wired to any screen)
+**Status:** done
+
 **TODO — Professor Photos**
 Drop headshot JPGs into `assets/professors/` named by professor key (e.g. `gibson_biddle.jpg`, `lenny_rachitsky.jpg`).
 Illustrations/initials circles are placeholders in the duel screen and tower map until photos are added.

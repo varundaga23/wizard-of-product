@@ -771,8 +771,12 @@ export default function Home() {
         </div>
 
         <div className="scroll-overlay">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="scroll-img" src="/assets/scroll_no_bg.png" alt="Parchment scroll" />
+          <div className="scroll-body">
+            <span className="scroll-text">Three Towers</span>
+            <span className="scroll-text">Nineteen Professors</span>
+            <div className="scroll-divider"><div className="scroll-divider-gem" /></div>
+            <span className="scroll-text lower">One Keeper.</span>
+          </div>
         </div>
 
         <div className="orb-wrap">
@@ -796,6 +800,7 @@ export default function Home() {
             Curated from <strong>LENNY&apos;S</strong>&nbsp; Newsletter &amp; Podcast
           </div>
         </div>
+
       </div>
 
       {/* ══════════════════════════════════
@@ -805,18 +810,20 @@ export default function Home() {
       <div id="s-oracle" className={`screen${screen === 'oracle' ? ' active' : ''}`}>
         <div className="oracle-bg" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="oracle-hat" src="/assets/sorting_hat_cropped.png" alt="The Codex Oracle" />
+        <img className="oracle-hat" src="/assets/sorting_hat_transparent.png" alt="" />
         <div className="oracle-title-block">
           <div className="oracle-title-main">The Codex Oracle</div>
         </div>
         <div className="oracle-wrap">
           <div className="oracle-qcard-outer">
             <div className="oracle-qcard">
-              <div className="oracle-eyebrow">✦ SORTING CEREMONY ✦</div>
+              <div className="oracle-eyebrow"><span>A CHOICE OF PATH</span></div>
               {oracleQ && (
                 <>
-                  <div className="oracle-q">{oracleQ.text}</div>
-                  <div className="oracle-q-divider" />
+                  <div className="oracle-q-box">
+                    <div className="oracle-q">{oracleQ.text}</div>
+                  </div>
+                  <div className="oracle-eyebrow"><span>CHOOSE YOUR PATH</span></div>
                   <div className="oracle-opts">
                     {oracleQ.options.map((opt, i) => (
                       <div
@@ -825,21 +832,25 @@ export default function Home() {
                         onClick={() => setOracleSelected(opt.archetype)}
                       >
                         <div className="oracle-opt-letter">
-                          {oracleSelected === opt.archetype ? '' : LETTERS[i]}
+                          {['A', 'B', 'C'][i]}
                         </div>
-                        <div className="oracle-opt-text">{opt.text}</div>
+                        <div className="oracle-opt-title">
+                          {opt.text.split('—')[0].trim().split(/\s+/).slice(0, 4).join(' ').toUpperCase().replace(/[.,;]$/, '')}
+                        </div>
+                        <div className="oracle-opt-dot">◆</div>
+                        <div className="oracle-opt-desc">{opt.text}</div>
                       </div>
                     ))}
                   </div>
-                  <button
-                    className={`oracle-submit${oracleSelected ? ' visible' : ''}`}
-                    onClick={submitOracleAnswer}
-                  >
-                    Reveal What the Oracle Has Decided
-                  </button>
                 </>
               )}
             </div>
+            <button
+              className={`oracle-submit${oracleSelected ? ' visible' : ''}`}
+              onClick={submitOracleAnswer}
+            >
+              Reveal What the Oracle Has Decided
+            </button>
           </div>
         </div>
       </div>
@@ -849,7 +860,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-archetype" className={`screen${screen === 'archetype' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Archetype_BG.png" alt="" />
+        <img className="bg" src="/assets/Landing_Page_Background_1774611504383.png" alt="" />
         <div className="ar-swirl" />
         <div className="ar-col">
           <div className="ar-scroll">
@@ -988,19 +999,58 @@ export default function Home() {
       <div id="s-spellwin" className={`screen${screen === 'spellwin' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="bg" src="/assets/Game_Background.png" alt="" />
-        <div className="spellwin-center">
-          <div className="spellwin-eyebrow">✦ SPELL EARNED ✦</div>
-          <div className="spellwin-spell">{wonSpell}</div>
-          <div className="spellwin-sub">
-            {PROFESSOR_WIN_LINES[wonProfKey] ?? `${wonProfKey} has been defeated.`}
+
+        {/* Lorethorn header */}
+        <div className="spellwin-header">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="spellwin-crest" src="/assets/Lorethron_crest.png" alt="" />
+          <span className="spellwin-header-title">Lorethorn</span>
+        </div>
+
+        {/* Professor portrait — left */}
+        <div className="spellwin-prof-panel">
+          <div className="spellwin-defeated-label">DEFEATED:</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="spellwin-prof-portrait"
+            src={`/assets/professors/${wonProfKey}.jpg`}
+            alt=""
+            onError={(e) => { (e.target as HTMLImageElement).src = '/assets/professor_placeholder.png' }}
+          />
+          <div className="spellwin-prof-name-label">
+            {Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.name.toUpperCase() ?? wonProfKey.toUpperCase()}
           </div>
-          <div className="spellwin-sp">{sp.toLocaleString()} SP total</div>
-          <button className="ar-cta" onClick={advanceAfterSpellWin}>
-            {wonProfIsBoss ? 'Tower Cleared — Onward ✦' : 'Next Duel ✦'}
-          </button>
-          <button className="playbook-link" onClick={() => openPlaybook('spellwin')}>
-            View Playbook →
-          </button>
+        </div>
+
+        {/* Playbook progress — top right */}
+        <div className="spellwin-pb-badge">
+          <div className="spellwin-pb-label">PLAYBOOK PROGRESS</div>
+          <div className="spellwin-pb-count">{defeatedProfessors.size} / 19 SPELLS</div>
+          <button className="spellwin-pb-btn" onClick={() => openPlaybook('spellwin')}>ADD TO PLAYBOOK</button>
+        </div>
+
+        {/* Main content */}
+        <div className="spellwin-main">
+          <div className="spellwin-unlocked">✦ SPELL UNLOCKED ✦</div>
+
+          <div className="spellwin-scroll-glow">
+            <div className="spellwin-scroll-inner">
+              <div className="spellwin-scroll-emoji">{SPELL_EMOJIS[wonProfKey] ?? '✦'}</div>
+              <div className="spellwin-scroll-name">{wonSpell}</div>
+            </div>
+          </div>
+
+          <div className="spellwin-spell-title">SPELL: {wonSpell.toUpperCase()} ✦</div>
+          <div className="spellwin-quote">
+            &ldquo;{PROFESSOR_WIN_LINES[wonProfKey] ?? ''}&rdquo;
+          </div>
+
+          <div className="spellwin-actions">
+            <div className="spellwin-sp-pill">+{sp.toLocaleString()} SP</div>
+            <button className="spellwin-continue-btn" onClick={advanceAfterSpellWin}>
+              {wonProfIsBoss ? 'TOWER CLEARED — ONWARD ✦' : 'CONTINUE DUEL →'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1034,42 +1084,59 @@ export default function Home() {
           <div className="playbook-count">{defeatedProfessors.size} / 19 Spells</div>
         </div>
 
-        <div className="playbook-columns" ref={pbCardRef}>
-          {(['pm', 'strategy', 'ai'] as TowerKey[]).map((towerKey) => {
-            const tower = TOWERS[towerKey]
-            const towerColor = towerKey === 'pm' ? '#4a90d9' : towerKey === 'strategy' ? '#e67e22' : '#9b59b6'
-            return (
-              <div key={towerKey} className="playbook-col">
-                <div className="playbook-col-header" style={{ borderColor: towerColor, color: towerColor }}>
-                  {tower.name.toUpperCase()}
-                </div>
-                {tower.professors.map((prof) => {
-                  const collected = defeatedProfessors.has(prof.key)
-                  return (
-                    <div
-                      key={prof.key}
-                      className={`pb-card${collected ? ' collected' : ' locked'}${prof.isBoss ? ' boss' : ''}`}
-                      style={prof.isBoss ? { borderColor: 'rgba(200,60,60,.6)' } : undefined}
-                    >
-                      {collected ? (
-                        <>
-                          <div className="pb-card-spell">{SPELL_NAMES[prof.key]}</div>
-                          <div className="pb-card-prof">{prof.name}</div>
-                          <div className="pb-card-ribbon">COLLECTED</div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="pb-card-locked-name">{prof.name}</div>
-                          <div className="pb-card-lock">🔒</div>
-                          <div className="pb-card-locked-hint">Defeat to unlock</div>
-                        </>
-                      )}
+        <div className="pb-scroll-inner" ref={pbCardRef}>
+          <div className="pb-wrap">
+            <div className="pb-towers">
+              {(['pm', 'strategy', 'ai'] as TowerKey[]).map((towerKey) => {
+                const tower = TOWERS[towerKey]
+                const towerLabel = towerKey === 'pm' ? '🏰 PM TOWER' : towerKey === 'strategy' ? '⚔️ STRATEGY TOWER' : '🤖 AI TOWER'
+                return (
+                  <div key={towerKey}>
+                    <div className={`pb-tower-head ${towerKey}`}>{towerLabel}</div>
+                    <div className="pb-cards">
+                      {tower.professors.map((prof) => {
+                        const collected = defeatedProfessors.has(prof.key)
+                        return (
+                          <div
+                            key={prof.key}
+                            className={`pb-card${collected ? '' : ' locked'}${prof.isBoss ? (collected ? ' boss-collected' : ' boss') : ''}`}
+                          >
+                            {collected && <div className="pb-ribbon">COLLECTED</div>}
+                            <div
+                              className={`pb-icon ${towerKey}`}
+                              style={prof.isBoss ? (collected
+                                ? { background: 'linear-gradient(180deg,rgba(240,192,96,.22),rgba(240,192,96,.06))' }
+                                : { background: 'linear-gradient(180deg,rgba(180,30,20,.18),rgba(180,30,20,.05))' }
+                              ) : undefined}
+                            >
+                              {SPELL_EMOJIS[prof.key]}
+                            </div>
+                            <div className="pb-body">
+                              <div
+                                className="pb-spell"
+                                style={prof.isBoss ? (collected ? { color: 'var(--gold)' } : { color: '#e08070' }) : undefined}
+                              >
+                                {SPELL_NAMES[prof.key]}
+                              </div>
+                              <div className="pb-prof">— {prof.name}</div>
+                            </div>
+                            {!collected && (
+                              <div className="pb-lock">
+                                <div className="pb-lock-icon">🔒</div>
+                                <div className="pb-lock-text">
+                                  {prof.isBoss ? 'Defeat the Tower Boss to unlock' : `Defeat ${prof.name} to unlock`}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
-                  )
-                })}
-              </div>
-            )
-          })}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="playbook-footer">
@@ -1088,13 +1155,13 @@ export default function Home() {
         onClick={dismissSummons}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Summo_letter_background.jpg" alt="" />
+        <img className="bg" src="/assets/Summo_letter_background_1775007534371.jpg" alt="" />
         <div className="sl-tint" />
 
         <div className="sl-scroll-inner">
           <div className="sl-card">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="sl-crest" src="/assets/Lorethron_crest.png" alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            <img className="sl-crest" src="/assets/Lorethron_crest_transparent.png" alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             <div className="sl-school">LORETHORN SCHOOL</div>
             <div className="sl-school-sub">OF PRODUCT SPELLCRAFT</div>
             <div className="sl-rule" />
@@ -1237,11 +1304,12 @@ export default function Home() {
               <div key={key} className="gw-col">
                 <div className="gw-col-label">{label}</div>
                 {TOWERS[key].professors.map((prof) => (
-                  <div key={prof.key} className={`gw-spell-row${prof.isBoss ? ' boss' : ''}`}>
-                    <span className="gw-spell-emoji">{SPELL_EMOJIS[prof.key]}</span>
-                    <div className="gw-spell-info">
-                      <div className="gw-spell-name">{SPELL_NAMES[prof.key]}</div>
-                      <div className="gw-spell-prof">{prof.name}</div>
+                  <div key={prof.key} className={`gw-card${prof.isBoss ? ' boss' : ''}`}>
+                    <div className="gw-card-ribbon">COLLECTED</div>
+                    <div className={`gw-card-icon ${prof.isBoss ? 'boss' : key}`}>{SPELL_EMOJIS[prof.key]}</div>
+                    <div className="gw-card-body">
+                      <div className={`gw-card-spell${prof.isBoss ? ' boss' : ''}`}>{SPELL_NAMES[prof.key]}</div>
+                      <div className="gw-card-prof">— {prof.name}</div>
                     </div>
                   </div>
                 ))}
