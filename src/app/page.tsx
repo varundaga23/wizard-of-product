@@ -884,84 +884,182 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-duel" className={`screen${screen === 'duel' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Game_Background.png" alt="" />
+        <img className="bg" src="/assets/Landing_Page_Background_1774611504383.png" alt="" />
+        <div className="du-overlay" />
 
-        {/* HUD */}
-        <div className="duel-hud">
-          <div className="duel-hud-hearts">
-            {Array.from({ length: finalBossActive ? 3 : 5 }).map((_, i) => (
-              <span key={i} className={`duel-heart${i < (finalBossActive ? lennyHearts : hearts) ? ' full' : ' empty'}`}>♥</span>
-            ))}
-          </div>
-          <div className="duel-hud-center">
-            <div className="duel-tower-name">{currentTower?.name.toUpperCase()}</div>
-            <div className="duel-tower-sub">Dueling {currentProf?.name}</div>
-          </div>
-          <div className="duel-hud-right">
-            <div className="duel-sp">{sp.toLocaleString()} SP</div>
-            <div className="duel-rank">WIZARD RANK: {rank.toUpperCase()}</div>
-          </div>
-          <button className="hud-playbook-btn" onClick={() => openPlaybook('duel')}>
-            📖 Playbook
-          </button>
-        </div>
-
-        {/* Professor area — left */}
-        <div className="duel-prof-area">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className="duel-prof-portrait"
-            src={`/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}.jpg`}
-            alt={currentProf?.name}
-            onError={(e) => { (e.target as HTMLImageElement).src = '/assets/professor_placeholder.png' }}
-          />
-          <div className="duel-prof-name">{currentProf?.name.toUpperCase()}</div>
-          <div className="duel-prof-title">{currentProf?.title}</div>
-          {currentProf?.isBoss && (
-            <div className="final-badge" style={{ marginTop: 4 }}>TOWER BOSS</div>
-          )}
-        </div>
-
-        {/* Player silhouette */}
-        <div className="duel-player" />
-
-        {/* Question scroll */}
-        <div className="duel-question-area">
-          <div className="duel-q-scroll">
-            {duelError ? (
-              <div className="duel-q-loading" style={{ color: 'var(--red-wrong)' }}>
-                The archive is unreachable. Please check your connection and refresh.
+        {/* Top status bar */}
+        <div className="du-topbar">
+          {/* Professor side */}
+          <div className="du-hud-side">
+            <div className="du-crest">{currentProf?.isBoss ? '👑' : '🏰'}</div>
+            <div className="du-hud-info">
+              <div className="du-hud-label">PROFESSOR</div>
+              <div className="du-hud-name">{currentProf?.name.toUpperCase()}</div>
+              <div className="du-hud-sub">{currentProf?.title}</div>
+              <div className="du-hp-wrap">
+                <div className="du-hp-track"><div className="du-hp-fill red" style={{ width: '100%' }} /></div>
+                <span className="du-hp-label">{currentProf?.isBoss ? 'BOSS' : 'PROFESSOR'}</span>
               </div>
-            ) : duelLoading || !currentQ ? (
-              <div className="duel-q-loading">Summoning questions...</div>
-            ) : (
-              <>
-                <div className="duel-q-eyebrow">
-                  <span>✦ QUESTION {qIndex + 1} OF {duelQs.length} ✦</span>
-                  <div className="duel-q-pips">
-                    {Array.from({ length: duelQs.length }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={`duel-q-pip${i < qIndex ? ' done' : i === qIndex ? ' active' : ''}`}
-                      />
-                    ))}
-                  </div>
+            </div>
+          </div>
+          {/* Center title */}
+          <div className="du-title-center">
+            <div className="du-duel-title">DUEL OF KNOWLEDGE</div>
+            <div className="du-round-tag">QUESTION {qIndex + 1} OF {duelQs.length || 5}</div>
+            <button className="hud-playbook-btn" style={{ marginTop: 4, position: 'static', transform: 'none' }} onClick={() => openPlaybook('duel')}>
+              📖 Playbook
+            </button>
+          </div>
+          {/* Player side */}
+          <div className="du-hud-side du-hud-right">
+            <div className="du-hud-info" style={{ textAlign: 'right' }}>
+              <div className="du-hud-label">YOU</div>
+              <div className="du-hud-name">{rank.toUpperCase()}</div>
+              <div className="du-hud-sub">{sp.toLocaleString()} SP · {currentTower?.name}</div>
+              <div className="du-hp-wrap" style={{ justifyContent: 'flex-end' }}>
+                <span className="du-hp-label">
+                  {Array.from({ length: finalBossActive ? 3 : 5 }).map((_, i) => (
+                    <span key={i} style={{ color: i < (finalBossActive ? lennyHearts : hearts) ? '#e83030' : 'rgba(100,60,60,.4)' }}>♥</span>
+                  ))}
+                </span>
+              </div>
+            </div>
+            <div className="du-crest blue">📜</div>
+          </div>
+        </div>
+
+        {/* Main 3-column layout */}
+        <div className="du-main">
+          {/* LEFT: Professor figure */}
+          <div className="du-left-col">
+            <div className="du-prof-frame">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="du-prof-img"
+                src={`/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}.jpg`}
+                alt={currentProf?.name}
+                onError={(e) => { (e.target as HTMLImageElement).src = '/assets/professor_placeholder.png' }}
+              />
+              <div className="du-prof-name-bar"><span>{currentProf?.name.toUpperCase()}</span></div>
+            </div>
+            <div className="du-bottom-panel">
+              <div className="du-panel-title">POSSIBLE REWARDS</div>
+              <div className="du-orbs-row du-orbs-single">
+                <div className="du-orb">
+                  <div className="du-orb-gem gold du-orb-gem-lg" />
+                  <div className="du-orb-name">{currentProf && SPELL_NAMES[currentProf.key] ? SPELL_NAMES[currentProf.key].split(' ').slice(0, 2).join(' ').toUpperCase() : 'SPELL'}</div>
+                  <div className="du-orb-desc">{currentTower?.name}</div>
                 </div>
-                <div className="duel-q-text">{currentQ.question}</div>
-                {answeredIndex !== null && currentQ.explanation && (
-                  <div className="duel-q-explanation">{currentQ.explanation}</div>
-                )}
-              </>
+              </div>
+            </div>
+          </div>
+
+          {/* CENTER: Question + Answers */}
+          <div className="du-center-col">
+            <div className="du-answer-hdr">ANSWER THE QUESTION</div>
+            <div className="du-question-box">
+              {duelError ? (
+                <div className="duel-q-loading" style={{ color: 'var(--red-wrong)' }}>
+                  The archive is unreachable. Please check your connection and refresh.
+                </div>
+              ) : duelLoading || !currentQ ? (
+                <div className="duel-q-loading">Summoning questions…</div>
+              ) : (
+                <>
+                  <div className="du-question-text">{currentQ.question}</div>
+                  {answeredIndex !== null && currentQ.explanation && (
+                    <div className="duel-q-explanation">{currentQ.explanation}</div>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="du-category-tag">
+              <span className="du-cat-label">{currentTower?.name.toUpperCase() ?? 'PRODUCT'}</span>
+            </div>
+            {currentQ && !duelLoading && (
+              <div className="du-ans-row">
+                {currentQ.displayOptions.map((opt, i) => {
+                  let cls = 'du-ans-card'
+                  if (answeredIndex !== null) {
+                    if (i === answeredIndex) cls += opt.isCorrect ? ' correct' : ' wrong'
+                    else if (opt.isCorrect) cls += ' reveal-correct'
+                    else cls += ' answered'
+                  }
+                  const orbColor = i === 0 ? 'blue' : 'gold'
+                  const title = opt.text.split(/[—\-–]/)[0].trim().split(/\s+/).slice(0, 3).join(' ').toUpperCase().replace(/[.,;:]$/, '')
+                  return (
+                    <div key={i} className={cls} onClick={() => handleAnswer(i)}>
+                      <div className="du-ans-letter">{LETTERS[i]}</div>
+                      <div className="du-ans-title">{title}</div>
+                      <div className="du-ans-diamond">◆</div>
+                      <div className="du-ans-desc">{opt.text}</div>
+                      <div className="du-ans-glyph"><div className={`du-orb-art ${orbColor}`} /></div>
+                    </div>
+                  )
+                })}
+              </div>
             )}
+            <div className="du-choose-row">
+              <div className="du-choose-label">{answeredIndex !== null ? 'SPELL CAST' : 'CHOOSE YOUR ANSWER'}</div>
+              <div className="du-timer-wrap">
+                <div className="du-timer-line" />
+                <div className="du-timer">{qIndex + 1}</div>
+                <div className="du-timer-line" />
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: Tower progress + Player */}
+          <div className="du-right-col">
+            <div className="du-tower-panel">
+              <div className="du-panel-title">{currentTower?.name.toUpperCase() ?? 'TOWER'}</div>
+              <div className="du-tower-progress">
+                {currentTower?.professors.filter(p => defeatedProfessors.has(p.key)).length ?? 0} / {currentTower?.professors.length ?? 0} DEFEATED
+              </div>
+              <div className="du-tower-avatars">
+                {currentTower?.professors.map((prof) => {
+                  const isDefeated = defeatedProfessors.has(prof.key)
+                  const isCurrent = prof.key === currentProf?.key
+                  return (
+                    <div key={prof.key} className={`du-avatar${isCurrent ? ' current' : isDefeated ? ' defeated' : ' locked'}`}>
+                      {isCurrent ? '⚔️' : isDefeated ? '✓' : '🔒'}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            <div className="du-player-frame">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="du-player-img" src="/assets/player_apprentice_nobg.png" alt="Apprentice"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            </div>
+            <div className="du-bottom-panel">
+              <div className="du-panel-title">YOUR SPELLS</div>
+              <div className="du-orbs-row">
+                {(() => {
+                  const collected = currentTower?.professors.filter(p => defeatedProfessors.has(p.key)) ?? []
+                  if (collected.length === 0) return (
+                    <div className="du-orb">
+                      <div className="du-orb-gem purple" style={{ opacity: .4 }} />
+                      <div className="du-orb-name" style={{ opacity: .5 }}>NONE YET</div>
+                    </div>
+                  )
+                  return collected.slice(0, 3).map((prof, i) => (
+                    <div key={prof.key} className="du-orb">
+                      <div className={`du-orb-gem ${['blue', 'red', 'gold'][i % 3]}`} />
+                      <div className="du-orb-name">{(SPELL_NAMES[prof.key] ?? '').split(' ').slice(0, 2).join(' ').toUpperCase()}</div>
+                    </div>
+                  ))
+                })()}
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Feedback toast */}
         {lastResult && (
           <div className={`duel-feedback visible ${lastResult}`}>
-            {lastResult === 'correct'
-              ? `✓ Correct! +${lastSpGained} SP`
-              : `✗ Wrong! −1 Heart`}
+            {lastResult === 'correct' ? `✓ Correct! +${lastSpGained} SP` : `✗ Wrong! −1 Heart`}
           </div>
         )}
 
@@ -971,26 +1069,6 @@ export default function Home() {
             💡 Lose all 5 hearts? Spend 500 SP to refill and keep going.
           </div>
         )}
-
-        {/* Answer buttons */}
-        {currentQ && !duelLoading && (
-          <div className="duel-answers">
-            {currentQ.displayOptions.map((opt, i) => {
-              let cls = 'duel-ans'
-              if (answeredIndex !== null) {
-                if (i === answeredIndex) cls += opt.isCorrect ? ' correct' : ' wrong'
-                else if (opt.isCorrect) cls += ' reveal-correct'
-                else cls += ' answered'
-              }
-              return (
-                <div key={i} className={cls} onClick={() => handleAnswer(i)}>
-                  <div className="duel-ans-letter">{LETTERS[i]}</div>
-                  <div className="duel-ans-text">{opt.text}</div>
-                </div>
-              )
-            })}
-          </div>
-        )}
       </div>
 
       {/* ══════════════════════════════════
@@ -998,56 +1076,69 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-spellwin" className={`screen${screen === 'spellwin' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Game_Background.png" alt="" />
+        <img className="sw-bg" src="/assets/Landing_Page_Background_1774611504383.png" alt="" />
+        <div className="sw-overlay" />
+        <div className="sw-layout">
 
-        {/* Lorethorn header */}
-        <div className="spellwin-header">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="spellwin-crest" src="/assets/Lorethron_crest.png" alt="" />
-          <span className="spellwin-header-title">Lorethorn</span>
-        </div>
-
-        {/* Professor portrait — left */}
-        <div className="spellwin-prof-panel">
-          <div className="spellwin-defeated-label">DEFEATED:</div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className="spellwin-prof-portrait"
-            src={`/assets/professors/${wonProfKey}.jpg`}
-            alt=""
-            onError={(e) => { (e.target as HTMLImageElement).src = '/assets/professor_placeholder.png' }}
-          />
-          <div className="spellwin-prof-name-label">
-            {Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.name.toUpperCase() ?? wonProfKey.toUpperCase()}
-          </div>
-        </div>
-
-        {/* Playbook progress — top right */}
-        <div className="spellwin-pb-badge">
-          <div className="spellwin-pb-label">PLAYBOOK PROGRESS</div>
-          <div className="spellwin-pb-count">{defeatedProfessors.size} / 19 SPELLS</div>
-          <button className="spellwin-pb-btn" onClick={() => openPlaybook('spellwin')}>ADD TO PLAYBOOK</button>
-        </div>
-
-        {/* Main content */}
-        <div className="spellwin-main">
-          <div className="spellwin-unlocked">✦ SPELL UNLOCKED ✦</div>
-
-          <div className="spellwin-scroll-glow">
-            <div className="spellwin-scroll-inner">
-              <div className="spellwin-scroll-emoji">{SPELL_EMOJIS[wonProfKey] ?? '✦'}</div>
-              <div className="spellwin-scroll-name">{wonSpell}</div>
+          {/* LEFT scroll: Defeated Professor */}
+          <div className="sw-side">
+            <div className="sw-card-tag">DEFEATED</div>
+            <div className="sw-prof-icon">{SPELL_EMOJIS[wonProfKey] ?? '🧙'}</div>
+            <div className="sw-prof-name">
+              {Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.name.toUpperCase() ?? wonProfKey.toUpperCase()}
+            </div>
+            <div className="sw-prof-title">
+              {Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.title ?? ''}
+            </div>
+            <div style={{ borderTop: '1px solid rgba(160,120,50,.35)', width: '100%', margin: '4px 0' }} />
+            <div className="sw-xp">+{lastSpGained > 0 ? lastSpGained : 100} SP</div>
+            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 9, color: 'rgba(180,150,90,.7)', fontStyle: 'italic', textAlign: 'center' }}>
+              Spell added to your Playbook
             </div>
           </div>
 
-          <div className="spellwin-spell-title">SPELL: {wonSpell.toUpperCase()} ✦</div>
-          <div className="spellwin-quote">
-            &ldquo;{PROFESSOR_WIN_LINES[wonProfKey] ?? ''}&rdquo;
+          {/* CENTER: Spell unlock */}
+          <div className="sw-center">
+            <div className="sw-header">SPELL UNLOCKED</div>
+            <div className="sw-glow">
+              <div className="sw-scroll-circle">
+                <div className="sw-spell-icon">{SPELL_EMOJIS[wonProfKey] ?? '✦'}</div>
+                <div className="sw-spell-name">{wonSpell}</div>
+                <div className="sw-spell-sub">{Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.title ?? ''}</div>
+              </div>
+            </div>
+            <div className="sw-quote-row">
+              <div className="sw-quote">&ldquo;{PROFESSOR_WIN_LINES[wonProfKey] ?? ''}&rdquo;</div>
+              <div className="sw-by">— {Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.name ?? ''}</div>
+            </div>
           </div>
 
-          <div className="spellwin-actions">
-            <div className="spellwin-sp-pill">+{sp.toLocaleString()} SP</div>
-            <button className="spellwin-continue-btn" onClick={advanceAfterSpellWin}>
+          {/* RIGHT scroll: Playbook Progress */}
+          <div className="sw-side">
+            <div className="sw-card-tag">PLAYBOOK PROGRESS</div>
+            <div className="sw-pb-count">{defeatedProfessors.size} / 19</div>
+            <div className="sw-pb-sub">Spells Collected</div>
+            <div style={{ borderTop: '1px solid rgba(160,120,50,.35)', width: '100%', margin: '4px 0' }} />
+            <div className="sw-towers-wrap">
+              {Object.entries(TOWERS).map(([key, tower]) => {
+                const count = tower.professors.filter(p => defeatedProfessors.has(p.key)).length
+                return (
+                  <div key={key} className="sw-tower-row">
+                    <span className="sw-tower-name">{tower.name.toUpperCase()}</span>
+                    <span className="sw-tower-count">{count} / {tower.professors.length}</span>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 9, color: 'rgba(180,150,90,.7)', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>
+              19 total spells (1 per professor)
+            </div>
+          </div>
+
+          {/* FOOTER: buttons */}
+          <div className="sw-footer">
+            <div className="sw-btn-sp">+ {sp.toLocaleString()} SP</div>
+            <button className="sw-btn-cont" onClick={advanceAfterSpellWin}>
               {wonProfIsBoss ? 'TOWER CLEARED — ONWARD ✦' : 'CONTINUE DUEL →'}
             </button>
           </div>
