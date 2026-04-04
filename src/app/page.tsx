@@ -1569,12 +1569,16 @@ export default function Home() {
             onClick={async () => {
               setFinalBossActive(true)
               setLennyHearts(3)
+              setDuelPhase('active')
               setDuelQs([])
               setQIndex(0)
               setAnsweredIndex(null)
               setLastResult(null)
               setLastSpGained(0)
+              setDuelTotalSp(0)
+              setCorrectInDuel(0)
               setDuelLoading(true)
+              setDuelError(false)
               setScreen('duel')
               try {
                 const res = await fetch('/api/questions?professor=lenny_oracle')
@@ -1676,12 +1680,16 @@ export default function Home() {
             className="ar-cta"
             onClick={async () => {
               setLennyHearts(3)
+              setDuelPhase('active')
               setDuelQs([])
               setQIndex(0)
               setAnsweredIndex(null)
               setLastResult(null)
               setLastSpGained(0)
+              setDuelTotalSp(0)
+              setCorrectInDuel(0)
               setDuelLoading(true)
+              setDuelError(false)
               setScreen('duel')
               try {
                 const res = await fetch('/api/questions?professor=lenny_oracle')
@@ -1742,6 +1750,7 @@ export default function Home() {
           <div className="go-actions">
             <button className="gw-btn-secondary" onClick={handleDownloadGameOver}>DOWNLOAD YOUR PROGRESS</button>
             <button className="gw-btn-text" onClick={() => {
+              setFinalBossActive(false)
               setHearts(5)
               setSp(0)
               setDefeatedProfessors(new Set())
