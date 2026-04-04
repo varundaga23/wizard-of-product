@@ -1150,9 +1150,9 @@ export default function Home() {
                     <div
                       key={prof.key}
                       className={`du-avatar${isCurrent ? ' current' : isDefeated ? ' defeated' : isLocked ? ' locked' : ' available'}`}
-                      onClick={!isLocked && !isDefeated && duelPhase === 'selecting' ? () => launchDuel(activeTowerKey, prof.key) : undefined}
-                      style={{ cursor: !isLocked && !isDefeated && duelPhase === 'selecting' ? 'pointer' : 'default' }}
-                      title={isLocked ? `Defeat ${3 - panelDefeatedNonBoss} more to unlock boss` : isDefeated ? prof.name : duelPhase === 'active' && !isDefeated && !isLocked ? 'Finish current duel first' : prof.name}
+                      onClick={!isLocked && !isDefeated ? () => launchDuel(activeTowerKey, prof.key) : undefined}
+                      style={{ cursor: !isLocked && !isDefeated ? 'pointer' : 'default' }}
+                      title={isLocked ? `Defeat ${3 - panelDefeatedNonBoss} more to unlock boss` : prof.name}
                     >
                       {isCurrent ? '⚔️' : isDefeated ? '✓' : isLocked ? '🔒' : (SPELL_EMOJIS[prof.key] ?? '🧙')}
                     </div>
