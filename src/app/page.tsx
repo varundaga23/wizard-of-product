@@ -313,10 +313,6 @@ function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5)
 }
 
-function toTitleCase(str: string): string {
-  return str.replace(/\b\w/g, c => c.toUpperCase())
-}
-
 function getRank(sp: number): string {
   return [...RANKS].reverse().find(r => sp >= r.min)?.label ?? 'Muggle'
 }
@@ -910,7 +906,7 @@ export default function Home() {
                   <div className="oracle-opts">
                     {oracleQ.options.map((opt, i) => {
                       const [before, after] = opt.text.split(' — ')
-                      const title = toTitleCase(before.trim().split(/\s+/).slice(0, 5).join(' ')).replace(/[.,;]$/, '')
+                      const title = before.trim().split(/\s+/).slice(0, 5).join(' ').replace(/[.,;]$/, '')
                       const desc = after ? after.trim() : opt.text
                       return (
                         <div
