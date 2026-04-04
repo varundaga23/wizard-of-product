@@ -13,9 +13,6 @@ type BlessingState = {
   q: DuelQuestion | null
   answeredIndex: number | null
   isCorrect: boolean | null
-  tIdx: number
-  pIdx: number
-  tOrd: TowerKey[]
 }
 type ArchetypeKey = 'V' | 'M' | 'B'
 type TowerKey = 'pm' | 'strategy' | 'ai'
@@ -89,6 +86,28 @@ const TOWERS: Record<TowerKey, { name: string; professors: ProfessorDef[] }> = {
       { key: 'fei_fei_li',  name: 'Dr. Fei-Fei Li',title: 'The Godmother of Intelligence', tower: 'ai', isBoss: true },
     ],
   },
+}
+
+const SPELL_SUBTITLES: Record<string, string> = {
+  gibson_biddle:         'Delight, Hard-to-copy, Margin-enhancing',
+  julie_zhuo:            'Outcomes, Growth, People',
+  teresa_torres:         'Opportunities, Solutions, Assumptions',
+  shreyas_doshi:         'Upstream, Northstar, Execution',
+  jules_walter:          'Vision, Coalition, Execution',
+  april_dunford:         'Market, Category, Positioning',
+  marty_cagan:           'Vision, Mission, Empowerment',
+  chandra_janakiraman:   'Diagnose, Design, Execute',
+  roger_martin:          'Choice, Logic, Wager',
+  christopher_lochhead:  'Create, Market, Dominate',
+  marc_andreessen:       'Contrarian, Bold, Prescient',
+  hamilton_helmer:       'Power, Moat, Dominance',
+  tal_raviv:             'AI, Automation, Leverage',
+  aman_khan:             'Evals, Metrics, Rigor',
+  claire_vo:             'Agents, Rethink, AI-Native',
+  nick_turley:           'Trust, Safety, Scale',
+  hamel_husain:          'Measure, Improve, Ship',
+  chip_huyen:            'Systems, Trade-offs, Reliability',
+  fei_fei_li:            'Vision, Cognition, Intelligence',
 }
 
 const SPELL_NAMES: Record<string, string> = {
@@ -231,10 +250,10 @@ const ARCHETYPES: Record<ArchetypeKey, { name: string; desc: string; tagline: st
 }
 
 const LANDING_PROFESSORS = [
-  { name: 'Teresa Torres', title: 'Product Discovery Master' },
-  { name: 'Shreyas Doshi', title: 'Strategy & Execution' },
-  { name: 'April Dunford', title: 'Positioning Powerhouse' },
-  { name: 'Marc Andreessen', title: 'Software Eats the World' },
+  { name: 'Gibson Biddle',  title: 'Former VP Product, Netflix',  img: '/assets/Gibson_Biddle_nobg.avif' },
+  { name: 'Shreyas Doshi',  title: 'Strategy & Execution',        img: null },
+  { name: 'April Dunford',  title: 'Positioning Powerhouse',      img: null },
+  { name: 'Marc Andreessen',title: 'Software Eats the World',     img: null },
 ]
 
 
@@ -328,10 +347,10 @@ export default function Home() {
   const [sp, setSp] = useState(0)
   const [defeatedProfessors, setDefeatedProfessors] = useState<Set<string>>(new Set())
 
-  // Tower progression
-  const [towerOrder, setTowerOrder] = useState<TowerKey[]>(['pm', 'strategy', 'ai'])
-  const [towerIndex, setTowerIndex] = useState(0)
-  const [profIndex, setProfIndex] = useState(0)
+  // Open progression state
+  const [activeTowerKey, setActiveTowerKey] = useState<TowerKey>('pm')  // controls right panel tower
+  const [activeProfKey, setActiveProfKey] = useState<string>('gibson_biddle') // current/last duel prof
+  const [duelPhase, setDuelPhase] = useState<'selecting' | 'active'>('selecting') // selecting = choose next, active = mid-duel
 
   // Duel state
   const [duelQs, setDuelQs] = useState<DuelQuestion[]>([])
@@ -339,18 +358,18 @@ export default function Home() {
   const [duelError, setDuelError] = useState(false)
   const [qIndex, setQIndex] = useState(0)
   const [answeredIndex, setAnsweredIndex] = useState<number | null>(null)
-  const [lastResult, setLastResult] = useState<'correct' | 'wrong' | null>(null)
+  const [lastResult, setLastResult] = useState<'correct' | 'wrong' | 'timeout' | null>(null)
   const [lastSpGained, setLastSpGained] = useState(0)
+  const [timeLeft, setTimeLeft] = useState<number>(15)
 
   // Spell win state
   const [wonSpell, setWonSpell] = useState('')
   const [wonProfKey, setWonProfKey] = useState('')
   const [wonProfIsBoss, setWonProfIsBoss] = useState(false)
-  const [wonTowerIndex, setWonTowerIndex] = useState(0)
-  const [wonProfIndex, setWonProfIndex] = useState(0)
 
   // Playbook state — tracks which screen to return to
   const [playbookReturn, setPlaybookReturn] = useState<Screen>('duel')
+  const [playbookModalOpen, setPlaybookModalOpen] = useState(false)
 
   // Summons letter state
   const [summonsVariant, setSummonsVariant] = useState<SummonsVariant>('easter_egg')
@@ -388,6 +407,7 @@ export default function Home() {
   const gwCardRef = useRef<HTMLDivElement>(null)
   const goCardRef = useRef<HTMLDivElement>(null)
   const pbCardRef = useRef<HTMLDivElement>(null)
+  const timeoutCallbackRef = useRef<() => void>(() => {})
   const [copyLabel, setCopyLabel] = useState('✦ SHARE YOUR JOURNEY ✦')
   const [pbCopyLabel, setPbCopyLabel] = useState('COPY LINK')
 
@@ -461,9 +481,13 @@ export default function Home() {
   const arc = ARCHETYPES[archetype]
   const rank = getRank(sp)
   const currentQ = duelQs[qIndex]
-  const currentTowerKey = towerOrder[towerIndex]
-  const currentTower = currentTowerKey ? TOWERS[currentTowerKey] : null
-  const currentProf: ProfessorDef | null = finalBossActive ? LENNY_PROF : (currentTower?.professors[profIndex] ?? null)
+  const allProfessors = Object.values(TOWERS).flatMap(t => t.professors)
+  const currentProf: ProfessorDef | null = finalBossActive ? LENNY_PROF : (allProfessors.find(p => p.key === activeProfKey) ?? null)
+  const currentTower = (finalBossActive || !currentProf) ? null : TOWERS[currentProf.tower]
+  const panelTower = TOWERS[activeTowerKey]
+  const panelNonBossProfs = panelTower?.professors.filter(p => !p.isBoss) ?? []
+  const panelDefeatedNonBoss = panelNonBossProfs.filter(p => defeatedProfessors.has(p.key)).length
+  const panelBossUnlocked = panelDefeatedNonBoss >= 3
 
   // ── Oracle handlers ───────────────────────────────────────────────────────────
   function beginOracle() {
@@ -477,22 +501,18 @@ export default function Home() {
   function submitOracleAnswer() {
     if (!oracleSelected) return
     posthog.capture('archetype_assigned', { archetype: oracleSelected })
-    const order = TOWER_ORDER_BY_ARCHETYPE[oracleSelected]
     setArchetype(oracleSelected)
-    setTowerOrder(order)
-    setTowerIndex(0)
-    setProfIndex(0)
     setScreen('archetype')
   }
 
   // ── Duel handlers ─────────────────────────────────────────────────────────────
-  async function launchDuel(tIdx: number, pIdx: number, tOrd: TowerKey[]) {
-    const towerKey = tOrd[tIdx]
-    const prof = TOWERS[towerKey]?.professors[pIdx]
+  async function launchDuel(towerKey: TowerKey, profKey: string) {
+    const prof = TOWERS[towerKey]?.professors.find(p => p.key === profKey)
     if (!prof) return
 
-    setTowerIndex(tIdx)
-    setProfIndex(pIdx)
+    setActiveTowerKey(towerKey)
+    setActiveProfKey(profKey)
+    setDuelPhase('active')
     setDuelQs([])
     setQIndex(0)
     setAnsweredIndex(null)
@@ -501,7 +521,6 @@ export default function Home() {
     setDuelLoading(true)
     setDuelError(false)
     setScreen('duel')
-    if (tOrd !== towerOrder) setTowerOrder(tOrd)
 
     try {
       const res = await fetch(`/api/questions?professor=${prof.key}`)
@@ -518,8 +537,11 @@ export default function Home() {
   }
 
   function startFirstDuel() {
-    const order = TOWER_ORDER_BY_ARCHETYPE[archetype]
-    launchDuel(0, 0, order)
+    const primaryTowerKey = TOWER_ORDER_BY_ARCHETYPE[archetype][0]
+    const tower = TOWERS[primaryTowerKey]
+    const firstProf = tower.professors.find(p => !p.isBoss)!
+    setActiveTowerKey(primaryTowerKey)
+    launchDuel(primaryTowerKey, firstProf.key)
   }
 
   function handleAnswer(optionIndex: number) {
@@ -567,9 +589,6 @@ export default function Home() {
     const nextQIndex = qIndex + 1
     const profKey = currentProf.key
     const isBoss = currentProf.isBoss ?? false
-    const snapTowerIndex = towerIndex
-    const snapProfIndex = profIndex
-    const snapTowerOrder = towerOrder
 
     setTimeout(() => {
       if (finalBossActive && newLennyHearts <= 0) {
@@ -601,22 +620,21 @@ export default function Home() {
       setWonSpell(SPELL_NAMES[profKey] ?? 'Unknown Spell')
       setWonProfKey(profKey)
       setWonProfIsBoss(isBoss)
-      setWonTowerIndex(snapTowerIndex)
-      setWonProfIndex(snapProfIndex)
       setScreen('spellwin')
     }, 1500)
   }
 
   // ── Lenny's Blessing ──────────────────────────────────────────────────────────
-  function triggerBlessing(tIdx: number, pIdx: number, tOrd: TowerKey[]) {
-    setBlessing({ phase: 'loading', q: null, answeredIndex: null, isCorrect: null, tIdx, pIdx, tOrd })
+  function triggerBlessing() {
+    setBlessing({ phase: 'loading', q: null, answeredIndex: null, isCorrect: null })
     fetch('/api/questions?professor=lenny_oracle')
       .then(r => r.json())
       .then((data: DuelQuestion[]) => {
         const qs = Array.isArray(data) ? data : []
         if (qs.length === 0) {
           setBlessing(null)
-          launchDuel(tIdx, pIdx, tOrd)
+          setDuelPhase('selecting')
+          setScreen('duel')
           return
         }
         const q = { ...qs[0], displayOptions: buildDisplayOptions(qs[0]) }
@@ -624,14 +642,14 @@ export default function Home() {
       })
       .catch(() => {
         setBlessing(null)
-        launchDuel(tIdx, pIdx, tOrd)
+        setDuelPhase('selecting')
+        setScreen('duel')
       })
   }
 
   function handleBlessingAnswer(optionIndex: number) {
     if (!blessing || blessing.answeredIndex !== null || !blessing.q) return
     const isCorrect = blessing.q.displayOptions[optionIndex].isCorrect
-    const { tIdx, pIdx, tOrd } = blessing
     setBlessing(prev => prev ? { ...prev, phase: 'result', answeredIndex: optionIndex, isCorrect } : null)
     if (isCorrect) {
       setSp(prev => prev + 500)
@@ -641,48 +659,34 @@ export default function Home() {
     }
     setTimeout(() => {
       setBlessing(null)
-      launchDuel(tIdx, pIdx, tOrd)
+      setDuelPhase('selecting')
+      setScreen('duel')
     }, isCorrect ? 2500 : 1200)
   }
 
   // ── Tower progression ─────────────────────────────────────────────────────────
   function advanceAfterSpellWin() {
-    advanceFromState(wonProfIsBoss, wonTowerIndex, wonProfIndex, towerOrder)
-  }
+    const wonProf = allProfessors.find(p => p.key === wonProfKey)
+    const towerKey = wonProf?.tower ?? activeTowerKey
 
-  function advanceFromState(
-    isBoss: boolean,
-    tIdx: number = towerIndex,
-    pIdx: number = profIndex,
-    tOrd: TowerKey[] = towerOrder,
-  ) {
-    const towerKey = tOrd[tIdx]
-    const tower = TOWERS[towerKey]
-
-    if (isBoss) {
-      const nextTIdx = tIdx + 1
-      if (nextTIdx >= tOrd.length) {
-        // All 3 towers cleared — show pre-final Summons Letter → Final Revelation
+    if (wonProfIsBoss) {
+      // Check if all 3 bosses are now defeated (defeatedProfessors already has wonProfKey)
+      const allBossKeys = Object.values(TOWERS).flatMap(t => t.professors.filter(p => p.isBoss).map(p => p.key))
+      const allBossesDefeated = allBossKeys.every(k => defeatedProfessors.has(k))
+      if (allBossesDefeated) {
         openSummonsPrefinal()
         return
       }
-      // Show tower cleared, then auto-advance to first professor of next tower
+      // Just this tower's boss — show tower cleared (user clicks CTA to continue)
       posthog.capture('tower_cleared', { tower: towerKey, sp_total: sp })
-      setTowerIndex(nextTIdx)
-      setProfIndex(0)
       setScreen('tower_cleared')
-      setTimeout(() => launchDuel(nextTIdx, 0, tOrd), 2500)
     } else {
-      const nextPIdx = pIdx + 1
-      if (nextPIdx < tower.professors.length) {
-        if (Math.random() < 0.1) {
-          triggerBlessing(tIdx, nextPIdx, tOrd)
-        } else {
-          launchDuel(tIdx, nextPIdx, tOrd)
-        }
+      // Non-boss defeated — maybe Lenny's Blessing, then return to duel in selecting mode
+      if (Math.random() < 0.1) {
+        triggerBlessing()
       } else {
-        // Safety fallback — treat last professor as boss
-        launchDuel(tIdx, pIdx, tOrd)
+        setDuelPhase('selecting')
+        setScreen('duel')
       }
     }
   }
@@ -720,6 +724,72 @@ export default function Home() {
     setScreen(playbookReturn)
   }
 
+  // ── Timer effects ─────────────────────────────────────────────────────────────
+  // Reset to 15s on each new question
+  useEffect(() => { setTimeLeft(15) }, [qIndex])
+
+  // Countdown tick + fire timeout at 0
+  useEffect(() => {
+    if (duelPhase !== 'active' || answeredIndex !== null || duelLoading || !currentQ) return
+    if (timeLeft === 0) { timeoutCallbackRef.current(); return }
+    const t = setTimeout(() => setTimeLeft(p => p - 1), 1000)
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, duelPhase, answeredIndex, duelLoading, currentQ?.id])
+
+  // ── Timeout callback (updated every render — always has fresh state) ─────────
+  timeoutCallbackRef.current = () => {
+    if (answeredIndex !== null || !currentQ || !currentProf) return
+    setAnsweredIndex(-1)
+    setLastResult('timeout')
+
+    let newH = hearts
+    let newLH = lennyHearts
+    if (finalBossActive) {
+      newLH = lennyHearts - 1
+      setLennyHearts(newLH)
+    } else {
+      newH = hearts - 1
+      setHearts(newH)
+      if (!hasShownHeartHint) {
+        setHasShownHeartHint(true)
+        setHeartHintVisible(true)
+        setTimeout(() => setHeartHintVisible(false), 4000)
+      }
+    }
+    posthog.capture('answer_timeout', { professor: currentProf.key, hearts_remaining: finalBossActive ? newLH : newH })
+
+    const nextQIdx = qIndex + 1
+    const profKey = currentProf.key
+    const isBoss = currentProf.isBoss ?? false
+    const curSp = sp
+    const qsLen = duelQs.length
+
+    setTimeout(() => {
+      if (finalBossActive && newLH <= 0) { setScreen('lenny_loss'); return }
+      if (!finalBossActive && newH <= 0) {
+        posthog.capture('game_over', { professor: profKey, sp_total: curSp, spells_collected: defeatedProfessors.size })
+        setGameOverProfKey(profKey)
+        setScreen('game_over')
+        return
+      }
+      if (nextQIdx < qsLen) {
+        setQIndex(nextQIdx)
+        setAnsweredIndex(null)
+        setLastResult(null)
+        setLastSpGained(0)
+        return
+      }
+      if (finalBossActive) { posthog.capture('grand_wizard', { archetype, sp_total: curSp }); setScreen('grand'); return }
+      posthog.capture('spell_won', { professor: profKey, is_boss: isBoss, sp_total: curSp })
+      setDefeatedProfessors(prev => new Set([...prev, profKey]))
+      setWonSpell(SPELL_NAMES[profKey] ?? 'Unknown Spell')
+      setWonProfKey(profKey)
+      setWonProfIsBoss(isBoss)
+      setScreen('spellwin')
+    }, 1500)
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className="game-container">
@@ -729,7 +799,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-landing" className={`screen${screen === 'landing' || screen === 'summons' ? ' active' : ''}${screen === 'summons' ? ' landing-under' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Landing_Page_Background.png" alt="" />
+        <img className="bg" src="/assets/Landing_Page_Background.avif" alt="" />
         <div style={{ position:'absolute', inset:0, zIndex:1, pointerEvents:'none',
           background:'radial-gradient(ellipse 80% 75% at 50% 50%, transparent 40%, rgba(0,0,0,.22) 100%)' }} />
 
@@ -745,7 +815,7 @@ export default function Home() {
           {LANDING_PROFESSORS.map((p) => (
             <div key={p.name} className="prof-card">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="prof-card-img" src="/assets/professor_placeholder.png" alt={p.name} />
+              <img className="prof-card-img" src={p.img ?? '/assets/professor_placeholder.png'} alt={p.name} />
               <div className="prof-card-overlay">
                 <div className="pname">{p.name.toUpperCase()}</div>
                 <div className="ptitle">{p.title.toUpperCase()}</div>
@@ -770,12 +840,14 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="scroll-overlay">
-          <div className="scroll-body">
-            <span className="scroll-text">Three Towers</span>
-            <span className="scroll-text">Nineteen Professors</span>
-            <div className="scroll-divider"><div className="scroll-divider-gem" /></div>
-            <span className="scroll-text lower">One Keeper.</span>
+        <div className="scroll-shadow-wrap">
+          <div className="scroll-overlay">
+            <div className="scroll-body">
+              <div className="scroll-text" style={{ color: '#1a0800', WebkitTextFillColor: '#1a0800' }}>For Every<br />Product Mage.</div>
+              <div className="scroll-text" style={{ color: '#1a0800', WebkitTextFillColor: '#1a0800' }}>Learn The Lore.<br />Claim Your Title.</div>
+              <div className="scroll-divider"><div className="scroll-divider-gem" /></div>
+              <div className="scroll-text lower" style={{ color: '#1a0800', WebkitTextFillColor: '#1a0800' }}>Duel Masters.<br />Build Your Playbook.<br />Rule The Product Realm.</div>
+            </div>
           </div>
         </div>
 
@@ -791,7 +863,7 @@ export default function Home() {
           />
           <div className="orb-assembly" onClick={beginOracle}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="orb-btn-img" src="/assets/orb_button_transparent.png" alt="Begin" />
+            <img className="orb-btn-img" src="/assets/orb_button_transparent.avif" alt="Begin" />
           </div>
         </div>
 
@@ -810,14 +882,13 @@ export default function Home() {
       <div id="s-oracle" className={`screen${screen === 'oracle' ? ' active' : ''}`}>
         <div className="oracle-bg" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="oracle-hat" src="/assets/sorting_hat_transparent.png" alt="" />
+        <img className="oracle-hat" src="/assets/sorting_hat_transparent.avif" alt="" />
         <div className="oracle-title-block">
           <div className="oracle-title-main">The Codex Oracle</div>
         </div>
         <div className="oracle-wrap">
           <div className="oracle-qcard-outer">
             <div className="oracle-qcard">
-              <div className="oracle-eyebrow"><span>A CHOICE OF PATH</span></div>
               {oracleQ && (
                 <>
                   <div className="oracle-q-box">
@@ -825,22 +896,23 @@ export default function Home() {
                   </div>
                   <div className="oracle-eyebrow"><span>CHOOSE YOUR PATH</span></div>
                   <div className="oracle-opts">
-                    {oracleQ.options.map((opt, i) => (
-                      <div
-                        key={opt.archetype}
-                        className={`oracle-opt${oracleSelected === opt.archetype ? ' selected' : ''}`}
-                        onClick={() => setOracleSelected(opt.archetype)}
-                      >
-                        <div className="oracle-opt-letter">
-                          {['A', 'B', 'C'][i]}
+                    {oracleQ.options.map((opt, i) => {
+                      const [before, after] = opt.text.split(' — ')
+                      const title = before.trim().split(/\s+/).slice(0, 5).join(' ').toUpperCase().replace(/[.,;]$/, '')
+                      const desc = after ? after.trim() : opt.text
+                      return (
+                        <div
+                          key={opt.archetype}
+                          className={`oracle-opt${oracleSelected === opt.archetype ? ' selected' : ''}`}
+                          onClick={() => setOracleSelected(opt.archetype)}
+                        >
+                          <div className="oracle-opt-letter">{['A', 'B', 'C'][i]}</div>
+                          <div className="oracle-opt-title">{title}</div>
+                          <div className="oracle-opt-dot">◆</div>
+                          <div className="oracle-opt-desc">{desc}</div>
                         </div>
-                        <div className="oracle-opt-title">
-                          {opt.text.split('—')[0].trim().split(/\s+/).slice(0, 4).join(' ').toUpperCase().replace(/[.,;]$/, '')}
-                        </div>
-                        <div className="oracle-opt-dot">◆</div>
-                        <div className="oracle-opt-desc">{opt.text}</div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </>
               )}
@@ -860,7 +932,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-archetype" className={`screen${screen === 'archetype' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Landing_Page_Background_1774611504383.png" alt="" />
+        <img className="bg" loading="lazy" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
         <div className="ar-swirl" />
         <div className="ar-col">
           <div className="ar-scroll">
@@ -884,7 +956,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-duel" className={`screen${screen === 'duel' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Landing_Page_Background_1774611504383.png" alt="" />
+        <img className="bg" loading="lazy" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
         <div className="du-overlay" />
 
         {/* Top status bar */}
@@ -896,51 +968,85 @@ export default function Home() {
               <div className="du-hud-label">PROFESSOR</div>
               <div className="du-hud-name">{currentProf?.name.toUpperCase()}</div>
               <div className="du-hud-sub">{currentProf?.title}</div>
-              <div className="du-hp-wrap">
-                <div className="du-hp-track"><div className="du-hp-fill red" style={{ width: '100%' }} /></div>
-                <span className="du-hp-label">{currentProf?.isBoss ? 'BOSS' : 'PROFESSOR'}</span>
-              </div>
+              {(() => {
+                const profHp = duelPhase === 'active' && duelQs.length > 0
+                  ? Math.max(10, Math.round((1 - qIndex / duelQs.length) * 100))
+                  : 100
+                return (
+                  <div className="du-hp-wrap">
+                    <div className="du-hp-track"><div className="du-hp-fill red" style={{ width: `${profHp}%` }} /></div>
+                    <span className="du-hp-label">{profHp} / 100</span>
+                  </div>
+                )
+              })()}
             </div>
           </div>
           {/* Center title */}
           <div className="du-title-center">
             <div className="du-duel-title">DUEL OF KNOWLEDGE</div>
-            <div className="du-round-tag">QUESTION {qIndex + 1} OF {duelQs.length || 5}</div>
-            <button className="hud-playbook-btn" style={{ marginTop: 4, position: 'static', transform: 'none' }} onClick={() => openPlaybook('duel')}>
-              📖 Playbook
-            </button>
+            <div className="du-round-tag">
+              {duelPhase === 'selecting' ? 'SELECT YOUR OPPONENT' : `QUESTION ${qIndex + 1} OF ${duelQs.length || 5}`}
+            </div>
           </div>
           {/* Player side */}
           <div className="du-hud-side du-hud-right">
             <div className="du-hud-info" style={{ textAlign: 'right' }}>
               <div className="du-hud-label">YOU</div>
               <div className="du-hud-name">{rank.toUpperCase()}</div>
-              <div className="du-hud-sub">{sp.toLocaleString()} SP · {currentTower?.name}</div>
-              <div className="du-hp-wrap" style={{ justifyContent: 'flex-end' }}>
-                <span className="du-hp-label">
-                  {Array.from({ length: finalBossActive ? 3 : 5 }).map((_, i) => (
-                    <span key={i} style={{ color: i < (finalBossActive ? lennyHearts : hearts) ? '#e83030' : 'rgba(100,60,60,.4)' }}>♥</span>
-                  ))}
-                </span>
-              </div>
+              <div className="du-hud-sub">{sp.toLocaleString()} SP · {currentTower?.name ?? 'Final Duel'}</div>
+              {(() => {
+                const maxH = finalBossActive ? 3 : 5
+                const curH = finalBossActive ? lennyHearts : hearts
+                const playerHp = Math.round((curH / maxH) * 100)
+                return (
+                  <div className="du-hp-wrap" style={{ justifyContent: 'flex-end' }}>
+                    <span className="du-hp-label">
+                      {Array.from({ length: maxH }).map((_, i) => (
+                        <span key={i} style={{ color: i < curH ? '#e83030' : 'rgba(100,60,60,.4)' }}>♥</span>
+                      ))}
+                    </span>
+                    <div className="du-hp-track"><div className="du-hp-fill blue" style={{ width: `${playerHp}%` }} /></div>
+                  </div>
+                )
+              })()}
             </div>
-            <div className="du-crest blue">📜</div>
+            <div className="du-crest blue" onClick={() => setPlaybookModalOpen(true)} title="Open Playbook">📜</div>
           </div>
         </div>
 
         {/* Main 3-column layout */}
         <div className="du-main">
-          {/* LEFT: Professor figure */}
+          {/* LEFT: Switch towers + Professor figure + Possible Rewards */}
           <div className="du-left-col">
+            <div className="du-tower-panel">
+              <div className="du-panel-title">SWITCH TOWERS</div>
+              <div className="du-left-tower-btns">
+                {(['pm', 'strategy', 'ai'] as TowerKey[]).map(tk => (
+                  <button
+                    key={tk}
+                    className={`du-left-tower-btn${activeTowerKey === tk ? ' active' : ''}`}
+                    onClick={() => setActiveTowerKey(tk)}
+                  >
+                    {tk === 'pm' ? '🏛️ PM' : tk === 'strategy' ? '♟️ STRATEGY' : '🤖 AI'}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="du-prof-frame">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="du-prof-img"
-                src={`/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}.jpg`}
+                src={`/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}_nobg.avif`}
                 alt={currentProf?.name}
-                onError={(e) => { (e.target as HTMLImageElement).src = '/assets/professor_placeholder.png' }}
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement
+                  if (img.src.includes('_nobg.avif')) {
+                    img.src = `/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}.jpg`
+                  } else {
+                    img.src = '/assets/professor_placeholder.png'
+                  }
+                }}
               />
-              <div className="du-prof-name-bar"><span>{currentProf?.name.toUpperCase()}</span></div>
             </div>
             <div className="du-bottom-panel">
               <div className="du-panel-title">POSSIBLE REWARDS</div>
@@ -958,7 +1064,12 @@ export default function Home() {
           <div className="du-center-col">
             <div className="du-answer-hdr">ANSWER THE QUESTION</div>
             <div className="du-question-box">
-              {duelError ? (
+              {duelPhase === 'selecting' ? (
+                <div className="du-selecting">
+                  <div className="du-selecting-title">Choose Your Opponent</div>
+                  <div className="du-selecting-desc">Click a professor in the tower panel →<br />or switch towers using the tabs above.</div>
+                </div>
+              ) : duelError ? (
                 <div className="duel-q-loading" style={{ color: 'var(--red-wrong)' }}>
                   The archive is unreachable. Please check your connection and refresh.
                 </div>
@@ -976,7 +1087,7 @@ export default function Home() {
             <div className="du-category-tag">
               <span className="du-cat-label">{currentTower?.name.toUpperCase() ?? 'PRODUCT'}</span>
             </div>
-            {currentQ && !duelLoading && (
+            {currentQ && !duelLoading && duelPhase === 'active' && (
               <div className="du-ans-row">
                 {currentQ.displayOptions.map((opt, i) => {
                   let cls = 'du-ans-card'
@@ -1000,10 +1111,17 @@ export default function Home() {
               </div>
             )}
             <div className="du-choose-row">
-              <div className="du-choose-label">{answeredIndex !== null ? 'SPELL CAST' : 'CHOOSE YOUR ANSWER'}</div>
+              <div className="du-choose-label">
+                {duelPhase === 'selecting' ? 'AWAITING CHALLENGER'
+                  : answeredIndex === -1 ? 'TIME EXPIRED'
+                  : answeredIndex !== null ? 'SPELL CAST'
+                  : 'CHOOSE YOUR ANSWER'}
+              </div>
               <div className="du-timer-wrap">
                 <div className="du-timer-line" />
-                <div className="du-timer">{qIndex + 1}</div>
+                <div className={`du-timer${duelPhase === 'active' && answeredIndex === null && timeLeft <= 5 ? ' urgent' : ''}`}>
+                  {duelPhase === 'active' && answeredIndex === null ? timeLeft : qIndex + 1}
+                </div>
                 <div className="du-timer-line" />
               </div>
             </div>
@@ -1012,17 +1130,23 @@ export default function Home() {
           {/* RIGHT: Tower progress + Player */}
           <div className="du-right-col">
             <div className="du-tower-panel">
-              <div className="du-panel-title">{currentTower?.name.toUpperCase() ?? 'TOWER'}</div>
+              <div className="du-panel-title">{panelTower?.name.toUpperCase() ?? 'TOWER'}</div>
               <div className="du-tower-progress">
-                {currentTower?.professors.filter(p => defeatedProfessors.has(p.key)).length ?? 0} / {currentTower?.professors.length ?? 0} DEFEATED
+                {panelDefeatedNonBoss} / {(panelTower?.professors.length ?? 1) - 1} PROFESSORS DEFEATED
               </div>
               <div className="du-tower-avatars">
-                {currentTower?.professors.map((prof) => {
+                {panelTower?.professors.map((prof) => {
                   const isDefeated = defeatedProfessors.has(prof.key)
-                  const isCurrent = prof.key === currentProf?.key
+                  const isCurrent = prof.key === activeProfKey && duelPhase === 'active'
+                  const isLocked = prof.isBoss && !panelBossUnlocked && !isDefeated
                   return (
-                    <div key={prof.key} className={`du-avatar${isCurrent ? ' current' : isDefeated ? ' defeated' : ' locked'}`}>
-                      {isCurrent ? '⚔️' : isDefeated ? '✓' : '🔒'}
+                    <div
+                      key={prof.key}
+                      className={`du-avatar${isCurrent ? ' current' : isDefeated ? ' defeated' : isLocked ? ' locked' : ' available'}`}
+                      onClick={!isLocked ? () => launchDuel(activeTowerKey, prof.key) : undefined}
+                      title={isLocked ? `Defeat ${3 - panelDefeatedNonBoss} more to unlock boss` : prof.name}
+                    >
+                      {isCurrent ? '⚔️' : isDefeated ? '✓' : isLocked ? '🔒' : (SPELL_EMOJIS[prof.key] ?? '🧙')}
                     </div>
                   )
                 })}
@@ -1030,14 +1154,14 @@ export default function Home() {
             </div>
             <div className="du-player-frame">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="du-player-img" src="/assets/player_apprentice_nobg.png" alt="Apprentice"
+              <img className="du-player-img" src="/assets/player_apprentice_nobg.avif" alt="Apprentice"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             </div>
             <div className="du-bottom-panel">
               <div className="du-panel-title">YOUR SPELLS</div>
               <div className="du-orbs-row">
                 {(() => {
-                  const collected = currentTower?.professors.filter(p => defeatedProfessors.has(p.key)) ?? []
+                  const collected = panelTower?.professors.filter(p => defeatedProfessors.has(p.key)) ?? []
                   if (collected.length === 0) return (
                     <div className="du-orb">
                       <div className="du-orb-gem purple" style={{ opacity: .4 }} />
@@ -1058,8 +1182,10 @@ export default function Home() {
 
         {/* Feedback toast */}
         {lastResult && (
-          <div className={`duel-feedback visible ${lastResult}`}>
-            {lastResult === 'correct' ? `✓ Correct! +${lastSpGained} SP` : `✗ Wrong! −1 Heart`}
+          <div className={`duel-feedback visible ${lastResult === 'timeout' ? 'wrong' : lastResult}`}>
+            {lastResult === 'correct' ? `✓ Correct! +${lastSpGained} SP`
+              : lastResult === 'timeout' ? `⏱ Time's Up! −1 Heart`
+              : `✗ Wrong! −1 Heart`}
           </div>
         )}
 
@@ -1069,6 +1195,76 @@ export default function Home() {
             💡 Lose all 5 hearts? Spend 500 SP to refill and keep going.
           </div>
         )}
+
+        {/* Playbook modal overlay */}
+        {playbookModalOpen && (
+          <div className="pbm-wrap" onClick={() => setPlaybookModalOpen(false)}>
+            <div className="pbm-overlay" />
+            <div className="pbm-panel" onClick={e => e.stopPropagation()}>
+              <button className="pbm-close" onClick={() => setPlaybookModalOpen(false)}>✕</button>
+              <div className="pbm-inner">
+                <div className="pb-scroll-inner">
+                  <div className="pb-wrap">
+                    <div className="pb-header">
+                      <div className="pb-title">Spell Card Collection Playbook</div>
+                      <div className="pb-subtitle">✦ MAX SPELLS: 19 &nbsp;·&nbsp; 1 PER PROFESSOR ✦</div>
+                    </div>
+                    <div className="pb-towers">
+                      {(['pm', 'strategy', 'ai'] as TowerKey[]).map((towerKey) => {
+                        const tower = TOWERS[towerKey]
+                        const towerLabel = towerKey === 'pm' ? '🏰 PM TOWER' : towerKey === 'strategy' ? '⚔️ STRATEGY TOWER' : '🤖 AI TOWER'
+                        return (
+                          <div key={towerKey}>
+                            <div className={`pb-tower-head ${towerKey}`}>{towerLabel}</div>
+                            <div className="pb-cards">
+                              {tower.professors.map((prof) => {
+                                const collected = defeatedProfessors.has(prof.key)
+                                return (
+                                  <div
+                                    key={prof.key}
+                                    className={`pb-card${collected ? '' : ' locked'}${prof.isBoss ? (collected ? ' boss-collected' : ' boss') : ''}`}
+                                  >
+                                    {collected && <div className="pb-ribbon">COLLECTED</div>}
+                                    <div
+                                      className={`pb-icon ${towerKey}`}
+                                      style={prof.isBoss ? (collected
+                                        ? { background: 'linear-gradient(180deg,rgba(240,192,96,.22),rgba(240,192,96,.06))' }
+                                        : { background: 'linear-gradient(180deg,rgba(180,30,20,.18),rgba(180,30,20,.05))' }
+                                      ) : undefined}
+                                    >
+                                      {SPELL_EMOJIS[prof.key]}
+                                    </div>
+                                    <div className="pb-body">
+                                      <div
+                                        className="pb-spell"
+                                        style={prof.isBoss ? (collected ? { color: 'var(--gold)' } : { color: '#e08070' }) : undefined}
+                                      >
+                                        {SPELL_NAMES[prof.key]}
+                                      </div>
+                                      <div className="pb-prof">— {prof.name}</div>
+                                    </div>
+                                    {!collected && (
+                                      <div className="pb-lock">
+                                        <div className="pb-lock-icon">🔒</div>
+                                        <div className="pb-lock-text">
+                                          {prof.isBoss ? 'Defeat the Tower Boss to unlock' : `Defeat ${prof.name} to unlock`}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ══════════════════════════════════
@@ -1076,7 +1272,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-spellwin" className={`screen${screen === 'spellwin' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="sw-bg" src="/assets/Landing_Page_Background_1774611504383.png" alt="" />
+        <img className="sw-bg" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
         <div className="sw-overlay" />
         <div className="sw-layout">
 
@@ -1104,7 +1300,7 @@ export default function Home() {
               <div className="sw-scroll-circle">
                 <div className="sw-spell-icon">{SPELL_EMOJIS[wonProfKey] ?? '✦'}</div>
                 <div className="sw-spell-name">{wonSpell}</div>
-                <div className="sw-spell-sub">{Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.title ?? ''}</div>
+                <div className="sw-spell-sub">{SPELL_SUBTITLES[wonProfKey] ?? ''}</div>
               </div>
             </div>
             <div className="sw-quote-row">
@@ -1146,22 +1342,36 @@ export default function Home() {
       </div>
 
       {/* ══════════════════════════════════
-          S6 — TOWER CLEARED (flow step — auto-advances)
+          S6 — TOWER CLEARED
       ══════════════════════════════════ */}
-      <div id="s-tower-cleared" className={`screen${screen === 'tower_cleared' ? ' active' : ''}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Game_Background.png" alt="" />
-        <div className="spellwin-center">
-          <div className="spellwin-eyebrow">✦ TOWER CLEARED ✦</div>
-          <div className="spellwin-spell" style={{ fontSize: 40 }}>
-            {towerOrder[towerIndex - 1] ? TOWERS[towerOrder[towerIndex - 1]].name : ''}
+      {(() => {
+        const clearedProf = allProfessors.find(p => p.key === wonProfKey)
+        const clearedTowerKey = clearedProf?.tower ?? activeTowerKey
+        const clearedTower = TOWERS[clearedTowerKey]
+        const nextTowerEntry = Object.entries(TOWERS).find(([k, t]) =>
+          k !== clearedTowerKey && !t.professors.filter(p => p.isBoss).every(p => defeatedProfessors.has(p.key))
+        )
+        const nextTowerName = nextTowerEntry ? nextTowerEntry[1].name : null
+        const towerDisplayName = clearedTower?.name ?? 'Tower'
+        return (
+          <div id="s-tower-cleared" className={`screen${screen === 'tower_cleared' ? ' active' : ''}`}>
+            <div className="tc-bg-overlay" />
+            <div className="tc-stars" />
+            <div className="tc-wrap">
+              <div className="tc-badge">{towerDisplayName.toUpperCase()} CLEARED</div>
+              <div className="tc-title">The {towerDisplayName} Falls.</div>
+              <div className="tc-next">
+                You&apos;ve bested the masters of this tower. Your knowledge grows.
+                {nextTowerName && <> The {nextTowerName} has opened its gates.</>}
+              </div>
+              {nextTowerName && <div className="tc-next-badge">NEXT: {nextTowerName.toUpperCase()}</div>}
+              <button className="tc-cta" onClick={() => { setDuelPhase('selecting'); setScreen('duel') }}>
+                {nextTowerName ? `ENTER ${nextTowerName.toUpperCase()} →` : 'CONTINUE →'}
+              </button>
+            </div>
           </div>
-          <div className="spellwin-sub">
-            The tower falls. The next awaits.<br />
-            Entering {currentTower?.name}...
-          </div>
-        </div>
-      </div>
+        )
+      })()}
 
       {/* ══════════════════════════════════
           S7 — PLAYBOOK
@@ -1169,14 +1379,14 @@ export default function Home() {
       <div id="s-playbook" className={`screen${screen === 'playbook' ? ' active' : ''}`}>
         <div className="playbook-bg" />
 
-        <div className="playbook-header">
-          <button className="playbook-back" onClick={closePlaybook}>← Back</button>
-          <div className="playbook-title">{displayName}&apos;s Playbook</div>
-          <div className="playbook-count">{defeatedProfessors.size} / 19 Spells</div>
-        </div>
+        <button className="playbook-back" onClick={closePlaybook}>← Back</button>
 
         <div className="pb-scroll-inner" ref={pbCardRef}>
           <div className="pb-wrap">
+            <div className="pb-header">
+              <div className="pb-title">Spell Card Collection Playbook</div>
+              <div className="pb-subtitle">✦ MAX SPELLS: 19 &nbsp;·&nbsp; 1 PER PROFESSOR ✦</div>
+            </div>
             <div className="pb-towers">
               {(['pm', 'strategy', 'ai'] as TowerKey[]).map((towerKey) => {
                 const tower = TOWERS[towerKey]
@@ -1246,13 +1456,13 @@ export default function Home() {
         onClick={dismissSummons}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Summo_letter_background_1775007534371.jpg" alt="" />
+        <img className="bg" loading="lazy" src="/assets/Summo_letter_background_1775007534371.jpg" alt="" />
         <div className="sl-tint" />
 
         <div className="sl-scroll-inner">
           <div className="sl-card">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="sl-crest" src="/assets/Lorethron_crest_transparent.png" alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            <img className="sl-crest" src="/assets/Lorethron_crest_transparent.avif" alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             <div className="sl-school">LORETHORN SCHOOL</div>
             <div className="sl-school-sub">OF PRODUCT SPELLCRAFT</div>
             <div className="sl-rule" />
@@ -1293,7 +1503,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-final" className={`screen${screen === 'final' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Game_Background.png" alt="" />
+        <img className="bg" loading="lazy" src="/assets/Game_Background.avif" alt="" />
         <div className="fr-vignette" />
         <div className="fr-title-bar">✦ &nbsp; THE FINAL REVELATION &nbsp; ✦</div>
 
@@ -1425,9 +1635,9 @@ export default function Home() {
                 setHearts(5)
                 setSp(0)
                 setDefeatedProfessors(new Set())
-                setTowerOrder(['pm', 'strategy', 'ai'])
-                setTowerIndex(0)
-                setProfIndex(0)
+                setActiveTowerKey('pm')
+                setActiveProfKey('gibson_biddle')
+                setDuelPhase('selecting')
                 setArchetype('V')
                 setScreen('landing')
               }}>
@@ -1443,7 +1653,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-lenny-loss" className={`screen${screen === 'lenny_loss' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Game_Background.png" alt="" />
+        <img className="bg" loading="lazy" src="/assets/Game_Background.avif" alt="" />
         <div className="spellwin-center">
           <div className="spellwin-eyebrow" style={{ color: '#c8922a' }}>✦ THE KEEPER PREVAILS ✦</div>
           <div className="spellwin-spell" style={{ fontSize: 28 }}>The archive remembers.</div>
@@ -1486,7 +1696,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-game-over" className={`screen${screen === 'game_over' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" src="/assets/Game_Background.png" alt="" />
+        <img className="bg" loading="lazy" src="/assets/Game_Background.avif" alt="" />
         <div className="spellwin-center" ref={goCardRef}>
           <div className="spellwin-eyebrow" style={{ color:'#e84030' }}>✦ DEFEATED ✦</div>
           <div className="spellwin-spell" style={{ fontSize: 36 }}>Your Hearts Run Out</div>
@@ -1508,7 +1718,8 @@ export default function Home() {
               if (sp < 500) return
               setSp(prev => prev - 500)
               setHearts(5)
-              launchDuel(towerIndex, profIndex, towerOrder)
+              const prof = allProfessors.find(p => p.key === activeProfKey)
+              if (prof) launchDuel(prof.tower, prof.key)
             }}
           >
             ✦ Continue Your Journey — 500 SP ✦
@@ -1525,9 +1736,9 @@ export default function Home() {
               setHearts(5)
               setSp(0)
               setDefeatedProfessors(new Set())
-              setTowerOrder(['pm', 'strategy', 'ai'])
-              setTowerIndex(0)
-              setProfIndex(0)
+              setActiveTowerKey('pm')
+              setActiveProfKey('gibson_biddle')
+              setDuelPhase('selecting')
               setArchetype('V')
               setScreen('landing')
             }}>

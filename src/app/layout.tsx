@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Cinzel, Cinzel_Decorative, EB_Garamond, Pinyon_Script } from 'next/font/google'
+import { Cinzel, Cinzel_Decorative, EB_Garamond, Pinyon_Script, Lora } from 'next/font/google'
 import { PostHogProvider } from './providers'
 import './globals.css'
 
@@ -26,6 +26,13 @@ const pinyonScript = Pinyon_Script({
   subsets: ['latin'],
   weight: ['400'],
   variable: '--font-pinyon-script',
+})
+
+const lora = Lora({
+  subsets: ['latin'],
+  weight: ['400', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-lora',
 })
 
 export const metadata: Metadata = {
@@ -56,7 +63,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${cinzel.variable} ${cinzelDecorative.variable} ${ebGaramond.variable} ${pinyonScript.variable}`}>
+    <html lang="en" className={`${cinzel.variable} ${cinzelDecorative.variable} ${ebGaramond.variable} ${pinyonScript.variable} ${lora.variable}`}>
       <body><PostHogProvider>{children}</PostHogProvider></body>
     </html>
   )

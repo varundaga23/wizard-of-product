@@ -8,6 +8,27 @@ A wizarding school browser duel game where product managers duel real product ex
 
 ---
 
+## Prototype Fidelity Rule (MANDATORY)
+
+`prototype_v3.html` at `/tmp/spellcraft_assets/attached_assets/prototype_v3.html` is the **source of truth** for every screen.
+
+**Before touching any screen**, read the corresponding section of the prototype HTML + CSS and compare it element-by-element against the implementation. Do not guess or approximate — copy exact values for:
+- Font family, size, weight, color, letter-spacing
+- Position (top/bottom/left/right/transform), width, height
+- Background colors and gradients
+- Border, box-shadow, padding, gap
+- Text content (copy must match prototype exactly)
+
+**When making any UI change**, run through this checklist for every affected screen:
+1. Read the prototype's CSS for every class used in that screen
+2. Read the prototype's HTML structure for that screen
+3. Diff against globals.css and page.tsx
+4. Fix every mismatch — do not leave partial matches
+
+Never ask the user to point out individual mismatches. It is Claude's responsibility to find them all by reading the prototype directly.
+
+---
+
 ## Scope Decisions (LOCKED — do not re-propose)
 
 These decisions are final. Do not suggest building skipped screens or features.
@@ -41,11 +62,17 @@ These decisions are final. Do not suggest building skipped screens or features.
 |---------|--------|
 | 2-option duel format | Each question shows exactly 2 choices: correct answer + best distractor. Shuffled randomly each load. **Do not revert to 4 options.** |
 | Best distractor | Claude-curated per question. Stored in `best_distractor` column in Supabase. One-time migration done (549 questions). |
+| Open progression | Players choose any professor in any order within a tower. Mid-duel switching allowed (no spell if abandoned). |
+| Tower boss unlock | Boss unlocks when ≥3 non-boss professors in that tower are defeated. Boss avatar shows 🔒 + "X to go" until unlocked. |
+| Tower switching | Topbar has 3 clickable tower tabs (🏰 PM / ⚔️ Strategy / 🤖 AI) that update the right panel. Does NOT auto-start a duel. |
+| Professor selection UI | Right panel tower avatars are clickable. Click any unlocked professor to start that duel. |
+| Duel selecting state | After a spell win (or blessing), screen returns to duelPhase='selecting'. Center shows "Choose Your Opponent". Player picks from right panel. |
+| Lenny unlock | All 3 tower bosses defeated → pre-final Summons Letter → Final Revelation. Unchanged. |
 | Rank Up Ceremony | Overlay at z-index 100, 5s, rank-coloured rays. Apprentice=amber, Scholar=blue, Wizard=purple, Archmage=crimson |
 | Lenny's Blessing | Overlay at z-index 99, 10% random after non-boss duel win. Fetches `lenny_oracle` from Supabase. Correct=+500 SP + nod. Wrong=no heart cost, fades 1.2s |
 | Professor win/loss one-liners | Hardcoded in `PROFESSOR_WIN_LINES` and `PROFESSOR_LOSS_LINES` in page.tsx. Loss line shown on game over screen |
 | Dedicated Lenny hearts | 3 separate hearts for final boss duel. HUD shows 3 during final boss. 0 = lenny_loss screen |
-| SP refill on game over | Primary CTA on game over. Costs 500 SP, refills to 5 hearts, relaunches current duel. Greyed + "Earn X more SP" hint when insufficient |
+| SP refill on game over | Primary CTA on game over. Costs 500 SP, refills to 5 hearts, relaunches same professor. Greyed + "Earn X more SP" hint when insufficient |
 | First heart lost hint | One-time toast on first heart lost: "Lose all 5 hearts? Spend 500 SP to refill and keep going." Fades after 4s, never repeats |
 
 ### Parked — Needs Setup First (come back to these)
@@ -64,6 +91,7 @@ These decisions are final. Do not suggest building skipped screens or features.
 - **No duel retry button** — the 500 SP refill mechanic IS the retry. Free retry would undercut it
 - **Professor one-liners are hardcoded** — static copy, no reason to put in Supabase
 - **2 options per question (not 4)** — feels like a duel, not a quiz. Best distractor is Claude-curated. Do not change back.
+- **Open progression is the model** — sequential tower/professor auto-advance is removed. State uses `activeTowerKey` + `activeProfKey` + `duelPhase`. Do not revert to towerIndex/profIndex.
 - **Design Spec v3 calls for 14 screens — we are building ~12** (deliberate scope reduction)
 
 ---
