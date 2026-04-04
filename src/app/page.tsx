@@ -956,7 +956,6 @@ export default function Home() {
               <div className="ar-tagline">{arc.tagline}</div>
             </div>
           </div>
-          <div className="ar-tower-label">✦ Your Tower: {arc.towerName} ✦</div>
           <button className="ar-cta" onClick={startFirstDuel}>
             Enter {arc.towerName} ✦
           </button>
