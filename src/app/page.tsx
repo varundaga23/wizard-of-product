@@ -366,6 +366,8 @@ export default function Home() {
   const [wonSpell, setWonSpell] = useState('')
   const [wonProfKey, setWonProfKey] = useState('')
   const [wonProfIsBoss, setWonProfIsBoss] = useState(false)
+  const [duelTotalSp, setDuelTotalSp] = useState(0)
+  const [correctInDuel, setCorrectInDuel] = useState(0)
 
   // Playbook state — tracks which screen to return to
   const [playbookReturn, setPlaybookReturn] = useState<Screen>('duel')
@@ -518,6 +520,8 @@ export default function Home() {
     setAnsweredIndex(null)
     setLastResult(null)
     setLastSpGained(0)
+    setDuelTotalSp(0)
+    setCorrectInDuel(0)
     setDuelLoading(true)
     setDuelError(false)
     setScreen('duel')
@@ -561,6 +565,8 @@ export default function Home() {
       const oldRank = getRank(sp)
       const newRank = getRank(newSp)
       setSp(newSp)
+      setDuelTotalSp(prev => prev + gained)
+      setCorrectInDuel(prev => prev + 1)
       setLastResult('correct')
       if (newRank !== oldRank && newRank !== 'Grand Wizard') {
         setRankUpInfo({ label: newRank, color: RANK_COLORS[newRank] ?? '#f0c060' })
@@ -670,9 +676,9 @@ export default function Home() {
     const towerKey = wonProf?.tower ?? activeTowerKey
 
     if (wonProfIsBoss) {
-      // Check if all 3 bosses are now defeated (defeatedProfessors already has wonProfKey)
+      // Check if all 3 bosses are now defeated (include wonProfKey explicitly to guard against batching edge cases)
       const allBossKeys = Object.values(TOWERS).flatMap(t => t.professors.filter(p => p.isBoss).map(p => p.key))
-      const allBossesDefeated = allBossKeys.every(k => defeatedProfessors.has(k))
+      const allBossesDefeated = allBossKeys.every(k => defeatedProfessors.has(k) || k === wonProfKey)
       if (allBossesDefeated) {
         openSummonsPrefinal()
         return
@@ -969,8 +975,9 @@ export default function Home() {
               <div className="du-hud-name">{currentProf?.name.toUpperCase()}</div>
               <div className="du-hud-sub">{currentProf?.title}</div>
               {(() => {
-                const profHp = duelPhase === 'active' && duelQs.length > 0
-                  ? Math.max(10, Math.round((1 - qIndex / duelQs.length) * 100))
+                const totalQs = duelQs.length || 5
+                const profHp = duelPhase === 'active'
+                  ? Math.max(0, Math.round((1 - correctInDuel / totalQs) * 100))
                   : 100
                 return (
                   <div className="du-hp-wrap">
@@ -1143,8 +1150,9 @@ export default function Home() {
                     <div
                       key={prof.key}
                       className={`du-avatar${isCurrent ? ' current' : isDefeated ? ' defeated' : isLocked ? ' locked' : ' available'}`}
-                      onClick={!isLocked ? () => launchDuel(activeTowerKey, prof.key) : undefined}
-                      title={isLocked ? `Defeat ${3 - panelDefeatedNonBoss} more to unlock boss` : prof.name}
+                      onClick={!isLocked && !isDefeated && duelPhase === 'selecting' ? () => launchDuel(activeTowerKey, prof.key) : undefined}
+                      style={{ cursor: !isLocked && !isDefeated && duelPhase === 'selecting' ? 'pointer' : 'default' }}
+                      title={isLocked ? `Defeat ${3 - panelDefeatedNonBoss} more to unlock boss` : isDefeated ? prof.name : duelPhase === 'active' && !isDefeated && !isLocked ? 'Finish current duel first' : prof.name}
                     >
                       {isCurrent ? '⚔️' : isDefeated ? '✓' : isLocked ? '🔒' : (SPELL_EMOJIS[prof.key] ?? '🧙')}
                     </div>
@@ -1287,9 +1295,9 @@ export default function Home() {
               {Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.title ?? ''}
             </div>
             <div style={{ borderTop: '1px solid rgba(160,120,50,.35)', width: '100%', margin: '4px 0' }} />
-            <div className="sw-xp">+{lastSpGained > 0 ? lastSpGained : 100} SP</div>
+            <div className="sw-xp">+{duelTotalSp > 0 ? duelTotalSp : lastSpGained || 100} SP</div>
             <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 9, color: 'rgba(180,150,90,.7)', fontStyle: 'italic', textAlign: 'center' }}>
-              Spell added to your Playbook
+              Earned this duel · Spell added to your Playbook
             </div>
           </div>
 
@@ -1352,6 +1360,7 @@ export default function Home() {
           k !== clearedTowerKey && !t.professors.filter(p => p.isBoss).every(p => defeatedProfessors.has(p.key))
         )
         const nextTowerName = nextTowerEntry ? nextTowerEntry[1].name : null
+        const nextTowerKey = nextTowerEntry ? nextTowerEntry[0] as TowerKey : clearedTowerKey as TowerKey
         const towerDisplayName = clearedTower?.name ?? 'Tower'
         return (
           <div id="s-tower-cleared" className={`screen${screen === 'tower_cleared' ? ' active' : ''}`}>
@@ -1365,7 +1374,7 @@ export default function Home() {
                 {nextTowerName && <> The {nextTowerName} has opened its gates.</>}
               </div>
               {nextTowerName && <div className="tc-next-badge">NEXT: {nextTowerName.toUpperCase()}</div>}
-              <button className="tc-cta" onClick={() => { setDuelPhase('selecting'); setScreen('duel') }}>
+              <button className="tc-cta" onClick={() => { setActiveTowerKey(nextTowerKey); setDuelPhase('selecting'); setScreen('duel') }}>
                 {nextTowerName ? `ENTER ${nextTowerName.toUpperCase()} →` : 'CONTINUE →'}
               </button>
             </div>
