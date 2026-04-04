@@ -332,6 +332,14 @@ export default function Home() {
     return () => window.removeEventListener('resize', updateScale)
   }, [])
 
+  // Force scroll text colour — React style prop can't set !important, JS setProperty can
+  useEffect(() => {
+    document.querySelectorAll('#s-landing .scroll-text').forEach(el => {
+      (el as HTMLElement).style.setProperty('color', '#000000', 'important')
+      ;(el as HTMLElement).style.setProperty('-webkit-text-fill-color', '#000000', 'important')
+    })
+  }, [])
+
   const [screen, setScreen] = useState<Screen>('landing')
 
   // Player identity
