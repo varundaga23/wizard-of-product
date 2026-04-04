@@ -252,14 +252,17 @@ body {
   transform: translateY(-50%);
   width: 248px;
   height: 248px;
-  filter: drop-shadow(0 10px 28px rgba(0,0,0,.8));
 }
-.scroll-overlay {
-  position: relative;
+/* Scroll image gets the drop-shadow — text is a sibling, never inside a filter context */
+.scroll-img-only {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  background: url('/assets/scroll_transparent.png') center / 100% 100% no-repeat;
+  filter: drop-shadow(0 10px 28px rgba(0,0,0,.8));
+  pointer-events: none;
 }
+.scroll-overlay { display: none; }
 .scroll-img-bg { display: none; }
 .scroll-img { display: none; }
 .scroll-curl { display: none; }
@@ -277,8 +280,8 @@ body {
   font-family: 'EB Garamond', serif;
   font-size: 11px;
   font-weight: 700;
-  color: #1a0800 !important;
-  -webkit-text-fill-color: #1a0800 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
   letter-spacing: .3px;
   line-height: 1.7;
   text-align: center;

@@ -313,6 +313,10 @@ function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5)
 }
 
+function toTitleCase(str: string): string {
+  return str.replace(/\b\w/g, c => c.toUpperCase())
+}
+
 function getRank(sp: number): string {
   return [...RANKS].reverse().find(r => sp >= r.min)?.label ?? 'Muggle'
 }
@@ -332,13 +336,6 @@ export default function Home() {
     return () => window.removeEventListener('resize', updateScale)
   }, [])
 
-  // Force scroll text colour — React style prop can't set !important, JS setProperty can
-  useEffect(() => {
-    document.querySelectorAll('#s-landing .scroll-text').forEach(el => {
-      (el as HTMLElement).style.setProperty('color', '#000000', 'important')
-      ;(el as HTMLElement).style.setProperty('-webkit-text-fill-color', '#000000', 'important')
-    })
-  }, [])
 
   const [screen, setScreen] = useState<Screen>('landing')
 
@@ -854,14 +851,15 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Scroll: image and text are siblings so filter on img never touches text */}
         <div className="scroll-shadow-wrap">
-          <div className="scroll-overlay">
-            <div className="scroll-body">
-              <div className="scroll-text" style={{ color: '#1a0800', WebkitTextFillColor: '#1a0800' }}>For Every<br />Product Mage.</div>
-              <div className="scroll-text" style={{ color: '#1a0800', WebkitTextFillColor: '#1a0800' }}>Learn The Lore.<br />Claim Your Title.</div>
-              <div className="scroll-divider"><div className="scroll-divider-gem" /></div>
-              <div className="scroll-text lower" style={{ color: '#1a0800', WebkitTextFillColor: '#1a0800' }}>Duel Masters.<br />Build Your Playbook.<br />Rule The Product Realm.</div>
-            </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/scroll_transparent.png" alt="" className="scroll-img-only" />
+          <div className="scroll-body">
+            <div className="scroll-text">For Every<br />Product Mage.</div>
+            <div className="scroll-text">Learn The Lore.<br />Claim Your Title.</div>
+            <div className="scroll-divider"><div className="scroll-divider-gem" /></div>
+            <div className="scroll-text lower">Duel Masters.<br />Build Your Playbook.<br />Rule The Product Realm.</div>
           </div>
         </div>
 
@@ -912,7 +910,7 @@ export default function Home() {
                   <div className="oracle-opts">
                     {oracleQ.options.map((opt, i) => {
                       const [before, after] = opt.text.split(' — ')
-                      const title = before.trim().split(/\s+/).slice(0, 5).join(' ').toUpperCase().replace(/[.,;]$/, '')
+                      const title = toTitleCase(before.trim().split(/\s+/).slice(0, 5).join(' ')).replace(/[.,;]$/, '')
                       const desc = after ? after.trim() : opt.text
                       return (
                         <div
