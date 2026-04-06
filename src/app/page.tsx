@@ -300,7 +300,8 @@ const LETTERS = ['A', 'B']
 
 function buildDisplayOptions(q: Omit<DuelQuestion, 'displayOptions'>): { text: string; isCorrect: boolean }[] {
   const correctText = q.options.find(o => o.startsWith(q.correct_answer + '.'))?.replace(/^[A-D]\.\s*/, '') ?? ''
-  const distractorText = (q.best_distractor ?? '').replace(/^[A-D]\.\s*/, '')
+  const rawDistractor = (q.best_distractor ?? '').replace(/^[A-D]\.\s*/, '').trim()
+  const distractorText = rawDistractor || q.options.find(o => !o.startsWith(q.correct_answer + '.'))?.replace(/^[A-D]\.\s*/, '') || ''
   const opts = [
     { text: correctText, isCorrect: true },
     { text: distractorText, isCorrect: false },
@@ -849,13 +850,11 @@ export default function Home() {
 
         {/* Scroll: image and text are siblings so filter on img never touches text */}
         <div className="scroll-shadow-wrap">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/scroll_transparent.png" alt="" className="scroll-img-only" />
           <div className="scroll-body">
-            <div className="scroll-text">For Every<br />Product Mage.</div>
-            <div className="scroll-text">Learn The Lore.<br />Claim Your Title.</div>
+            <div className="scroll-text">For every<br />product mage.</div>
+            <div className="scroll-text">Learn the lore.<br />Claim your title.</div>
             <div className="scroll-divider"><div className="scroll-divider-gem" /></div>
-            <div className="scroll-text lower">Duel Masters.<br />Build Your Playbook.<br />Rule The Product Realm.</div>
+            <div className="scroll-text lower">Duel masters.<br />Build your playbook.<br />Rule the product realm.</div>
           </div>
         </div>
 
@@ -907,7 +906,8 @@ export default function Home() {
                     {oracleQ.options.map((opt, i) => {
                       const [before, after] = opt.text.split(' — ')
                       const title = before.trim().split(/\s+/).slice(0, 5).join(' ').replace(/[.,;]$/, '')
-                      const desc = after ? after.trim() : opt.text
+                      const rawDesc = after ? after.trim() : opt.text
+                      const desc = rawDesc.charAt(0).toUpperCase() + rawDesc.slice(1)
                       return (
                         <div
                           key={opt.archetype}
@@ -929,7 +929,7 @@ export default function Home() {
               className={`oracle-submit${oracleSelected ? ' visible' : ''}`}
               onClick={submitOracleAnswer}
             >
-              Reveal What the Oracle Has Decided
+              Reveal what the Oracle has decided
             </button>
           </div>
         </div>
@@ -953,7 +953,7 @@ export default function Home() {
             </div>
           </div>
           <button className="ar-cta" onClick={startFirstDuel}>
-            Enter {arc.towerName} ✦
+            ✦ Enter {arc.towerName} ✦
           </button>
         </div>
       </div>
@@ -1473,8 +1473,8 @@ export default function Home() {
           <div className="sl-card">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="sl-crest" src="/assets/Lorethron_crest_transparent.avif" alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-            <div className="sl-school">LORETHORN SCHOOL</div>
-            <div className="sl-school-sub">OF PRODUCT SPELLCRAFT</div>
+            <div className="sl-school">Lorethorn Academy</div>
+            <div className="sl-school-sub">of Product Spellcraft</div>
             <div className="sl-rule" />
 
             {summonsVariant === 'easter_egg' ? (
