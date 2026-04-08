@@ -229,7 +229,7 @@ const ARCHETYPES: Record<ArchetypeKey, { name: string; desc: string; tagline: st
   V: {
     name: 'Visionary',
     desc: 'You think in systems, futures, and possibilities before anyone else has caught up. Your superpower is the vision. Your challenge is bringing others with you.',
-    tagline: "You see what others don't — yet.",
+    tagline: "You see what others don't. Yet.",
     tower: 'pm',
     towerName: 'PM Tower',
   },
@@ -243,7 +243,7 @@ const ARCHETYPES: Record<ArchetypeKey, { name: string; desc: string; tagline: st
   B: {
     name: 'Builder',
     desc: "You ship. While others deliberate, you're already iterating. Your superpower is momentum. Your challenge is stopping long enough to ask if you're building the right thing.",
-    tagline: "Done is better than perfect — until it isn't.",
+    tagline: "Done is better than perfect. Until it isn't.",
     tower: 'ai',
     towerName: 'AI Tower',
   },
@@ -811,7 +811,7 @@ export default function Home() {
         <div style={{ position:'absolute', inset:0, zIndex:1, pointerEvents:'none',
           background:'radial-gradient(ellipse 80% 75% at 50% 50%, transparent 40%, rgba(0,0,0,.22) 100%)' }} />
 
-        <div className="landing-top-banner">Welcome to Lorethorn — the Academy of Product Spellcraft.</div>
+        <div className="landing-top-banner">Lorethorn Academy of Product Spellcraft</div>
 
         <div className="landing-logo-block">
           <div className="landing-logo-title">Spellcraft</div>
