@@ -925,7 +925,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-duel" className={`screen${screen === 'duel' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" loading="lazy" src="/assets/Game_Background.avif" alt="" />
+        <img className="bg" loading="lazy" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
         <div className="du-overlay" />
 
         {/* Top status bar */}
@@ -1516,7 +1516,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-final" className={`screen${screen === 'final' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" loading="lazy" src="/assets/Game_Background.avif" alt="" />
+        <img className="bg" loading="lazy" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
         <div className="fr-vignette" />
         <div className="fr-title-bar">✦ &nbsp; THE FINAL REVELATION &nbsp; ✦</div>
 
@@ -1670,7 +1670,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-lenny-loss" className={`screen${screen === 'lenny_loss' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" loading="lazy" src="/assets/Game_Background.avif" alt="" />
+        <img className="bg" loading="lazy" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
         <div className="spellwin-center">
           <div className="spellwin-eyebrow" style={{ color: '#c8922a' }}>✦ THE KEEPER PREVAILS ✦</div>
           <div className="spellwin-spell" style={{ fontSize: 28 }}>The archive remembers.</div>
@@ -1717,7 +1717,7 @@ export default function Home() {
       ══════════════════════════════════ */}
       <div id="s-game-over" className={`screen${screen === 'game_over' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" loading="lazy" src="/assets/Game_Background.avif" alt="" />
+        <img className="bg" loading="lazy" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
         <div className="spellwin-center" ref={goCardRef}>
           <div className="spellwin-eyebrow" style={{ color:'#e84030' }}>✦ DEFEATED ✦</div>
           <div className="spellwin-spell" style={{ fontSize: 36 }}>Your Hearts Run Out</div>
