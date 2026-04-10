@@ -265,6 +265,12 @@ const LENNY_PROF: ProfessorDef = {
   isBoss: true,
 }
 
+const TOWER_ICON: Record<string, string> = {
+  pm:       '/assets/pm_tower_icon.png',
+  strategy: '/assets/strategy_tower_icon.png',
+  ai:       '/assets/ai_tower_icon.png',
+}
+
 const SPELL_EMOJIS: Record<string, string> = {
   gibson_biddle:         '📐',
   julie_zhuo:            '🪞',
@@ -989,15 +995,17 @@ export default function Home() {
           {/* LEFT: Switch towers + Professor figure + Possible Rewards */}
           <div className="du-left-col">
             <div className="du-tower-panel">
-              <div className="du-panel-title">SWITCH TOWERS</div>
+              <div className="du-panel-title" onClick={() => setTowerModalOpen(true)} style={{cursor:'pointer'}}>SWITCH TOWERS</div>
               <div className="du-left-tower-btns">
                 {(['pm', 'strategy', 'ai'] as TowerKey[]).map(tk => (
                   <button
                     key={tk}
                     className={`du-left-tower-btn${activeTowerKey === tk ? ' active' : ''}`}
-                    onClick={() => setActiveTowerKey(tk)}
+                    onClick={() => { setActiveTowerKey(tk); setTowerModalOpen(true); }}
                   >
-                    {tk === 'pm' ? '🏛️ PM' : tk === 'strategy' ? '♟️ STRATEGY' : '🤖 AI'}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={TOWER_ICON[tk]} alt="" />
+                    {tk === 'pm' ? 'PM' : tk === 'strategy' ? 'Strategy' : 'AI'}
                   </button>
                 ))}
               </div>
@@ -1005,28 +1013,19 @@ export default function Home() {
             <div className="du-prof-frame">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                key={currentProf?.key}
                 className="du-prof-img"
-                src={`/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}_nobg.avif`}
+                src={currentProf?.key === 'gibson_biddle' ? '/assets/Gibson_Biddle_nobg.avif' : `/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}_nobg.avif`}
                 alt={currentProf?.name}
                 onError={(e) => {
                   const img = e.target as HTMLImageElement
                   if (img.src.includes('_nobg.avif')) {
                     img.src = `/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}.jpg`
                   } else {
-                    img.src = '/assets/professor_placeholder.png'
+                    img.style.display = 'none'
                   }
                 }}
               />
-            </div>
-            <div className="du-bottom-panel">
-              <div className="du-panel-title">POSSIBLE REWARDS</div>
-              <div className="du-orbs-row du-orbs-single">
-                <div className="du-orb">
-                  <div className="du-orb-gem gold du-orb-gem-lg" />
-                  <div className="du-orb-name">{currentProf && SPELL_NAMES[currentProf.key] ? SPELL_NAMES[currentProf.key].split(' ').slice(0, 2).join(' ').toUpperCase() : 'SPELL'}</div>
-                  <div className="du-orb-desc">{currentTower?.name}</div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -1117,26 +1116,6 @@ export default function Home() {
               <img className="du-player-img" src="/assets/player_apprentice_nobg.avif" alt="Apprentice"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             </div>
-            <div className="du-bottom-panel">
-              <div className="du-panel-title">YOUR SPELLS</div>
-              <div className="du-orbs-row">
-                {(() => {
-                  const collected = panelTower?.professors.filter(p => defeatedProfessors.has(p.key)) ?? []
-                  if (collected.length === 0) return (
-                    <div className="du-orb">
-                      <div className="du-orb-gem purple" style={{ opacity: .4 }} />
-                      <div className="du-orb-name" style={{ opacity: .5 }}>NONE YET</div>
-                    </div>
-                  )
-                  return collected.slice(0, 3).map((prof, i) => (
-                    <div key={prof.key} className="du-orb">
-                      <div className={`du-orb-gem ${['blue', 'red', 'gold'][i % 3]}`} />
-                      <div className="du-orb-name">{(SPELL_NAMES[prof.key] ?? '').split(' ').slice(0, 2).join(' ').toUpperCase()}</div>
-                    </div>
-                  ))
-                })()}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1170,10 +1149,13 @@ export default function Home() {
                     <div className="pb-towers">
                       {(['pm', 'strategy', 'ai'] as TowerKey[]).map((towerKey) => {
                         const tower = TOWERS[towerKey]
-                        const towerLabel = towerKey === 'pm' ? '🏰 PM TOWER' : towerKey === 'strategy' ? '⚔️ STRATEGY TOWER' : '🤖 AI TOWER'
                         return (
                           <div key={towerKey}>
-                            <div className={`pb-tower-head ${towerKey}`}>{towerLabel}</div>
+                            <div className={`pb-tower-head ${towerKey}`}>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={TOWER_ICON[towerKey]} alt="" style={{width:'16px',height:'16px',objectFit:'contain',verticalAlign:'middle',marginRight:'6px'}} />
+                              {towerKey === 'pm' ? 'PM Tower' : towerKey === 'strategy' ? 'Strategy Tower' : 'AI Tower'}
+                            </div>
                             <div className="pb-cards">
                               {tower.professors.map((prof) => {
                                 const collected = defeatedProfessors.has(prof.key)
@@ -1229,7 +1211,7 @@ export default function Home() {
           <div className="tm-overlay" onClick={() => setTowerModalOpen(false)}>
             <div className="tm-sheet" onClick={e => e.stopPropagation()}>
               <div className="tm-header">
-                <span className="tm-title">✦ SELECT YOUR OPPONENT ✦</span>
+                <span className="tm-title">✦ Select your opponent ✦</span>
                 <button className="tm-close" onClick={() => setTowerModalOpen(false)}>✕ CLOSE</button>
               </div>
               <div className="tm-body" ref={towerModalBodyRef}>
@@ -1241,9 +1223,10 @@ export default function Home() {
                   return (
                     <div key={tk} id={`tm-section-${tk}`} className="tm-section">
                       <div className="tm-section-hdr">
-                        <span className="tm-section-icon">{tk === 'pm' ? '🏛️' : tk === 'strategy' ? '♟️' : '🤖'}</span>
-                        <span className="tm-section-name">{tower.name.toUpperCase()}</span>
-                        <span className="tm-section-prog">{defeatedInTower} / {nonBossProfs.length} DEFEATED</span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={TOWER_ICON[tk]} alt="" className="tm-section-icon" />
+                        <span className="tm-section-name" style={{color: tk === 'pm' ? '#6090f0' : tk === 'strategy' ? '#e08030' : '#a070e0'}}>{tower.name}</span>
+                        <span className="tm-section-prog">{defeatedInTower} / {nonBossProfs.length} Defeated</span>
                       </div>
                       <div className="tm-prof-grid">
                         {tower.professors.map(prof => {
@@ -1257,15 +1240,21 @@ export default function Home() {
                               className={`tm-prof-card${isDefeated ? ' defeated' : isLocked ? ' locked' : ''}${isActive ? ' active-duel' : ''}`}
                               onClick={!isDefeated && !isLocked ? () => { launchDuel(tk, prof.key); setTowerModalOpen(false) } : undefined}
                             >
-                              <div className={`tm-prof-avatar${prof.isBoss ? ' boss' : ''}`}>
-                                {SPELL_EMOJIS[prof.key] ?? '🧙'}
-                                {isDefeated && <div className="tm-prof-ov" style={{ color: '#50c880' }}>✓</div>}
-                                {isLocked && <div className="tm-prof-ov">🔒</div>}
-                                {isActive && <div className="tm-prof-ov" style={{ color: '#f0c060' }}>⚔️</div>}
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                className="tm-prof-card-img"
+                                src={prof.key === 'gibson_biddle' ? '/assets/Gibson_Biddle_nobg.avif' : `/assets/professors/${prof.key}.jpg`}
+                                alt={prof.name}
+                                onError={e => { (e.target as HTMLImageElement).style.display='none' }}
+                              />
+                              <div className="tm-prof-card-overlay">
+                                <div className="tm-prof-name">{prof.name}</div>
+                                <div className="tm-prof-title">{prof.title}</div>
+                                {isLocked && <div className="tm-boss-hint">{remaining} to go</div>}
                               </div>
-                              <div className="tm-prof-name">{prof.name}</div>
-                              <div className="tm-prof-title">{prof.title}</div>
-                              {isLocked && <div className="tm-boss-hint">{remaining} to go</div>}
+                              {isDefeated && <div className="tm-prof-ov" style={{color:'#50c880'}}>✓</div>}
+                              {isLocked && <div className="tm-prof-ov">🔒</div>}
+                              {isActive && <div className="tm-prof-ov" style={{color:'#f0c060'}}>⚔️</div>}
                             </div>
                           )
                         })}
@@ -1614,13 +1603,13 @@ export default function Home() {
 
           {/* 3-column spell roster */}
           <div className="gw-columns">
-            {([
-              { key: 'pm' as TowerKey,       label: '🏰 PM TOWER' },
-              { key: 'strategy' as TowerKey, label: '⚔️ STRATEGY TOWER' },
-              { key: 'ai' as TowerKey,       label: '🤖 AI TOWER' },
-            ]).map(({ key, label }) => (
+            {(['pm', 'strategy', 'ai'] as TowerKey[]).map((key) => (
               <div key={key} className="gw-col">
-                <div className="gw-col-label">{label}</div>
+                <div className="gw-col-label">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={TOWER_ICON[key]} alt="" style={{width:'16px',height:'16px',objectFit:'contain',verticalAlign:'middle',marginRight:'6px'}} />
+                  {key === 'pm' ? 'PM Tower' : key === 'strategy' ? 'Strategy Tower' : 'AI Tower'}
+                </div>
                 {TOWERS[key].professors.map((prof) => (
                   <div key={prof.key} className={`gw-card${prof.isBoss ? ' boss' : ''}`}>
                     <div className="gw-card-ribbon">COLLECTED</div>

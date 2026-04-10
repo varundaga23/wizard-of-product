@@ -45,7 +45,7 @@ These decisions are final. Do not suggest building skipped screens or features.
 | Landing | Built — needs design polish | Open FEEDBACK.md item — background, font, tagline readability |
 | Oracle's Rite | Done | |
 | Archetype Reveal | Done | |
-| Duel | Done | Tower roster left panel deferred to v2 |
+| Duel | Done | Tower switch tabs handle tower navigation |
 | Spell Win | Done | |
 | Tower Cleared | Done | |
 | Lenny Loss | Done | Dedicated 3-heart final boss loss screen with retry |
@@ -81,7 +81,6 @@ These decisions are final. Do not suggest building skipped screens or features.
 ### Deferred to v2 (do not build in v1)
 - Archetype SP bonus (+50 SP in primary tower) — questions table has no archetype_tag
 - Lenny's Blessing harder retry subset — no difficulty filter in API yet
-- Tower roster progress panel in duel left panel
 - localStorage persistence (game resets on page refresh)
 - Midnight heart refill (PRD §6.2 "come back tomorrow")
 - Cross-device sync / Supabase user accounts
