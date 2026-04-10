@@ -660,7 +660,7 @@ export default function Home() {
       setWonProfKey(profKey)
       setWonProfIsBoss(isBoss)
       setScreen('spellwin')
-    }, 1500)
+    }, isCorrect ? 2000 : 7000)
   }
 
   // ── Lenny's Blessing ──────────────────────────────────────────────────────────
@@ -938,10 +938,9 @@ export default function Home() {
         <div className="du-topbar">
           {/* Professor side */}
           <div className="du-hud-side">
-            <div className="du-crest">{currentProf?.isBoss ? '👑' : '🏰'}</div>
             <div className="du-hud-info">
               <div className="du-hud-label">PROFESSOR</div>
-              <div className="du-hud-name">{currentProf?.name.toUpperCase()}</div>
+              <div className="du-hud-name">{currentProf?.name}</div>
               <div className="du-hud-sub">{currentProf?.title}</div>
               {(() => {
                 const totalQs = duelQs.length || 5
@@ -968,7 +967,7 @@ export default function Home() {
           <div className="du-hud-side du-hud-right">
             <div className="du-hud-info" style={{ textAlign: 'right' }}>
               <div className="du-hud-label">YOU</div>
-              <div className="du-hud-name">{rank.toUpperCase()}</div>
+              <div className="du-hud-name">{rank}</div>
               <div className="du-hud-sub">{sp.toLocaleString()} SP · {currentTower?.name ?? 'Final Duel'}</div>
               {(() => {
                 const maxH = finalBossActive ? 3 : 5
@@ -986,7 +985,6 @@ export default function Home() {
                 )
               })()}
             </div>
-            <div className="du-crest blue" onClick={() => setPlaybookModalOpen(true)} title="Open Playbook">📜</div>
           </div>
         </div>
 
@@ -1085,32 +1083,19 @@ export default function Home() {
 
           </div>
 
-          {/* RIGHT: Tower progress + Player */}
+          {/* RIGHT: Spellbook + Player */}
           <div className="du-right-col">
-            <div className="du-tower-panel">
-              <div className="du-panel-title">{panelTower?.name.toUpperCase() ?? 'TOWER'}</div>
-              <div className="du-tower-progress">
-                {panelDefeatedNonBoss} / {(panelTower?.professors.length ?? 1) - 1} PROFESSORS DEFEATED
-              </div>
-              <div className="du-tower-avatars">
-                {panelTower?.professors.map((prof) => {
-                  const isDefeated = defeatedProfessors.has(prof.key)
-                  const isCurrent = prof.key === activeProfKey && duelPhase === 'active'
-                  const isLocked = prof.isBoss && !panelBossUnlocked && !isDefeated
-                  return (
-                    <div
-                      key={prof.key}
-                      className={`du-avatar${isCurrent ? ' current' : isDefeated ? ' defeated' : isLocked ? ' locked' : ' available'}`}
-                      onClick={!isLocked && !isDefeated ? () => launchDuel(activeTowerKey, prof.key) : undefined}
-                      style={{ cursor: !isLocked && !isDefeated ? 'pointer' : 'default' }}
-                      title={isLocked ? `Defeat ${3 - panelDefeatedNonBoss} more to unlock boss` : prof.name}
-                    >
-                      {isCurrent ? '⚔️' : isDefeated ? '✓' : isLocked ? '🔒' : (SPELL_EMOJIS[prof.key] ?? '🧙')}
-                    </div>
-                  )
-                })}
+            {/* Playbook panel — click opens modal like Switch Towers */}
+            <div className="du-spellbook-panel" style={{ position: 'relative', zIndex: 5 }}>
+              <div className="du-sb-header" onClick={() => setPlaybookModalOpen(true)}>
+                <div className="du-sb-header-label">PLAYBOOK</div>
+                <div className="du-sb-header-icon">📜</div>
+                <div className="du-sb-header-bottom">
+                  <span className="du-sb-header-count">{defeatedProfessors.size}<span className="du-sb-header-total"> / 19 SPELLS</span></span>
+                </div>
               </div>
             </div>
+
             <div className="du-player-frame">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="du-player-img" src="/assets/player_apprentice_nobg.avif" alt="Apprentice"
@@ -1133,15 +1118,16 @@ export default function Home() {
           </div>
         )}
 
-        {/* Playbook modal overlay */}
+        {/* Playbook modal — bottom sheet (same style as tower select) */}
         {playbookModalOpen && (
-          <div className="pbm-wrap" onClick={() => setPlaybookModalOpen(false)}>
-            <div className="pbm-overlay" />
-            <div className="pbm-panel" onClick={e => e.stopPropagation()}>
-              <button className="pbm-close" onClick={() => setPlaybookModalOpen(false)}>✕</button>
-              <div className="pbm-inner">
-                <div className="pb-scroll-inner">
-                  <div className="pb-wrap">
+          <div className="pbm-overlay" onClick={() => setPlaybookModalOpen(false)}>
+            <div className="pbm-sheet" onClick={e => e.stopPropagation()}>
+              <div className="pbm-header">
+                <span className="pbm-title">✦ Your Spellbook ✦</span>
+                <button className="pbm-close-btn" onClick={() => setPlaybookModalOpen(false)}>✕ CLOSE</button>
+              </div>
+              <div className="pbm-body">
+                <div className="pb-wrap">
                     <div className="pb-header">
                       <div className="pb-title">Spell Card Collection Playbook</div>
                       <div className="pb-subtitle">✦ MAX SPELLS: 19 &nbsp;·&nbsp; 1 PER PROFESSOR ✦</div>
@@ -1200,7 +1186,6 @@ export default function Home() {
                       })}
                     </div>
                   </div>
-                </div>
               </div>
             </div>
           </div>

@@ -835,8 +835,8 @@ body {
 .du-round-tag { font-family:'Cinzel',serif;font-size:8px;letter-spacing:3px;color:rgba(220,185,95,.85);border:1px solid rgba(180,140,50,.45);border-radius:10px;padding:2px 14px;margin-top:3px;background:rgba(40,25,5,.6); }
 /* Left column SWITCH TOWERS buttons */
 .du-left-tower-btns { display:flex;gap:6px;margin-top:8px;justify-content:center; }
-.du-left-tower-btn { flex:1;border:1.5px solid rgba(140,110,35,.45);border-radius:14px;background:rgba(20,10,2,.8);cursor:pointer;padding:12px 4px;font-family:'Cinzel',serif;font-size:7.5px;font-weight:700;letter-spacing:1px;color:rgba(195,160,80,.7);transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px; }
-.du-left-tower-btn img { width:30px;height:30px;object-fit:contain;mix-blend-mode:screen;opacity:.9; }
+.du-left-tower-btn { flex:1;border:1.5px solid rgba(140,110,35,.45);border-radius:14px;background:rgba(20,10,2,.8);cursor:pointer;padding:8px 4px;font-family:'Cinzel',serif;font-size:7.5px;font-weight:700;letter-spacing:1px;color:rgba(195,160,80,.7);transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px; }
+.du-left-tower-btn img { width:22px;height:22px;object-fit:contain;mix-blend-mode:screen;opacity:.9; }
 .du-left-tower-btn.active { border-color:rgba(225,182,58,.9);color:#e6cc82;box-shadow:0 0 8px rgba(220,172,38,.35);background:rgba(48,32,7,.9); }
 .du-left-tower-btn:hover:not(.active) { border-color:rgba(200,160,50,.7);color:#d4b86a;background:rgba(35,20,5,.85); }
 /* Crest icon — clickable */
@@ -913,7 +913,7 @@ body {
 
 /* RIGHT COLUMN — tower + player */
 .du-right-col { position:relative; }
-.du-tower-panel { background:linear-gradient(160deg,rgba(10,6,1,.96),rgba(6,3,0,.98));border-bottom:1.5px solid rgba(180,140,50,.45);padding:12px 10px 50px;position:relative;z-index:5; }
+.du-tower-panel { background:linear-gradient(160deg,rgba(10,6,1,.96),rgba(6,3,0,.98));border-bottom:1.5px solid rgba(180,140,50,.45);padding:8px 8px 28px;position:relative;z-index:5; }
 .du-tower-progress { font-family:'EB Garamond',serif;font-size:10px;color:rgba(195,170,125,.82);text-align:center;font-style:italic;margin-bottom:8px; }
 .du-tower-avatars { display:flex;justify-content:center;gap:6px;flex-wrap:wrap; }
 .du-avatar { width:38px;height:38px;border-radius:50%;background:rgba(20,10,4,.85);border:2px solid rgba(120,90,30,.42);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;transition:transform .15s,box-shadow .15s; }
@@ -926,6 +926,17 @@ body {
 .du-player-frame { position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;background:transparent;overflow:visible;pointer-events:none; }
 .du-player-img { height:100%;width:100%;object-fit:contain;object-position:bottom center;filter:drop-shadow(0 4px 28px rgba(70,130,220,.35)) drop-shadow(0 0 12px rgba(20,40,120,.5)) brightness(1.08);position:relative;z-index:2; }
 
+
+/* RIGHT COLUMN — Collapsible Spellbook */
+.du-spellbook-panel { background:linear-gradient(160deg,rgba(10,6,1,.97),rgba(6,3,0,.99));border-bottom:1.5px solid rgba(180,140,50,.45); }
+.du-sb-header { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px 8px 28px;cursor:pointer;user-select:none;transition:background .15s; }
+.du-sb-header:hover { background:rgba(122,85,21,.18); }
+.du-sb-header-label { font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:2.5px;color:#c8a050;text-align:center;padding-bottom:4px;border-bottom:1px solid rgba(155,120,35,.28);width:100%; }
+.du-sb-header-icon { font-size:26px;line-height:1;filter:drop-shadow(0 0 8px rgba(240,192,96,.4)); }
+.du-sb-header-bottom { display:flex;align-items:center;justify-content:center;gap:6px; }
+.du-sb-header-count { font-family:'Cinzel',serif;font-size:11px;color:#f0c060;letter-spacing:1px; }
+.du-sb-header-total { font-size:9px;color:rgba(240,192,96,.45); }
+.du-sb-chevron { font-size:9px;color:rgba(200,150,50,.7); }
 
 /* Loading / explanation — inside question box */
 .duel-q-loading {
@@ -2826,14 +2837,32 @@ body {
 /* ═══════════════════════════════════════════════
    PLAYBOOK MODAL (overlay on duel screen)
 ═══════════════════════════════════════════════ */
-.pbm-wrap { position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center; }
-.pbm-overlay { position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);z-index:1; }
-.pbm-panel { position:relative;z-index:2;width:90%;height:91%;border-radius:10px;overflow:hidden;border:2px solid rgba(180,130,45,.75);box-shadow:0 0 60px rgba(0,0,0,.95),0 0 30px rgba(140,90,20,.3);display:flex;flex-direction:column; }
-.pbm-close { position:absolute;top:8px;right:8px;z-index:20;background:rgba(20,10,2,.92);border:1.5px solid rgba(180,130,45,.65);border-radius:50%;width:26px;height:26px;color:#e0c87a;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;line-height:1;transition:all .2s; }
-.pbm-close:hover { border-color:rgba(220,175,60,.9);box-shadow:0 0 10px rgba(210,170,50,.4); }
-.pbm-inner { flex:1;position:relative;overflow:hidden;background:url('/assets/Playbook_background_1775005707967.avif') center top / cover no-repeat; }
-.pbm-inner::-webkit-scrollbar { width:4px; }
-.pbm-inner::-webkit-scrollbar-thumb { background:rgba(140,105,30,.3);border-radius:2px; }
+.pbm-overlay { position:absolute;inset:0;z-index:60;background:rgba(2,1,0,.4); }
+.pbm-sheet {
+  position:absolute;left:0;right:0;bottom:0;top:26%;
+  background: linear-gradient(rgba(5,3,0,.35),rgba(5,3,0,.4)),
+              url('/assets/Playbook_background_1775005707967.avif') center top / cover no-repeat;
+  border-top:2px solid rgba(210,165,60,.8);
+  box-shadow:0 -8px 48px rgba(0,0,0,.85),0 -2px 20px rgba(160,110,20,.35);
+  display:flex;flex-direction:column;overflow:hidden;
+  animation:tmSlideUp .2s cubic-bezier(.22,.68,0,1.2);
+}
+.pbm-header {
+  display:flex;align-items:center;padding:10px 18px 9px;
+  background:rgba(6,3,0,.7);
+  border-bottom:1px solid rgba(180,140,50,.5);flex-shrink:0;gap:12px;
+}
+.pbm-title { font-family:'EB Garamond',serif;font-size:16px;font-weight:600;letter-spacing:.04em;color:#c8a050;flex:1; }
+.pbm-close-btn {
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:.1em;
+  background:rgba(30,15,3,.9);border:1.5px solid rgba(180,130,40,.7);
+  color:#c8a050;border-radius:4px;padding:6px 16px;cursor:pointer;transition:all .15s;
+  box-shadow:0 2px 8px rgba(0,0,0,.5);
+}
+.pbm-close-btn:hover { border-color:#f0c060;color:#f0c060;background:rgba(50,28,6,.95); }
+.pbm-body { flex:1;overflow-y:auto;padding:0 18px 16px;scrollbar-width:thin;scrollbar-color:#4a3010 transparent; }
+.pbm-body::-webkit-scrollbar { width:4px; }
+.pbm-body::-webkit-scrollbar-thumb { background:#4a3010;border-radius:2px; }
 
 /* ═══════════════════════════════════════════════
    TOWER SELECT MODAL (bottom sheet on duel screen)
