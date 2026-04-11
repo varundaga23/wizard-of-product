@@ -259,16 +259,30 @@ const LANDING_PROFESSORS = [
 
 // Professor image maps — add new professors here as images arrive
 const PROF_CARD_IMG: Record<string, string> = {
-  gibson_biddle:  '/assets/professors/gibson_biddle_card.png',
-  julie_zhuo:     '/assets/professors/julie_zhuo_card.png',
-  teresa_torres:  '/assets/professors/teresa_torres_card.png',
-  shreyas_doshi:  '/assets/professors/shreyas_doshi_card.png',
+  gibson_biddle:         '/assets/professors/gibson_biddle_card.png',
+  julie_zhuo:            '/assets/professors/julie_zhuo_card.png',
+  teresa_torres:         '/assets/professors/teresa_torres_card.png',
+  shreyas_doshi:         '/assets/professors/shreyas_doshi_card.png',
+  jules_walter:          '/assets/professors/jules_walter_card.png',
+  april_dunford:         '/assets/professors/april_dunford_card.png',
+  marty_cagan:           '/assets/professors/marty_cagan_card.png',
+  chandra_janakiraman:   '/assets/professors/chandra_janakiraman_card.png',
+  roger_martin:          '/assets/professors/roger_martin_card.png',
+  christopher_lochhead:  '/assets/professors/christopher_lochhead_card.png',
+  marc_andreessen:       '/assets/professors/marc_andreessen_card.png',
 }
 const PROF_DUEL_IMG: Record<string, string> = {
-  gibson_biddle:  '/assets/professors/gibson_biddle_duel.png',
-  julie_zhuo:     '/assets/professors/julie_zhuo_duel.png',
-  teresa_torres:  '/assets/professors/teresa_torres_duel.png',
-  shreyas_doshi:  '/assets/professors/shreyas_doshi_duel.png',
+  gibson_biddle:         '/assets/professors/gibson_biddle_duel.png',
+  julie_zhuo:            '/assets/professors/julie_zhuo_duel.png',
+  teresa_torres:         '/assets/professors/teresa_torres_duel.png',
+  shreyas_doshi:         '/assets/professors/shreyas_doshi_duel.png',
+  jules_walter:          '/assets/professors/jules_walter_duel.png',
+  april_dunford:         '/assets/professors/april_dunford_duel.png',
+  marty_cagan:           '/assets/professors/marty_cagan_duel.png',
+  chandra_janakiraman:   '/assets/professors/chandra_janakiraman_duel.png',
+  roger_martin:          '/assets/professors/roger_martin_duel.png',
+  christopher_lochhead:  '/assets/professors/christopher_lochhead_duel.png',
+  marc_andreessen:       '/assets/professors/marc_andreessen_duel.png',
 }
 function getProfCardImg(key: string): string {
   return PROF_CARD_IMG[key] ?? `/assets/professors/${key}.jpg`
