@@ -84,6 +84,7 @@ These decisions are final. Do not suggest building skipped screens or features.
 - localStorage persistence (game resets on page refresh)
 - Midnight heart refill (PRD §6.2 "come back tomorrow")
 - Cross-device sync / Supabase user accounts
+- **Post-duel review summary** — after duel ends (win or lose), show a summary of all 5 questions with correct/wrong indicators. Tapping a wrong answer reveals the `explanation` field from Supabase. Framed as "the professor debriefs you after the battle." `explanation` column already exists in the questions table.
 
 ### Other Locked Decisions
 - **No Supabase leaderboard** — score submission not being built
@@ -268,7 +269,7 @@ Muggle → Apprentice → Scholar → Wizard → Archmage → Grand Wizard
 4. Shreyas Doshi — Master of Strategic Spells
 5. Jules Walter — The Influence Enchanter
 6. April Dunford — The Positioning Sage
-7. **Marty Cagan** — Tower Boss
+7. **Marty Cagan** — Tower Boss (The Ancient Sage)
 
 ### Strategy Tower (5 professors, fixed order)
 1. Chandra Janakiraman — Strategy Blocks Sage

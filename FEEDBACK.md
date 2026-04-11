@@ -15,6 +15,23 @@ Add raw notes as you play. Tell Claude "address the feedback file" when ready fo
 
 ## Open
 
+**TODO — Sound Design**
+Downloaded sample tracks are at `~/Desktop/spellcraft-sounds/`:
+- `ambient/` — 4 fantasy/contemplative tracks (MP3)
+- `sfx/` — spell_cast_1-7.ogg + magic SFX pack (fire, healing, ice, wind WAVs)
+
+Action: Listen to samples and decide which tracks to use for:
+- Landing page ambient loop
+- Oracle's Rite ceremony
+- Archetype Reveal
+- Duel screen ambient loop
+- Correct answer SFX
+- Wrong answer SFX
+- Spell win SFX
+
+Once tracks are chosen, tell Claude "wire up sounds" and implementation will follow (audio manager + mute button in HUD).
+**Priority:** medium
+**Status:** open
 
 ---
 

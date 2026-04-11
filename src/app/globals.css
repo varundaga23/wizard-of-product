@@ -867,7 +867,7 @@ body {
 /* LEFT + RIGHT COLUMN */
 .du-left-col,.du-right-col { display:flex;flex-direction:column;position:relative; }
 .du-prof-frame { position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;background:transparent;overflow:visible;pointer-events:none; }
-.du-prof-img { height:100%;width:100%;object-fit:contain;object-position:bottom center;filter:drop-shadow(0 4px 28px rgba(200,140,30,.32)) drop-shadow(0 0 12px rgba(120,70,5,.45)) brightness(1.1);position:relative;z-index:2; }
+.du-prof-img { height:100%;width:100%;object-fit:contain;object-position:bottom center;filter:drop-shadow(0 4px 28px rgba(200,140,30,.32)) drop-shadow(0 0 12px rgba(120,70,5,.45)) brightness(1.1);position:relative;z-index:2;mask-image:radial-gradient(ellipse 80% 88% at 45% 95%, black 45%, transparent 100%);-webkit-mask-image:radial-gradient(ellipse 80% 88% at 45% 95%, black 45%, transparent 100%); }
 .du-prof-name-bar { position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(4,2,1,.88));padding:6px 10px 5px;text-align:center;pointer-events:none; }
 .du-prof-name-bar span { font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:1px;color:#e8d090; }
 .du-bottom-panel { background:linear-gradient(160deg,rgba(6,8,20,.97),rgba(4,5,15,.99));border-top:1.5px solid rgba(155,122,44,.5);padding:5px 10px 6px;position:relative;z-index:5; }

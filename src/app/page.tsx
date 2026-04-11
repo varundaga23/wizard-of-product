@@ -250,12 +250,32 @@ const ARCHETYPES: Record<ArchetypeKey, { name: string; desc: string; tagline: st
 }
 
 const LANDING_PROFESSORS = [
-  { name: 'Gibson Biddle',  title: 'Former VP Product, Netflix',  img: '/assets/Gibson_Biddle_nobg.avif' },
-  { name: 'Shreyas Doshi',  title: 'Strategy & Execution',        img: null },
-  { name: 'April Dunford',  title: 'Positioning Powerhouse',      img: null },
-  { name: 'Marc Andreessen',title: 'Software Eats the World',     img: null },
+  { key: 'gibson_biddle',   name: 'Gibson Biddle',   title: 'The DHM Keeper'             },
+  { key: 'shreyas_doshi',   name: 'Shreyas Doshi',   title: 'Master of Strategic Spells' },
+  { key: 'april_dunford',   name: 'April Dunford',   title: 'The Positioning Sage'       },
+  { key: 'marc_andreessen', name: 'Marc Andreessen', title: 'The Contrarian Archmage'    },
 ]
 
+
+// Professor image maps — add new professors here as images arrive
+const PROF_CARD_IMG: Record<string, string> = {
+  gibson_biddle:  '/assets/professors/gibson_biddle_card.png',
+  julie_zhuo:     '/assets/professors/julie_zhuo_card.png',
+  teresa_torres:  '/assets/professors/teresa_torres_card.png',
+  shreyas_doshi:  '/assets/professors/shreyas_doshi_card.png',
+}
+const PROF_DUEL_IMG: Record<string, string> = {
+  gibson_biddle:  '/assets/professors/gibson_biddle_duel.png',
+  julie_zhuo:     '/assets/professors/julie_zhuo_duel.png',
+  teresa_torres:  '/assets/professors/teresa_torres_duel.png',
+  shreyas_doshi:  '/assets/professors/shreyas_doshi_duel.png',
+}
+function getProfCardImg(key: string): string {
+  return PROF_CARD_IMG[key] ?? `/assets/professors/${key}.jpg`
+}
+function getProfDuelImg(key: string): string {
+  return PROF_DUEL_IMG[key] ?? `/assets/professors/${key === 'lenny_oracle' ? 'lenny_rachitsky' : key}_nobg.avif`
+}
 
 const LENNY_PROF: ProfessorDef = {
   key: 'lenny_oracle',
@@ -789,7 +809,7 @@ export default function Home() {
           {LANDING_PROFESSORS.map((p) => (
             <div key={p.name} className="prof-card">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="prof-card-img" src={p.img ?? '/assets/professor_placeholder.png'} alt={p.name} />
+              <img className="prof-card-img" src={getProfCardImg(p.key)} alt={p.name} />
               <div className="prof-card-overlay">
                 <div className="pname">{p.name.toUpperCase()}</div>
                 <div className="ptitle">{p.title.toUpperCase()}</div>
@@ -1013,7 +1033,7 @@ export default function Home() {
               <img
                 key={currentProf?.key}
                 className="du-prof-img"
-                src={currentProf?.key === 'gibson_biddle' ? '/assets/Gibson_Biddle_nobg.avif' : `/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}_nobg.avif`}
+                src={getProfDuelImg(currentProf?.key ?? '')}
                 alt={currentProf?.name}
                 onError={(e) => {
                   const img = e.target as HTMLImageElement
@@ -1228,7 +1248,7 @@ export default function Home() {
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 className="tm-prof-card-img"
-                                src={prof.key === 'gibson_biddle' ? '/assets/Gibson_Biddle_nobg.avif' : `/assets/professors/${prof.key}.jpg`}
+                                src={getProfCardImg(prof.key)}
                                 alt={prof.name}
                                 onError={e => { (e.target as HTMLImageElement).style.display='none' }}
                               />
