@@ -85,6 +85,7 @@ These decisions are final. Do not suggest building skipped screens or features.
 - Midnight heart refill (PRD §6.2 "come back tomorrow")
 - Cross-device sync / Supabase user accounts
 - **Post-duel review summary** — after duel ends (win or lose), show a summary of all 5 questions with correct/wrong indicators. Tapping a wrong answer reveals the `explanation` field from Supabase. Framed as "the professor debriefs you after the battle." `explanation` column already exists in the questions table.
+- **Question writing quality pass** — fix in a single Claude migration script across all 549 questions: (1) Replace em dash overuse (`X — Y` constructions) with varied punctuation. (2) Vary answer option lengths — correct answer is currently always the longest/most hedged option, letting players pattern-match without reading. Mix in short direct correct answers and long plausible wrong answers to force genuine engagement. (3) Break the uniform scenario structure — not every question should be `"You're [role] and [situation]. What do you do?"`. (4) Remove repeated AI-favoured phrases: "connective tissue", "table stakes", "upstream thinking", "first principles" used too frequently. (5) Remove hedging qualifiers ("likely", "often", "typically") that signal which option is correct before the player has thought about it.
 
 ### Other Locked Decisions
 - **No Supabase leaderboard** — score submission not being built
