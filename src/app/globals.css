@@ -831,7 +831,7 @@ body {
 .du-hud-side { display:flex;align-items:center;gap:8px;width:310px;flex-shrink:0; }
 .du-hud-right { flex-direction:row-reverse; }
 .du-title-center { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center; }
-.du-duel-title { font-family:'HarryP',serif;font-size:15px;font-weight:900;color:#e8c84a;letter-spacing:4px;text-shadow:0 0 20px rgba(240,200,60,.45); }
+.du-duel-title { font-family:'HarryP',serif;font-size:22px;font-weight:900;color:#e8c84a;letter-spacing:4px;text-shadow:0 0 20px rgba(240,200,60,.45); }
 .du-round-tag { font-family:'Cinzel',serif;font-size:8px;letter-spacing:3px;color:rgba(220,185,95,.85);border:1px solid rgba(180,140,50,.45);border-radius:10px;padding:2px 14px;margin-top:3px;background:rgba(40,25,5,.6); }
 /* Left column SWITCH TOWERS buttons */
 .du-left-tower-btns { display:flex;gap:6px;margin-top:8px;justify-content:center; }
@@ -850,10 +850,10 @@ body {
 .du-browse-all-btn:hover { border-color:#f0c060;color:#f0c060; }
 .du-crest { width:46px;height:46px;border-radius:5px;border:2px solid rgba(180,130,45,.65);background:linear-gradient(135deg,rgba(130,18,18,.95),rgba(70,8,8,.98));display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;box-shadow:0 2px 10px rgba(0,0,0,.7); }
 .du-crest.blue { background:linear-gradient(135deg,rgba(18,50,140,.95),rgba(10,28,90,.98)); }
-.du-hud-info { display:flex;flex-direction:column;gap:1px; }
-.du-hud-label { font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:rgba(200,165,80,.7); }
-.du-hud-name { font-family:'Cinzel',serif;font-size:10px;font-weight:700;color:#f0e0b0;letter-spacing:.5px; }
-.du-hud-sub { font-family:'EB Garamond',serif;font-size:9px;color:rgba(190,160,110,.8);font-style:italic; }
+.du-hud-info { display:flex;flex-direction:column;gap:1px;min-width:0;overflow:hidden; }
+.du-hud-label { font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:rgba(200,165,80,.7);white-space:nowrap; }
+.du-hud-name { font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:#f0e0b0;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.du-hud-sub { font-family:'EB Garamond',serif;font-size:12px;color:rgba(190,160,110,.8);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 .du-hp-wrap { display:flex;align-items:center;gap:5px;margin-top:3px; }
 .du-hp-track { width:105px;height:7px;background:rgba(0,0,0,.55);border-radius:4px;border:1px solid rgba(120,90,40,.4);overflow:hidden; }
 .du-hp-fill { height:100%;border-radius:4px; }
@@ -891,7 +891,7 @@ body {
 /* CENTER COLUMN */
 .du-center-col { display:flex;flex-direction:column;align-items:center;padding:10px 14px 10px;gap:8px;height:100%;overflow:hidden; }
 .du-question-box { background:linear-gradient(175deg,rgba(12,6,1,.97),rgba(8,3,0,.99));border:1.5px solid rgba(175,138,50,.6);border-radius:8px;padding:14px 22px;width:100%;box-shadow:0 8px 28px rgba(0,0,0,.85),inset 0 1px 0 rgba(200,160,80,.05);flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px; }
-.du-question-text { font-family:'EB Garamond',serif;font-size:18px;color:#f4eada;line-height:1.68;text-align:center; }
+.du-question-text { font-family:'EB Garamond',serif;font-size:20px;color:#f4eada;line-height:1.68;text-align:center; }
 .du-category-tag { display:flex;align-items:center;gap:8px;width:100%;flex-shrink:0; }
 .du-category-tag::before,.du-category-tag::after { content:'';flex:1;height:1px;background:rgba(175,138,45,.4); }
 .du-cat-label { font-family:'Cinzel',serif;font-size:7px;letter-spacing:2.5px;color:#b89040;border:1px solid rgba(175,132,42,.4);border-radius:10px;padding:3px 12px;background:rgba(30,16,2,.9);white-space:nowrap; }
@@ -909,7 +909,7 @@ body {
 .du-ans-card.correct .du-ans-desc { color:#7fff90; }
 .du-ans-card.wrong .du-ans-desc { color:#ff9090; }
 .du-ans-card.reveal-correct .du-ans-desc { color:#60c860; }
-.du-ans-desc { font-family:'EB Garamond',serif;font-size:20px;color:rgba(210,190,148,.82);text-align:center;line-height:1.55;flex:1;display:flex;align-items:center;justify-content:center; }
+.du-ans-desc { font-family:'EB Garamond',serif;font-size:17px;color:rgba(210,190,148,.82);text-align:center;line-height:1.55;flex:1;display:flex;align-items:center;justify-content:center; }
 
 /* RIGHT COLUMN — tower + player */
 .du-right-col { position:relative; }

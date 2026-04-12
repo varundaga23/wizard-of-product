@@ -35,6 +35,15 @@ Once tracks are chosen, tell Claude "wire up sounds" and implementation will fol
 
 ---
 
+**TODO — How to Play modal (Option A)**
+**Screen:** Duel screen HUD
+**Issue:** New players have no way to learn the rules mid-game.
+**Plan:** Add a small `ℹ` icon in the HUD center (next to the Spellcraft title or QUESTION tag). Clicking it opens a clean modal overlay with game rules: hearts, SP, towers, how to win a duel, what spells are, Lenny unlock condition.
+**Priority:** medium
+**Status:** open
+
+---
+
 ## Done
 
 <!-- Completed items move here -->

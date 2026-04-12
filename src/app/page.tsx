@@ -1026,7 +1026,6 @@ export default function Home() {
           {/* Professor side */}
           <div className="du-hud-side">
             <div className="du-hud-info">
-              <div className="du-hud-label">PROFESSOR</div>
               <div className="du-hud-name">{currentProf?.name}</div>
               <div className="du-hud-sub">{currentProf?.title}</div>
               {(() => {
@@ -1053,7 +1052,6 @@ export default function Home() {
           {/* Player side */}
           <div className="du-hud-side du-hud-right">
             <div className="du-hud-info" style={{ textAlign: 'right' }}>
-              <div className="du-hud-label">YOU</div>
               <div className="du-hud-name">{rank}</div>
               <div className="du-hud-sub">{sp.toLocaleString()} SP · {currentTower?.name ?? 'Final Duel'}</div>
               {(() => {
@@ -1080,7 +1078,7 @@ export default function Home() {
           {/* LEFT: Switch towers + Professor figure + Possible Rewards */}
           <div className="du-left-col">
             <div className="du-tower-panel">
-              <div className="du-panel-title" onClick={() => setTowerModalOpen(true)} style={{cursor:'pointer'}}>SELECT PROFESSORS</div>
+              <div className="du-panel-title" onClick={() => setTowerModalOpen(true)} style={{cursor:'pointer'}}>Select professors</div>
               <div className="du-left-tower-btns">
                 {(['pm', 'strategy', 'ai'] as TowerKey[]).map(tk => (
                   <button
@@ -1175,7 +1173,7 @@ export default function Home() {
             {/* Playbook panel — click opens modal like Switch Towers */}
             <div className="du-spellbook-panel" style={{ position: 'relative', zIndex: 5 }}>
               <div className="du-sb-header" onClick={() => setPlaybookModalOpen(true)}>
-                <div className="du-sb-header-label">PLAYBOOK</div>
+                <div className="du-sb-header-label">Playbook</div>
                 <div className="du-sb-header-icon">📜</div>
                 <div className="du-sb-header-bottom">
                   <span className="du-sb-header-count">{defeatedProfessors.size}<span className="du-sb-header-total"> / 19 SPELLS</span></span>
