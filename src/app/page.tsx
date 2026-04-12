@@ -248,7 +248,7 @@ const ARCHETYPES: Record<ArchetypeKey, { name: string; desc: string; tagline: st
 }
 
 const LANDING_PROFESSORS = [
-  { key: 'marty_cagan',     name: 'Marty Cagan',     title: 'The Ancient Sage'           },
+  { key: 'julie_zhuo',      name: 'Julie Zhuo',      title: 'Enchantress of Design'      },
   { key: 'shreyas_doshi',   name: 'Shreyas Doshi',   title: 'Master of Strategic Spells' },
   { key: 'nick_turley',     name: 'Nick Turley',     title: 'Keeper of the Crystal'      },
   { key: 'marc_andreessen', name: 'Marc Andreessen', title: 'The Contrarian Archmage'    },
@@ -267,7 +267,15 @@ const PROF_CARD_IMG: Record<string, string> = {
   roger_martin:          '/assets/professors/roger_martin_card.png',
   christopher_lochhead:  '/assets/professors/christopher_lochhead_card.png',
   marc_andreessen:       '/assets/professors/marc_andreessen_card.png',
-  lenny_rachitsky:       '/assets/professors/lenny_rachitsky.jpg',
+  hamilton_helmer:       '/assets/professors/hamilton_helmer_card.png',
+  tal_raviv:             '/assets/professors/tal_raviv_card.png',
+  aman_khan:             '/assets/professors/aman_khan_card.png',
+  claire_vo:             '/assets/professors/claire_vo_card.png',
+  nick_turley:           '/assets/professors/nick_turley_card.png',
+  hamel_husain:          '/assets/professors/hamel_husain_card.png',
+  chip_huyen:            '/assets/professors/chip_huyen_card.png',
+  fei_fei_li:            '/assets/professors/fei_fei_li_card.png',
+  lenny_rachitsky:       '/assets/professors/lenny_rachitsky_card.png',
 }
 const PROF_DUEL_IMG: Record<string, string> = {
   gibson_biddle:         '/assets/professors/gibson_biddle_duel.png',
@@ -280,7 +288,15 @@ const PROF_DUEL_IMG: Record<string, string> = {
   roger_martin:          '/assets/professors/roger_martin_duel.png',
   christopher_lochhead:  '/assets/professors/christopher_lochhead_duel.png',
   marc_andreessen:       '/assets/professors/marc_andreessen_duel.png',
-  lenny_rachitsky:       '/assets/professors/lenny_rachitsky.jpg',
+  hamilton_helmer:       '/assets/professors/hamilton_helmer_duel.png',
+  tal_raviv:             '/assets/professors/tal_raviv_duel.png',
+  aman_khan:             '/assets/professors/aman_khan_duel.png',
+  claire_vo:             '/assets/professors/claire_vo_duel.png',
+  nick_turley:           '/assets/professors/nick_turley_duel.png',
+  hamel_husain:          '/assets/professors/hamel_husain_duel.png',
+  chip_huyen:            '/assets/professors/chip_huyen_duel.png',
+  fei_fei_li:            '/assets/professors/fei_fei_li_duel.png',
+  lenny_rachitsky:       '/assets/professors/lenny_rachitsky_duel.png',
 }
 function getProfCardImg(key: string): string {
   return PROF_CARD_IMG[key] ?? `/assets/professors/${key}.jpg`
@@ -857,7 +873,6 @@ export default function Home() {
         <div className="landing-logo-block">
           <div className="landing-logo-title">Spellcraft</div>
           <div className="landing-logo-sub">Wizard of Product</div>
-          <div className="landing-logo-tagline">Three towers. Eighteen professors. One Keeper.</div>
         </div>
 
         <div className="prof-grid">
@@ -873,7 +888,7 @@ export default function Home() {
           ))}
           <div className="prof-card final" onClick={openSummonsEasterEgg} style={{ cursor: 'pointer' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="prof-card-img" src="/assets/professors/lenny_rachitsky.jpg" alt="Lenny Rachitsky" />
+            <img className="prof-card-img" src="/assets/professors/lenny_rachitsky_card.png" alt="Lenny Rachitsky" />
             <div className="prof-card-overlay">
               <div className="pname">LENNY RACHITSKY</div>
               <div className="ptitle">KEEPER OF THE PRODUCT LORE</div>
@@ -882,17 +897,15 @@ export default function Home() {
           <div className="prof-card more">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="prof-card-img" src="/assets/professor_placeholder.png" alt="" style={{ opacity:.8 }} />
-            <div className="prof-card-overlay">
-              <div className="pname" style={{ color:'#a08040', letterSpacing:'.8px' }}>MORE LEGENDS AWAIT...</div>
-            </div>
+            <div className="prof-card-overlay" />
           </div>
         </div>
 
         {/* Scroll: image and text are siblings so filter on img never touches text */}
         <div className="scroll-shadow-wrap">
           <div className="scroll-body">
-            <div className="scroll-text">For every<br />product mage.</div>
-            <div className="scroll-text">Learn the lore.<br />Claim your title.</div>
+            <div className="scroll-text">Three towers.<br />Eighteen professors.</div>
+            <div className="scroll-text">One Keeper.</div>
             <div className="scroll-divider"><div className="scroll-divider-gem" /></div>
             <div className="scroll-text lower">Duel masters.<br />Build your playbook.<br />Rule the product realm.</div>
           </div>
@@ -1032,7 +1045,7 @@ export default function Home() {
           </div>
           {/* Center title */}
           <div className="du-title-center">
-            <div className="du-duel-title">DUEL OF KNOWLEDGE</div>
+            <div className="du-duel-title">Spellcraft</div>
             <div className="du-round-tag">
               {duelPhase === 'selecting' ? 'SELECT YOUR OPPONENT' : `QUESTION ${qIndex + 1} OF ${duelQs.length || 5}`}
             </div>
@@ -1314,7 +1327,7 @@ export default function Home() {
                     <span className="tm-section-name" style={{ color: '#f0c060' }}>📖 Keeper of Product Lore</span>
                     <span className="tm-section-prog" style={{ color: '#a08040' }}>Always available · No hearts at stake</span>
                   </div>
-                  <div className="tm-prof-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                  <div className="tm-prof-grid">
                     <div
                       className={`tm-prof-card${defeatedProfessors.has('lenny_rachitsky') ? ' defeated' : ''}`}
                       style={{ cursor: 'pointer', borderColor: 'rgba(240,192,96,.4)' }}
@@ -1323,7 +1336,7 @@ export default function Home() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         className="tm-prof-card-img"
-                        src="/assets/professors/lenny_rachitsky.jpg"
+                        src="/assets/professors/lenny_rachitsky_card.png"
                         alt="Lenny Rachitsky"
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />

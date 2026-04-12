@@ -831,7 +831,7 @@ body {
 .du-hud-side { display:flex;align-items:center;gap:8px;width:310px;flex-shrink:0; }
 .du-hud-right { flex-direction:row-reverse; }
 .du-title-center { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center; }
-.du-duel-title { font-family:'Cinzel Decorative',serif;font-size:13px;font-weight:900;color:#e8c84a;letter-spacing:4px;text-shadow:0 0 20px rgba(240,200,60,.45); }
+.du-duel-title { font-family:'HarryP',serif;font-size:15px;font-weight:900;color:#e8c84a;letter-spacing:4px;text-shadow:0 0 20px rgba(240,200,60,.45); }
 .du-round-tag { font-family:'Cinzel',serif;font-size:8px;letter-spacing:3px;color:rgba(220,185,95,.85);border:1px solid rgba(180,140,50,.45);border-radius:10px;padding:2px 14px;margin-top:3px;background:rgba(40,25,5,.6); }
 /* Left column SWITCH TOWERS buttons */
 .du-left-tower-btns { display:flex;gap:6px;margin-top:8px;justify-content:center; }
