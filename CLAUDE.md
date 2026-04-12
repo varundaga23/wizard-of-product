@@ -79,6 +79,7 @@ These decisions are final. Do not suggest building skipped screens or features.
 - **Rate limiting on `/api/questions`** — needs: `vercel integration add upstash` → `vercel env pull .env.local` → install `@upstash/ratelimit` → implement sliding window 60 req/min per IP in route.ts
 
 ### Deferred to v2 (do not build in v1)
+- **Teresa Torres** (Oracle of Discovery) — removed from PM Tower professor list for v1. Re-add to PM Tower (between Julie Zhuo and Shreyas Doshi) when ready for v2.
 - Archetype SP bonus (+50 SP in primary tower) — questions table has no archetype_tag
 - Lenny's Blessing harder retry subset — no difficulty filter in API yet
 - localStorage persistence (game resets on page refresh)
@@ -103,7 +104,7 @@ These decisions are final. Do not suggest building skipped screens or features.
 - **UI:** React + CSS (all visual effects are CSS — animations, clip-path, gradients)
 - **Database:** Supabase (questions, best_distractor)
 - **Deployment:** Vercel (`wizard-of-product.vercel.app`)
-- **Content:** Static JS for all 19 professors, spell names, archetypes (`src/data/professors.js`)
+- **Content:** Static JS for all 18 professors, spell names, archetypes (`src/data/professors.js`)
 - **AI:** Anthropic SDK used for one-time Supabase migrations (scripts only, not at runtime)
 
 **Phaser is fully removed.** All legacy `src/Scenes/`, `src/Config/`, `index.html`, `webpack.config.js` deleted. Do not reference or rebuild Phaser.
@@ -266,11 +267,10 @@ Muggle → Apprentice → Scholar → Wizard → Archmage → Grand Wizard
 ### PM Tower (7 professors, fixed order)
 1. Gibson Biddle — DHM Keeper
 2. Julie Zhuo — Enchantress of Design & Leadership
-3. Teresa Torres — Oracle of Discovery
-4. Shreyas Doshi — Master of Strategic Spells
-5. Jules Walter — The Influence Enchanter
-6. April Dunford — The Positioning Sage
-7. **Marty Cagan** — Tower Boss (The Ancient Sage)
+3. Shreyas Doshi — Master of Strategic Spells
+4. Jules Walter — The Influence Enchanter
+5. April Dunford — The Positioning Sage
+6. **Marty Cagan** — Tower Boss (The Ancient Sage)
 
 ### Strategy Tower (5 professors, fixed order)
 1. Chandra Janakiraman — Strategy Blocks Sage
@@ -290,12 +290,11 @@ Muggle → Apprentice → Scholar → Wizard → Archmage → Grand Wizard
 
 **Final Boss:** Lenny Rachitsky (unlocked after all 3 tower bosses defeated)
 
-### Spell Names (all 19)
+### Spell Names (all 18)
 | Professor | Spell |
 |-----------|-------|
 | Gibson Biddle | DHM Principle |
 | Julie Zhuo | The Design Mirror |
-| Teresa Torres | Continuous Discovery |
 | Shreyas Doshi | Upstream Thinking |
 | Jules Walter | The Influence Pact |
 | April Dunford | The Positioning Code |
@@ -333,7 +332,7 @@ Muggle → Apprentice → Scholar → Wizard → Archmage → Grand Wizard
 
 ## Playbook Screen
 - 3 columns by tower: PM (blue) | Strategy (orange) | AI (purple)
-- 19 cards total (1 per professor), Lenny excluded
+- 18 cards total (1 per professor), Lenny excluded
 - Collected cards: diagonal green COLLECTED ribbon
 - Locked cards: desaturated, 🔒 overlay, "Defeat [Professor] to unlock"
 - Tower boss cards: red-tinted border

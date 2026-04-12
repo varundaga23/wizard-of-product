@@ -57,7 +57,6 @@ const TOWERS: Record<TowerKey, { name: string; professors: ProfessorDef[] }> = {
     professors: [
       { key: 'gibson_biddle',  name: 'Gibson Biddle',  title: 'The DHM Keeper',             tower: 'pm' },
       { key: 'julie_zhuo',     name: 'Julie Zhuo',     title: 'Enchantress of Design',      tower: 'pm' },
-      { key: 'teresa_torres',  name: 'Teresa Torres',  title: 'Oracle of Discovery',        tower: 'pm' },
       { key: 'shreyas_doshi',  name: 'Shreyas Doshi',  title: 'Master of Strategic Spells', tower: 'pm' },
       { key: 'jules_walter',   name: 'Jules Walter',   title: 'The Influence Enchanter',    tower: 'pm' },
       { key: 'april_dunford',  name: 'April Dunford',  title: 'The Positioning Sage',       tower: 'pm' },
@@ -91,7 +90,6 @@ const TOWERS: Record<TowerKey, { name: string; professors: ProfessorDef[] }> = {
 const SPELL_SUBTITLES: Record<string, string> = {
   gibson_biddle:         'Delight, Hard-to-copy, Margin-enhancing',
   julie_zhuo:            'Outcomes, Growth, People',
-  teresa_torres:         'Opportunities, Solutions, Assumptions',
   shreyas_doshi:         'Upstream, Northstar, Execution',
   jules_walter:          'Vision, Coalition, Execution',
   april_dunford:         'Market, Category, Positioning',
@@ -108,12 +106,12 @@ const SPELL_SUBTITLES: Record<string, string> = {
   hamel_husain:          'Measure, Improve, Ship',
   chip_huyen:            'Systems, Trade-offs, Reliability',
   fei_fei_li:            'Vision, Cognition, Intelligence',
+  lenny_rachitsky:       'Consistency, Craft, Community',
 }
 
 const SPELL_NAMES: Record<string, string> = {
   gibson_biddle:         'DHM Principle',
   julie_zhuo:            'The Design Mirror',
-  teresa_torres:         'Continuous Discovery',
   shreyas_doshi:         'Upstream Thinking',
   jules_walter:          'The Influence Pact',
   april_dunford:         'The Positioning Code',
@@ -130,12 +128,12 @@ const SPELL_NAMES: Record<string, string> = {
   hamel_husain:          'The Eval Stack',
   chip_huyen:            'Systems Sight',
   fei_fei_li:            'The Intelligence Arc',
+  lenny_rachitsky:       'The Product Lore',
 }
 
 const PROFESSOR_WIN_LINES: Record<string, string> = {
   gibson_biddle:         "DHM is not a framework. It's a discipline. You're starting to understand the difference.",
   julie_zhuo:            "Great design is not about aesthetics. It's about showing you understand the human. You do.",
-  teresa_torres:         "You asked the right questions before reaching for solutions. That is the whole game.",
   shreyas_doshi:         "Upstream thinking is the rarest skill in product. You're already using it.",
   jules_walter:          "Influence without authority is the true PM superpower. You've found yours.",
   april_dunford:         "Bad positioning is invisible — until a competitor eats your lunch. You can see it now.",
@@ -152,12 +150,12 @@ const PROFESSOR_WIN_LINES: Record<string, string> = {
   hamel_husain:          "Evals are product discovery for AI. You've just unlocked the whole stack.",
   chip_huyen:            "The engineering trade-off is also a product trade-off. You can see the whole board now.",
   fei_fei_li:            "The future belongs to those who augment human judgment — not replace it.",
+  lenny_rachitsky:       "You've read the archive. Now go write your own chapter.",
 }
 
 const PROFESSOR_LOSS_LINES: Record<string, string> = {
   gibson_biddle:         "The DHM model only works if you apply it — not memorise it. Come back when you've sat with it.",
   julie_zhuo:            "Great teams come from clear thinking. Yours wasn't clear enough today.",
-  teresa_torres:         "You're still thinking in solutions. Come back when you're thinking in opportunities.",
   shreyas_doshi:         "That's an output answer. I was looking for an outcome answer. There's a difference.",
   jules_walter:          "Knowing a framework and using it to influence are two different things. Think about it.",
   april_dunford:         "Wrong positioning kills good products. What makes this the best at something specific?",
@@ -250,9 +248,9 @@ const ARCHETYPES: Record<ArchetypeKey, { name: string; desc: string; tagline: st
 }
 
 const LANDING_PROFESSORS = [
-  { key: 'gibson_biddle',   name: 'Gibson Biddle',   title: 'The DHM Keeper'             },
+  { key: 'marty_cagan',     name: 'Marty Cagan',     title: 'The Ancient Sage'           },
   { key: 'shreyas_doshi',   name: 'Shreyas Doshi',   title: 'Master of Strategic Spells' },
-  { key: 'april_dunford',   name: 'April Dunford',   title: 'The Positioning Sage'       },
+  { key: 'nick_turley',     name: 'Nick Turley',     title: 'Keeper of the Crystal'      },
   { key: 'marc_andreessen', name: 'Marc Andreessen', title: 'The Contrarian Archmage'    },
 ]
 
@@ -261,7 +259,6 @@ const LANDING_PROFESSORS = [
 const PROF_CARD_IMG: Record<string, string> = {
   gibson_biddle:         '/assets/professors/gibson_biddle_card.png',
   julie_zhuo:            '/assets/professors/julie_zhuo_card.png',
-  teresa_torres:         '/assets/professors/teresa_torres_card.png',
   shreyas_doshi:         '/assets/professors/shreyas_doshi_card.png',
   jules_walter:          '/assets/professors/jules_walter_card.png',
   april_dunford:         '/assets/professors/april_dunford_card.png',
@@ -270,11 +267,11 @@ const PROF_CARD_IMG: Record<string, string> = {
   roger_martin:          '/assets/professors/roger_martin_card.png',
   christopher_lochhead:  '/assets/professors/christopher_lochhead_card.png',
   marc_andreessen:       '/assets/professors/marc_andreessen_card.png',
+  lenny_rachitsky:       '/assets/professors/lenny_rachitsky.jpg',
 }
 const PROF_DUEL_IMG: Record<string, string> = {
   gibson_biddle:         '/assets/professors/gibson_biddle_duel.png',
   julie_zhuo:            '/assets/professors/julie_zhuo_duel.png',
-  teresa_torres:         '/assets/professors/teresa_torres_duel.png',
   shreyas_doshi:         '/assets/professors/shreyas_doshi_duel.png',
   jules_walter:          '/assets/professors/jules_walter_duel.png',
   april_dunford:         '/assets/professors/april_dunford_duel.png',
@@ -283,6 +280,7 @@ const PROF_DUEL_IMG: Record<string, string> = {
   roger_martin:          '/assets/professors/roger_martin_duel.png',
   christopher_lochhead:  '/assets/professors/christopher_lochhead_duel.png',
   marc_andreessen:       '/assets/professors/marc_andreessen_duel.png',
+  lenny_rachitsky:       '/assets/professors/lenny_rachitsky.jpg',
 }
 function getProfCardImg(key: string): string {
   return PROF_CARD_IMG[key] ?? `/assets/professors/${key}.jpg`
@@ -292,11 +290,11 @@ function getProfDuelImg(key: string): string {
 }
 
 const LENNY_PROF: ProfessorDef = {
-  key: 'lenny_oracle',
+  key: 'lenny_rachitsky',
   name: 'Lenny Rachitsky',
   title: 'The Keeper of Product Lore',
   tower: 'pm',
-  isBoss: true,
+  isBoss: false,
 }
 
 const TOWER_ICON: Record<string, string> = {
@@ -308,7 +306,6 @@ const TOWER_ICON: Record<string, string> = {
 const SPELL_EMOJIS: Record<string, string> = {
   gibson_biddle:         '📐',
   julie_zhuo:            '🪞',
-  teresa_torres:         '🔍',
   shreyas_doshi:         '⚡',
   jules_walter:          '🎭',
   april_dunford:         '🎯',
@@ -325,6 +322,7 @@ const SPELL_EMOJIS: Record<string, string> = {
   hamel_husain:          '🔬',
   chip_huyen:            '⚙️',
   fei_fei_li:            '🧠',
+  lenny_rachitsky:       '📖',
 }
 
 const RANKS = [
@@ -445,7 +443,10 @@ export default function Home() {
   const [summonsVariant, setSummonsVariant] = useState<SummonsVariant>('easter_egg')
   const [summonsClosing, setSummonsClosing] = useState(false)
 
-  // Final boss state
+  // Lenny duel state (v1: accessible anytime, no heart cost)
+  const [isLennyDuel, setIsLennyDuel] = useState(false)
+
+  // Final boss state (v2)
   const [finalBossActive, setFinalBossActive] = useState(false)
   const [lennyHearts, setLennyHearts] = useState(3)
   const [gameOverProfKey, setGameOverProfKey] = useState('')
@@ -551,8 +552,8 @@ export default function Home() {
   const rank = getRank(sp)
   const currentQ = duelQs[qIndex]
   const allProfessors = Object.values(TOWERS).flatMap(t => t.professors)
-  const currentProf: ProfessorDef | null = finalBossActive ? LENNY_PROF : (allProfessors.find(p => p.key === activeProfKey) ?? null)
-  const currentTower = (finalBossActive || !currentProf) ? null : TOWERS[currentProf.tower]
+  const currentProf: ProfessorDef | null = (finalBossActive || isLennyDuel) ? LENNY_PROF : (allProfessors.find(p => p.key === activeProfKey) ?? null)
+  const currentTower = (finalBossActive || isLennyDuel || !currentProf) ? null : TOWERS[currentProf.tower]
   const panelTower = TOWERS[activeTowerKey]
   const panelNonBossProfs = panelTower?.professors.filter(p => !p.isBoss) ?? []
   const panelDefeatedNonBoss = panelNonBossProfs.filter(p => defeatedProfessors.has(p.key)).length
@@ -579,6 +580,7 @@ export default function Home() {
     const prof = TOWERS[towerKey]?.professors.find(p => p.key === profKey)
     if (!prof) return
 
+    setIsLennyDuel(false)
     setActiveTowerKey(towerKey)
     setActiveProfKey(profKey)
     setDuelPhase('active')
@@ -595,6 +597,34 @@ export default function Home() {
 
     try {
       const res = await fetch(`/api/questions?professor=${prof.key}`)
+      const data = await res.json()
+      const qs = Array.isArray(data) ? data : []
+      if (qs.length === 0) setDuelError(true)
+      setDuelQs(qs.map((q: Omit<DuelQuestion, 'displayOptions'>) => ({ ...q, displayOptions: buildDisplayOptions(q) })))
+    } catch {
+      setDuelError(true)
+      setDuelQs([])
+    } finally {
+      setDuelLoading(false)
+    }
+  }
+
+  async function launchLennyDuel() {
+    setIsLennyDuel(true)
+    setActiveProfKey('lenny_rachitsky')
+    setDuelPhase('active')
+    setDuelQs([])
+    setQIndex(0)
+    setAnsweredIndex(null)
+    setLastResult(null)
+    setLastSpGained(0)
+    setDuelTotalSp(0)
+    setCorrectInDuel(0)
+    setDuelLoading(true)
+    setDuelError(false)
+    setScreen('duel')
+    try {
+      const res = await fetch('/api/questions?professor=lenny_rachitsky')
       const data = await res.json()
       const qs = Array.isArray(data) ? data : []
       if (qs.length === 0) setDuelError(true)
@@ -640,9 +670,12 @@ export default function Home() {
         setTimeout(() => setRankUpInfo(null), 5000)
       }
     } else {
-      if (finalBossActive) {
+      if (isLennyDuel) {
+        // Lenny duel: no heart cost — it's about learning, not competing
+      } else if (finalBossActive) {
         newLennyHearts = lennyHearts - 1
         setLennyHearts(newLennyHearts)
+        posthog.capture('heart_lost', { professor: currentProf.key, hearts_remaining: newLennyHearts, difficulty: currentQ.difficulty })
       } else {
         newHearts = hearts - 1
         setHearts(newHearts)
@@ -651,9 +684,9 @@ export default function Home() {
           setHeartHintVisible(true)
           setTimeout(() => setHeartHintVisible(false), 4000)
         }
+        posthog.capture('heart_lost', { professor: currentProf.key, hearts_remaining: newHearts, difficulty: currentQ.difficulty })
       }
       setLastResult('wrong')
-      posthog.capture('heart_lost', { professor: currentProf.key, hearts_remaining: finalBossActive ? newLennyHearts : newHearts, difficulty: currentQ.difficulty })
     }
     posthog.capture('answer_submitted', { professor: currentProf.key, correct: isCorrect, difficulty: currentQ.difficulty, sp_total: newSp })
     setLastSpGained(gained)
@@ -668,7 +701,7 @@ export default function Home() {
         setScreen('lenny_loss')
         return
       }
-      if (!finalBossActive && newHearts <= 0) {
+      if (!finalBossActive && !isLennyDuel && newHearts <= 0) {
         posthog.capture('game_over', { professor: profKey, sp_total: newSp, spells_collected: defeatedProfessors.size })
         setGameOverProfKey(profKey)
         setScreen('game_over')
@@ -739,6 +772,14 @@ export default function Home() {
 
   // ── Tower progression ─────────────────────────────────────────────────────────
   function advanceAfterSpellWin() {
+    // Lenny duel — just return to selecting, no tower logic
+    if (wonProfKey === 'lenny_rachitsky') {
+      setIsLennyDuel(false)
+      setDuelPhase('selecting')
+      setScreen('duel')
+      return
+    }
+
     const wonProf = allProfessors.find(p => p.key === wonProfKey)
     const towerKey = wonProf?.tower ?? activeTowerKey
 
@@ -816,7 +857,7 @@ export default function Home() {
         <div className="landing-logo-block">
           <div className="landing-logo-title">Spellcraft</div>
           <div className="landing-logo-sub">Wizard of Product</div>
-          <div className="landing-logo-tagline">Three towers. Nineteen professors. One Keeper.</div>
+          <div className="landing-logo-tagline">Three towers. Eighteen professors. One Keeper.</div>
         </div>
 
         <div className="prof-grid">
@@ -836,7 +877,6 @@ export default function Home() {
             <div className="prof-card-overlay">
               <div className="pname">LENNY RACHITSKY</div>
               <div className="ptitle">KEEPER OF THE PRODUCT LORE</div>
-              <div className="final-badge">FINAL DUEL</div>
             </div>
           </div>
           <div className="prof-card more">
@@ -1027,7 +1067,7 @@ export default function Home() {
           {/* LEFT: Switch towers + Professor figure + Possible Rewards */}
           <div className="du-left-col">
             <div className="du-tower-panel">
-              <div className="du-panel-title" onClick={() => setTowerModalOpen(true)} style={{cursor:'pointer'}}>SWITCH TOWERS</div>
+              <div className="du-panel-title" onClick={() => setTowerModalOpen(true)} style={{cursor:'pointer'}}>SELECT PROFESSORS</div>
               <div className="du-left-tower-btns">
                 {(['pm', 'strategy', 'ai'] as TowerKey[]).map(tk => (
                   <button
@@ -1127,6 +1167,9 @@ export default function Home() {
                 <div className="du-sb-header-bottom">
                   <span className="du-sb-header-count">{defeatedProfessors.size}<span className="du-sb-header-total"> / 19 SPELLS</span></span>
                 </div>
+                <div className="du-sb-header-bottom" style={{ fontSize: 8, color: 'rgba(160,130,70,.7)', fontStyle: 'italic', marginTop: 1 }}>
+                  18 professors · The Keeper
+                </div>
               </div>
             </div>
 
@@ -1141,7 +1184,7 @@ export default function Home() {
         {/* Feedback toast */}
         {lastResult && (
           <div className={`duel-feedback visible ${lastResult}`}>
-            {lastResult === 'correct' ? `✓ Correct! +${lastSpGained} SP` : `✗ Wrong! −1 Heart`}
+            {lastResult === 'correct' ? `✓ Correct! +${lastSpGained} SP` : isLennyDuel ? '✗ Incorrect — no heart lost' : `✗ Wrong! −1 Heart`}
           </div>
         )}
 
@@ -1165,6 +1208,36 @@ export default function Home() {
                     <div className="pb-header">
                       <div className="pb-title">Spell Card Collection Playbook</div>
                       <div className="pb-subtitle">✦ MAX SPELLS: 19 &nbsp;·&nbsp; 1 PER PROFESSOR ✦</div>
+                    </div>
+
+                    {/* Lenny's spell card */}
+                    <div style={{ marginBottom: 12 }}>
+                      <div className="pb-tower-head" style={{ background: 'linear-gradient(90deg,rgba(240,192,96,.15),transparent)', borderLeft: '3px solid #f0c060', color: '#f0c060' }}>
+                        📖 Keeper of Product Lore
+                      </div>
+                      <div className="pb-cards">
+                        {(() => {
+                          const collected = defeatedProfessors.has('lenny_rachitsky')
+                          return (
+                            <div className={`pb-card${collected ? '' : ' locked'}`}>
+                              {collected && <div className="pb-ribbon">COLLECTED</div>}
+                              <div className="pb-icon" style={{ background: collected ? 'linear-gradient(180deg,rgba(240,192,96,.22),rgba(240,192,96,.06))' : undefined }}>
+                                📖
+                              </div>
+                              <div className="pb-body">
+                                <div className="pb-spell" style={{ color: collected ? 'var(--gold)' : undefined }}>The Product Lore</div>
+                                <div className="pb-prof">— Lenny Rachitsky</div>
+                              </div>
+                              {!collected && (
+                                <div className="pb-lock">
+                                  <div className="pb-lock-icon">🔒</div>
+                                  <div className="pb-lock-text">Duel Lenny to unlock</div>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })()}
+                      </div>
                     </div>
                     <div className="pb-towers">
                       {(['pm', 'strategy', 'ai'] as TowerKey[]).map((towerKey) => {
@@ -1234,6 +1307,35 @@ export default function Home() {
                 <button className="tm-close" onClick={() => setTowerModalOpen(false)}>✕ CLOSE</button>
               </div>
               <div className="tm-body" ref={towerModalBodyRef}>
+
+                {/* Keeper of Product Lore — Lenny */}
+                <div className="tm-section" style={{ borderBottom: '1px solid rgba(240,192,96,.2)', marginBottom: 12, paddingBottom: 12 }}>
+                  <div className="tm-section-hdr">
+                    <span className="tm-section-name" style={{ color: '#f0c060' }}>📖 Keeper of Product Lore</span>
+                    <span className="tm-section-prog" style={{ color: '#a08040' }}>Always available · No hearts at stake</span>
+                  </div>
+                  <div className="tm-prof-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                    <div
+                      className={`tm-prof-card${defeatedProfessors.has('lenny_rachitsky') ? ' defeated' : ''}`}
+                      style={{ cursor: 'pointer', borderColor: 'rgba(240,192,96,.4)' }}
+                      onClick={() => { launchLennyDuel(); setTowerModalOpen(false) }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        className="tm-prof-card-img"
+                        src="/assets/professors/lenny_rachitsky.jpg"
+                        alt="Lenny Rachitsky"
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                      <div className="tm-prof-card-overlay">
+                        <div className="tm-prof-name">Lenny Rachitsky</div>
+                        <div className="tm-prof-title">The Keeper of Product Lore</div>
+                      </div>
+                      {defeatedProfessors.has('lenny_rachitsky') && <div className="tm-prof-ov" style={{ color: '#50c880' }}>✓</div>}
+                    </div>
+                  </div>
+                </div>
+
                 {(['pm', 'strategy', 'ai'] as TowerKey[]).map(tk => {
                   const tower = TOWERS[tk]
                   const nonBossProfs = tower.professors.filter(p => !p.isBoss)
@@ -1301,10 +1403,10 @@ export default function Home() {
             <div className="sw-card-tag">DEFEATED</div>
             <div className="sw-prof-icon">{SPELL_EMOJIS[wonProfKey] ?? '🧙'}</div>
             <div className="sw-prof-name">
-              {Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.name.toUpperCase() ?? wonProfKey.toUpperCase()}
+              {(wonProfKey === 'lenny_rachitsky' ? LENNY_PROF : Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey))?.name.toUpperCase() ?? wonProfKey.toUpperCase()}
             </div>
             <div className="sw-prof-title">
-              {Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.title ?? ''}
+              {(wonProfKey === 'lenny_rachitsky' ? LENNY_PROF : Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey))?.title ?? ''}
             </div>
             <div style={{ borderTop: '1px solid rgba(160,120,50,.35)', width: '100%', margin: '4px 0' }} />
             <div className="sw-xp">+{duelTotalSp > 0 ? duelTotalSp : lastSpGained || 100} SP</div>
@@ -1325,7 +1427,7 @@ export default function Home() {
             </div>
             <div className="sw-quote-row">
               <div className="sw-quote">&ldquo;{PROFESSOR_WIN_LINES[wonProfKey] ?? ''}&rdquo;</div>
-              <div className="sw-by">— {Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey)?.name ?? ''}</div>
+              <div className="sw-by">— {(wonProfKey === 'lenny_rachitsky' ? LENNY_PROF : Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey))?.name ?? ''}</div>
             </div>
           </div>
 
@@ -1355,7 +1457,7 @@ export default function Home() {
           <div className="sw-footer">
             <div className="sw-btn-sp">+ {sp.toLocaleString()} SP</div>
             <button className="sw-btn-cont" onClick={advanceAfterSpellWin}>
-              {wonProfIsBoss ? 'TOWER CLEARED — ONWARD ✦' : 'CONTINUE DUEL →'}
+              {wonProfKey === 'lenny_rachitsky' ? 'RETURN TO THE ACADEMY →' : wonProfIsBoss ? 'TOWER CLEARED — ONWARD ✦' : 'CONTINUE DUEL →'}
             </button>
           </div>
         </div>

@@ -60,10 +60,57 @@ const BOSSES = [
     displayName: 'Lenny Rachitsky',
     domain: 'pm',
     wizardTitle: 'The Keeper of Product Lore',
-    sourceSummary: `Lenny Rachitsky is a former Airbnb PM and growth lead, now running the most widely-read product newsletter and podcast.
-    Key themes: product-market fit, growth loops, retention, building great product teams, career growth for PMs,
-    how to run great 1:1s, roadmap prioritisation, how to say no, metrics that matter,
-    the difference between output and outcome, working with engineers, the role of a PM vs. engineer vs. designer.`
+    sourceSummary: `Lenny Rachitsky is a former Airbnb PM and growth lead (7 years), founder of the world's largest product newsletter and podcast (1M+ subscribers), angel investor, and the most widely-read product thinker of his generation.
+
+    KEY THEME 1 — BUILDING THE NEWSLETTER (from "1,000,000" and "500,000"):
+    - Quality + consistency = all that matters. Design, title, strategy, growth plan — none of it matters. "Growth comes from publishing something valuable that people want to share, over and over."
+    - Word of mouth is the only growth lever that actually worked. Paid ads, SEO, referrals, BD — none of them moved the needle. WOM + Substack's recommendation feature (5,000+ newsletters recommend his) drove everything.
+    - Infinite games over viral posts: "Individual viral posts come and go, but it's all about how long you can stick with it. Prioritise stamina over anything else."
+    - Follow your energy, not market demand — write about what gives you energy, even if it's broad. Narrow niches lead to boredom and burnout.
+    - Do your "job to be done" better than anyone: identify who your audience is (specific person) and what concrete job you're doing for them.
+    - The ikigai moment: realised 9 months in that writing was still fun, he had more ideas, and people found it valuable — that's when he added the paid plan.
+    - No full-time employees — all contractors. Delegation matters for scale but quality review stays with the founder.
+    - Contribute something new to the conversation — most writing is a rehash. Primary research + novel insights = what people share.
+    - Cut 30-50% of your words. Start your story right before the bear eats you. Every first paragraph can almost always be cut.
+
+    KEY THEME 2 — PRODUCT-MARKET FIT (from "What to do if your product isn't taking off"):
+    - The #1 reason startups fail: not talking to users → not finding PMF. "If they don't find PMF, nothing else really matters." (Gustaf Alströmer, YC)
+    - Look for pain AND pull: (1) people pay you, (2) strong emotion / hatred for incumbents, (3) cold inbound interest, (4) continued usage even when product is bad.
+    - Don't confuse people rooting for you with market signal. Lenny's own startup Localmind had users who said they loved it, but there was no real pain — just novelty.
+    - PMF timelines: B2C = 6-18 months if not immediate. B2B = median 2 years. Network effects businesses (marketplaces, social) take even longer.
+    - 7 steps when product isn't taking off: (1) talk to more users, (2) change ICP, (3) change positioning/messaging, (4) try kickstarts, (5) pivot to what IS working, (6) give it more time, (7) quit.
+
+    KEY THEME 3 — TARGET AUDIENCE + ICP:
+    - Your ICP should be "almost comically narrow" — at least 3 narrowing characteristics.
+    - Pinterest found 30-something female bloggers accidentally. Retool found CTOs, not ops teams. DoorDash started with tier-2/3 city independent restaurants. Discord started with one WoW guild.
+    - "It's easier to boil a thimble than the ocean." — Sarah Tavel
+    - Narrow ICP helps with focus (solve one problem well), distribution (find people in one place), and early adopter flywheel (they tell others).
+    - "Super-specific who" for B2C: Instagram = designers interested in photography who spent time on Twitter.
+
+    KEY THEME 4 — PIVOTING:
+    - ~20% of successful consumer companies and ~40% of B2B companies pivoted at least once early on.
+    - Find what IS working (a feature, a user behaviour) and pivot fully to that. Instagram cut everything except photos. Discord realised chat was better than the game. Loom saw a client record a video summary and built from that.
+    - "Pay attention to what people actually do on your product, not what they say they want."
+
+    KEY THEME 5 — GROWTH FRAMEWORKS:
+    - Racecar Growth Framework: growth engine (the main scalable loop) + kickstarts (unscalable tactics for first 1,000 users) + turbo boosts.
+    - Kickstarts = unscalable tactics: guest posts, cold outreach, community seeding, press, doing things that don't scale.
+    - Growth engine = the scalable loop you build after kickstarts work.
+    - For the newsletter: WOM was the engine; Substack recommendations were the turbo boost.
+
+    KEY THEME 6 — CAREER + PM ROLE:
+    - PM skills are the skills AI engineers increasingly need: figuring out what to build, prioritising highest-ROI opportunities, getting buy-in, articulating requirements, having taste, driving adoption/growth/retention.
+    - Career optionality > job titles. Build toward solopreneurship or advisory work that gives flexibility.
+    - The Magic Loop: a framework for rapid career growth — take on hard projects → get feedback → improve → repeat.
+    - 1,000 true fans: get 1,000 people who think your work is the best in the world. At 1,000 paid subscribers Lenny could make a real living.
+    - PM teams will shrink 25-50% with AI; PMs will have more scope but spend more time in discovery and GTM, less time designing and building.
+    - "The bar will continue to rise." Companies need PMs who can figure out what to build, work with AI and humans to build it, verify it's correct, and drive adoption.
+
+    KEY THEME 7 — QUITTING AND CONVICTION:
+    - "Winners quit all the time. They just quit the right stuff at the right time." — Seth Godin
+    - Ask: do you have MORE or LESS conviction now than when you started? If less, quit.
+    - Signs to quit: lost energy, no more good ideas, exhausted, out of money, instinct says it won't work.
+    - Quitting ≠ stopping. Many of the most successful founders quit first projects before finding the right one.`
   },
   {
     professor: 'shreyas_doshi',
@@ -220,16 +267,32 @@ const BOSSES = [
     domain: 'ai',
     wizardTitle: 'The Eval Conjurer',
     sourceSummary: `Aman Khan is a product leader and author of 'Beyond vibe checks: A PM's complete guide to evals' for Lenny's Newsletter.
-    Key themes: why 'vibe checks' (informal gut-feel testing) are not evals and why they fail at scale,
-    what a real eval is — a repeatable, measurable test of AI output quality,
-    the four types of evals PMs need to know (human evals, automated evals, LLM-as-judge, unit tests),
-    how to design evals before building the AI feature — not after,
-    what a good eval dataset looks like — coverage, edge cases, representative samples,
-    how to measure hallucination, relevance, and task completion,
-    the difference between offline evals (pre-launch) and online evals (production monitoring),
-    how to use evals to make go/no-go decisions on AI features,
-    why PMs who can write evals are more valuable than PMs who can only write PRDs,
-    how to build an eval culture on an AI product team.`
+
+    CORE ARGUMENT: "Vibe checks" — ad hoc gut-feel testing — fail at scale because they are not repeatable, not measurable, and give false confidence. Real evals are systematic, documented, and tied to product decisions.
+
+    THE EVAL FORMULA (4 parts):
+    1. Input — what goes into the AI system (user query, context, documents)
+    2. Output — what the AI produces
+    3. Expected behavior — what "good" looks like (rubric, example, or threshold)
+    4. Score — how you measure the gap between output and expected behavior
+
+    THE 3 TYPES OF EVALS (and when to use each):
+    - Human evals: most accurate, expensive, slow — use for setting benchmarks and catching subtle failures
+    - Automated / code-based evals: fast, cheap, deterministic — use for regression testing and CI/CD gates
+    - LLM-as-judge: flexible, scalable — use when rubrics are complex and human evals are too slow; always validate the judge against human evals first
+
+    THE 4-PHASE EVAL WORKFLOW:
+    1. Collection — gather real or synthetic inputs that represent your use cases; include edge cases and failure modes
+    2. First-pass — run human evals to establish a quality baseline before writing any automated eval
+    3. Iteration — use evals to guide prompt changes, model changes, and retrieval changes; never ship a change that breaks the baseline
+    4. Production monitoring — run evals continuously on live outputs; set alerts when quality drops
+
+    KEY PM INSIGHTS:
+    - Start writing evals before you write a single prompt — they are product requirements, not QA afterthoughts
+    - "Hallucination" is not one thing — decompose it: factual error, unsupported claim, wrong format, refused answer — each needs its own eval
+    - The hardest evals problem is "no ground truth" — LLM-as-judge solves this but must itself be evaluated
+    - PMs who can write evals get 10x more done because they can iterate without waiting for human review cycles
+    - Eval coverage matters: a passing eval suite with 10 examples is worthless; shoot for 100+ diverse examples per use case`
   },
   {
     professor: 'claire_vo',

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.3",
+    "dotenv": "^17.4.1",
     "html-to-image": "^1.11.13",
     "next": "^16.2.1",
     "posthog-js": "^1.364.1",

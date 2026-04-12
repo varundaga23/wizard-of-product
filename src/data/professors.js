@@ -6,7 +6,6 @@ export const TOWERS = {
     professors: [
       { key: 'gibson_biddle', name: 'Gibson Biddle', title: 'The DHM Keeper' },
       { key: 'julie_zhuo', name: 'Julie Zhuo', title: 'Enchantress of Design' },
-      { key: 'teresa_torres', name: 'Teresa Torres', title: 'Oracle of Discovery' },
       { key: 'shreyas_doshi', name: 'Shreyas Doshi', title: 'Master of Strategic Spells' },
       { key: 'jules_walter', name: 'Jules Walter', title: 'The Influence Enchanter' },
       { key: 'april_dunford', name: 'April Dunford', title: 'The Positioning Sage' },
