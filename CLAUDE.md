@@ -4,7 +4,7 @@
 
 A wizarding school browser duel game where product managers duel real product experts (Lenny Rachitsky, Shreyas Doshi, Chip Huyen, etc.) by answering questions drawn from Lenny's Newsletter and Podcast archive. Players get sorted by archetype, clear three towers, and face Lenny in a final duel.
 
-**One-line pitch:** Hogwarts for product people. Get sorted. Duel real product legends. Earn Spells. Build a Playbook. Face Lenny in the final duel.
+**One-line pitch:** Hogwarts for product people. Get sorted. Duel real product legends. Earn Spells. Build a Playbook. Collect all 19 spell cards to become Grand Wizard.
 
 ---
 
@@ -48,14 +48,14 @@ These decisions are final. Do not suggest building skipped screens or features.
 | Duel | Done | Tower switch tabs handle tower navigation |
 | Spell Win | Done | |
 | Tower Cleared | Done | |
-| Lenny Loss | Done | Dedicated 3-heart final boss loss screen with retry |
-| Game Over | Done | SP refill button as primary CTA |
+| Lenny Loss | **Removed** | No longer needed — Lenny has no heart cost in v1 |
+| Game Over | Done | Free "Try Again" button (no SP cost) |
 | Playbook | Done — needs design polish | |
-| Summons Letter | Done | |
-| Final Revelation | Done — needs design sign-off | |
-| Grand Wizard | Done | |
-| Rank Up Ceremony | Done | Overlay (not a screen), 5s display, auto-dismisses |
-| Lenny's Blessing | Done | Overlay, ~10% between duels, +500 SP, no heart cost |
+| Summons Letter | Done | Easter egg only (tap Lenny portrait on landing) |
+| Final Revelation | Hidden (display:none) | Preserved for v2; not accessible in v1 |
+| Grand Wizard | Done | Triggered by collecting all 19 spell cards |
+| Rank Up Ceremony | **Removed** | SP/rank system killed for v1 |
+| Lenny's Blessing | Done | Overlay, ~10% between duels, no SP reward |
 
 ### Game Mechanics Built
 | Mechanic | Detail |
@@ -67,18 +67,24 @@ These decisions are final. Do not suggest building skipped screens or features.
 | Tower switching | Topbar has 3 clickable tower tabs (🏰 PM / ⚔️ Strategy / 🤖 AI) that update the right panel. Does NOT auto-start a duel. |
 | Professor selection UI | Right panel tower avatars are clickable. Click any unlocked professor to start that duel. |
 | Duel selecting state | After a spell win (or blessing), screen returns to duelPhase='selecting'. Center shows "Choose Your Opponent". Player picks from right panel. |
-| Lenny unlock | All 3 tower bosses defeated → pre-final Summons Letter → Final Revelation. Unchanged. |
-| Rank Up Ceremony | Overlay at z-index 100, 5s, rank-coloured rays. Apprentice=amber, Scholar=blue, Wizard=purple, Archmage=crimson |
-| Lenny's Blessing | Overlay at z-index 99, 10% random after non-boss duel win. Fetches `lenny_oracle` from Supabase. Correct=+500 SP + nod. Wrong=no heart cost, fades 1.2s |
+| Lenny always available | Lenny appears in professor selection modal at all times — no unlock needed. His card shows "♥♥♥ Win to earn +3 hearts". |
+| Lenny no heart cost | Wrong answers during a Lenny duel do NOT cost hearts (`isLennyDuel` flag). Win = +3 hearts (capped at 8), added to defeatedProfessors. |
+| Heart cap | Hearts cap at 8. Hearts 1–5 = red ♥, hearts 6–8 = gold ♥ (Lenny bonus). Display uses `Math.max(5, hearts)` slots. |
+| Endgame | Collecting all 19 spell cards (18 professors + Lenny) = Grand Wizard. Triggered in `advanceAfterSpellWin` when `defeatedProfessors.size >= 19`. |
+| Lenny's Blessing | Overlay at z-index 99, 10% random after non-boss duel win. Fetches `lenny_oracle` from Supabase. Correct = "✦ Lenny Nods ✦". Wrong = no heart cost, fades 1.2s. No SP reward. |
 | Professor win/loss one-liners | Hardcoded in `PROFESSOR_WIN_LINES` and `PROFESSOR_LOSS_LINES` in page.tsx. Loss line shown on game over screen |
-| Dedicated Lenny hearts | 3 separate hearts for final boss duel. HUD shows 3 during final boss. 0 = lenny_loss screen |
-| SP refill on game over | Primary CTA on game over. Costs 500 SP, refills to 5 hearts, relaunches same professor. Greyed + "Earn X more SP" hint when insufficient |
-| First heart lost hint | One-time toast on first heart lost: "Lose all 5 hearts? Spend 500 SP to refill and keep going." Fades after 4s, never repeats |
+| SP system | **Killed for v1.** No SP earning, no rank display, no refill mechanic anywhere. Deferred to v2 entirely. |
+| Game over retry | Free "Try Again" button — no SP cost. Resets hearts to 5, relaunches same professor duel. |
+| Sound system | Kevin MacLeod tracks in `public/assets/sounds/`. ambient_landing, ambient_oracle, ambient_duel, ambient_spellwin, ambient_final. SFX: correct.ogg, wrong.ogg, spell_win.wav. Music loops per screen, changes on transition. No mute button in HUD. |
 
 ### Parked — Needs Setup First (come back to these)
 - **Rate limiting on `/api/questions`** — needs: `vercel integration add upstash` → `vercel env pull .env.local` → install `@upstash/ratelimit` → implement sliding window 60 req/min per IP in route.ts
 
 ### Deferred to v2 (do not build in v1)
+- **SP & rank system** — SP earning, rank display (Muggle → Grand Wizard), Rank Up Ceremony overlay. All removed from v1.
+- **Lenny final unlock flow** — Summons Letter cutscene → Final Revelation → 3-heart final boss duel. In v1, Lenny is always available with no unlock gate.
+- **Spell unlock accuracy gate** — Require 3/5 correct answers to earn a spell. In v1, winning only requires surviving all 5 questions with ≥1 heart (no accuracy threshold).
+- **Player name input** ("What shall we call you, mage?") — removed from landing page for v1. Re-add name input on landing + wire `displayName` throughout (Grand Wizard, Playbook share text) when ready for v2.
 - **Teresa Torres** (Oracle of Discovery) — removed from PM Tower professor list for v1. Re-add to PM Tower (between Julie Zhuo and Shreyas Doshi) when ready for v2.
 - Archetype SP bonus (+50 SP in primary tower) — questions table has no archetype_tag
 - Lenny's Blessing harder retry subset — no difficulty filter in API yet
@@ -90,7 +96,7 @@ These decisions are final. Do not suggest building skipped screens or features.
 
 ### Other Locked Decisions
 - **No Supabase leaderboard** — score submission not being built
-- **No duel retry button** — the 500 SP refill mechanic IS the retry. Free retry would undercut it
+- **No duel retry button** — free Try Again on Game Over is fine; SP refill moves to v2
 - **Professor one-liners are hardcoded** — static copy, no reason to put in Supabase
 - **2 options per question (not 4)** — feels like a duel, not a quiz. Best distractor is Claude-curated. Do not change back.
 - **Open progression is the model** — sequential tower/professor auto-advance is removed. State uses `activeTowerKey` + `activeProfKey` + `duelPhase`. Do not revert to towerIndex/profIndex.
@@ -154,11 +160,11 @@ vercel --prod    # Deploy to production
 | s-cleared | Tower Cleared | Done |
 | s-playbook | Playbook | Done — open book background |
 | s-summons | Summons Letter | Done |
-| s-final | Final Revelation | Done — design sign-off pending |
-| s-grand | Grand Wizard Completion | Done — open book background (matches Playbook) |
-| — | Lenny Loss | Done (overlay flow) |
-| — | Game Over | Done |
-| — | Rank Up Ceremony | Done (overlay) |
+| s-final | Final Revelation | Hidden (display:none) — preserved for v2 |
+| s-grand | Grand Wizard Completion | Done — triggered by 19 spell cards collected |
+| — | Lenny Loss | **Removed** — no longer needed (Lenny has no heart cost) |
+| — | Game Over | Done — free Try Again |
+| — | Rank Up Ceremony | **Removed** — SP system killed for v1 |
 | — | Lenny's Blessing | Done (overlay) |
 
 ---
@@ -169,6 +175,7 @@ vercel --prod    # Deploy to production
 2. **Contrast comes from dark semi-transparent panels floating on top** — not from darkening the world.
 3. **Panel style:** `background: linear-gradient(180deg, rgba(46,32,16,.97), rgba(26,16,8,.97))` · `border: 2px solid #7a5515`
 4. **HUD style:** `background: rgba(42,30,14,.96)`
+5. **NO UPPERCASE TEXT ANYWHERE — EVER.** `'Cinzel', serif` is BANNED for UI labels, names, buttons, and body text — it renders everything as small-caps/uppercase. Use `'EB Garamond', serif` instead. Never add `text-transform: uppercase`. Never call `.toUpperCase()` on displayed text. No exceptions.
 
 ### Color tokens
 | Token | Value |
@@ -181,12 +188,11 @@ vercel --prod    # Deploy to production
 ### Fonts
 | Font | Use |
 |------|-----|
-| Cinzel | All UI text |
-| Cinzel Decorative | Titles and archetype names |
-| EB Garamond | Body text |
-| Pinyon Script | Summons Letter only |
-| HarryP | Logo + Lorethorn header in Spell Win (`public/assets/fonts/HarryP.woff`) |
-| Lumos | Available (`public/assets/fonts/Lumos.woff`) — not yet used |
+| EB Garamond | ALL UI labels, names, buttons, body text — replaces Cinzel everywhere |
+| Cinzel Decorative | Large decorative display titles only (Tower Cleared, Grand Wizard) — never for labels |
+| HarryP | Logo ("Spellcraft"), Rules of the Academy title, Lorethorn header in Spell Win |
+| Pinyon Script | Signatures only |
+| Lumos | Available — not yet used |
 
 ---
 
@@ -236,19 +242,18 @@ vercel --prod    # Deploy to production
 | Winning | Complete all 5 questions with ≥1 heart remaining globally |
 | Losing | Run out of hearts before completing all 5 questions |
 | Professor defeated | All 5 completed with hearts remaining → spell awarded |
-| SP earned | Per correct answer, even if duel lost — SP is never taken back |
+| SP earned | **None in v1** — SP system removed entirely |
 
-### Scoring
-- Basic question: 100 SP
-- Advanced question: 200 SP
-- ~~Archetype bonus: 50 SP~~ — deferred to v2
-- Lenny's Blessing (correct): +500 SP
+### Scoring (v1 — no SP)
+- SP system killed for v1. No points, no ranks, no refill. Deferred to v2.
+- Progress tracked by: spell cards collected (defeatedProfessors Set), hearts remaining
 
 ### Hearts
-- 5 hearts globally per session (normal duels)
-- 3 hearts for Lenny final boss (separate counter)
-- Hearts deducted on wrong answer (not per-duel)
-- 0 hearts = Game Over (normal) or Lenny Loss screen (final boss)
+- 5 hearts globally per session
+- Hearts deducted on wrong answer (not per-duel), **except during Lenny duels** (no heart cost)
+- Cap: 8 hearts. Hearts 1–5 = red ♥. Hearts 6–8 = gold ♥ (from Lenny win bonus).
+- 0 hearts = Game Over (free retry: reset to 5 hearts, same professor)
+- Lenny win = +3 hearts (capped at 8), shown on spell win screen as "♥♥♥ +3 Hearts awarded"
 
 ### Archetypes (Oracle's Rite output)
 | Archetype | Key | Primary Tower |
@@ -257,8 +262,8 @@ vercel --prod    # Deploy to production
 | Mastermind | M | Strategy |
 | Builder | B | AI |
 
-### Ranks (by cumulative SP)
-Muggle → Apprentice → Scholar → Wizard → Archmage → Grand Wizard
+### Ranks (v2 — deferred)
+Muggle → Apprentice → Scholar → Wizard → Archmage → Grand Wizard — not shown in v1
 
 ---
 

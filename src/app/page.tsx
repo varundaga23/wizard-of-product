@@ -5,7 +5,7 @@ import { toPng } from 'html-to-image'
 import posthog from 'posthog-js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Screen = 'landing' | 'oracle' | 'archetype' | 'duel' | 'spellwin' | 'tower_cleared' | 'game_over' | 'lenny_loss' | 'playbook' | 'summons' | 'final' | 'grand'
+type Screen = 'landing' | 'oracle' | 'archetype' | 'duel' | 'spellwin' | 'tower_cleared' | 'game_over' | 'playbook' | 'grand'
 type SummonsVariant = 'easter_egg' | 'prefinal'
 
 type BlessingState = {
@@ -341,15 +341,6 @@ const SPELL_EMOJIS: Record<string, string> = {
   lenny_rachitsky:       '📖',
 }
 
-const RANKS = [
-  { label: 'Muggle', min: 0 },
-  { label: 'Apprentice', min: 100 },
-  { label: 'Scholar', min: 500 },
-  { label: 'Wizard', min: 1000 },
-  { label: 'Archmage', min: 2000 },
-  { label: 'Grand Wizard', min: 5000 },
-]
-
 const LETTERS = ['A', 'B']
 
 // Scale font size down for long text so it always fits in its box
@@ -379,11 +370,12 @@ function buildDisplayOptions(q: Omit<DuelQuestion, 'displayOptions'>): { text: s
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5)
-}
-
-function getRank(sp: number): string {
-  return [...RANKS].reverse().find(r => sp >= r.min)?.label ?? 'Muggle'
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
 }
 
 
@@ -394,7 +386,7 @@ export default function Home() {
   useEffect(() => {
     function updateScale() {
       const scale = Math.min(window.innerWidth / 960, window.innerHeight / 540)
-      document.documentElement.style.setProperty('--game-scale', String(Math.min(scale, 1)))
+      document.documentElement.style.setProperty('--game-scale', String(scale))
     }
     updateScale()
     window.addEventListener('resize', updateScale)
@@ -414,7 +406,6 @@ export default function Home() {
 
   // Global game state
   const [hearts, setHearts] = useState(5)
-  const [sp, setSp] = useState(0)
   const [defeatedProfessors, setDefeatedProfessors] = useState<Set<string>>(new Set())
 
   // Open progression state
@@ -429,13 +420,11 @@ export default function Home() {
   const [qIndex, setQIndex] = useState(0)
   const [answeredIndex, setAnsweredIndex] = useState<number | null>(null)
   const [lastResult, setLastResult] = useState<'correct' | 'wrong' | null>(null)
-  const [lastSpGained, setLastSpGained] = useState(0)
 
   // Spell win state
   const [wonSpell, setWonSpell] = useState('')
   const [wonProfKey, setWonProfKey] = useState('')
   const [wonProfIsBoss, setWonProfIsBoss] = useState(false)
-  const [duelTotalSp, setDuelTotalSp] = useState(0)
   const [correctInDuel, setCorrectInDuel] = useState(0)
 
   // Playbook state — tracks which screen to return to
@@ -446,48 +435,80 @@ export default function Home() {
   const [towerModalOpen, setTowerModalOpen] = useState(false)
   const towerModalBodyRef = useRef<HTMLDivElement>(null)
 
+  // Rules of the Academy modal
+  const [rulesModalOpen, setRulesModalOpen] = useState(false)
+  const hasShownRulesRef = useRef(false)
+
+  // Modal always opens at top so Lenny is visible first
   useEffect(() => {
-    if (!towerModalOpen) return
-    const t = setTimeout(() => {
-      const el = document.getElementById(`tm-section-${activeTowerKey}`)
-      el?.scrollIntoView({ behavior: 'instant', block: 'start' })
-    }, 30)
-    return () => clearTimeout(t)
-  }, [towerModalOpen, activeTowerKey])
+    if (towerModalOpen && towerModalBodyRef.current) {
+      towerModalBodyRef.current.scrollTop = 0
+    }
+  }, [towerModalOpen])
 
   // Summons letter state
   const [summonsVariant, setSummonsVariant] = useState<SummonsVariant>('easter_egg')
-  const [summonsClosing, setSummonsClosing] = useState(false)
+  const [summonsOpen, setSummonsOpen] = useState(false)
 
-  // Lenny duel state (v1: accessible anytime, no heart cost)
+  // Lenny duel state (v1: accessible anytime, no heart cost, +3 hearts on win)
   const [isLennyDuel, setIsLennyDuel] = useState(false)
 
-  // Final boss state (v2)
-  const [finalBossActive, setFinalBossActive] = useState(false)
-  const [lennyHearts, setLennyHearts] = useState(3)
   const [gameOverProfKey, setGameOverProfKey] = useState('')
-
-  // Heart hint — shown once on first heart lost
-  const [heartHintVisible, setHeartHintVisible] = useState(false)
-  const [hasShownHeartHint, setHasShownHeartHint] = useState(false)
 
   // Lenny's Blessing
   const [blessing, setBlessing] = useState<BlessingState | null>(null)
 
-  // Rank up ceremony
-  const [rankUpInfo, setRankUpInfo] = useState<{ label: string; color: string } | null>(null)
+  // ── Audio ─────────────────────────────────────────────────────────────────────
+  const [muted, setMuted] = useState(false)
+  const bgAudioRef = useRef<HTMLAudioElement | null>(null)
+  const mutedRef = useRef(false)
 
-  const RANK_COLORS: Record<string, string> = {
-    Apprentice: '#c8922a',
-    Scholar: '#4080c0',
-    Wizard: '#8040c0',
-    Archmage: '#c03040',
+  const SCREEN_MUSIC: Partial<Record<Screen, string>> = {
+    landing:       '/assets/sounds/ambient_landing.mp3',
+    oracle:        '/assets/sounds/ambient_oracle.mp3',
+    archetype:     '/assets/sounds/ambient_archetype.mp3',
+    duel:          '/assets/sounds/ambient_duel.mp3',
+    spellwin:      '/assets/sounds/ambient_spellwin.mp3',
+    tower_cleared: '/assets/sounds/ambient_spellwin.mp3',
+    grand:         '/assets/sounds/ambient_spellwin.mp3',
+    game_over:     '/assets/sounds/ambient_landing.mp3',
   }
-  const RANK_ACHIEVEMENTS: Record<string, string> = {
-    Apprentice: 'The Oracle has sorted you.',
-    Scholar: 'Your primary tower stands defeated.',
-    Wizard: 'Two towers. Two domains mastered.',
-    Archmage: 'Three towers cleared. One duel remains.',
+
+  useEffect(() => { mutedRef.current = muted }, [muted])
+
+  // Auto-show Rules of the Academy on first duel screen visit
+  useEffect(() => {
+    if (screen === 'duel' && !hasShownRulesRef.current) {
+      hasShownRulesRef.current = true
+      setRulesModalOpen(true)
+    }
+  }, [screen])
+
+  useEffect(() => {
+    const src = SCREEN_MUSIC[screen]
+    if (!src) return
+    const current = bgAudioRef.current
+    if (current && current.getAttribute('data-src') === src) return // same track, keep playing
+    if (current) { current.pause(); current.src = '' }
+    const audio = new Audio(src)
+    audio.loop = true
+    audio.volume = 0.35
+    audio.setAttribute('data-src', src)
+    bgAudioRef.current = audio
+    if (!mutedRef.current) audio.play().catch(() => {})
+  }, [screen]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const audio = bgAudioRef.current
+    if (!audio) return
+    if (muted) { audio.pause() } else { audio.play().catch(() => {}) }
+  }, [muted])
+
+  function playSfx(path: string) {
+    if (mutedRef.current) return
+    const sfx = new Audio(path)
+    sfx.volume = 0.7
+    sfx.play().catch(() => {})
   }
 
   // Share / download
@@ -499,10 +520,10 @@ export default function Home() {
 
   function handleCopyLink() {
     const archetypeNames = { V: 'Visionary', M: 'Mastermind', B: 'Builder' }
-    const text = `${displayName} just became a Grand Wizard of Product as a ${archetypeNames[archetype]}! 🧙 I defeated 19 professors across 3 towers and earned ${sp.toLocaleString()} SP in Spellcraft. Can you beat my score?`
+    const text = `${displayName} just became a Grand Wizard of Product as a ${archetypeNames[archetype]}! 🧙 I defeated 19 professors across 3 towers in Spellcraft. Can you beat my score?`
     const url = window.location.href.split('?')[0]
     navigator.clipboard.writeText(`${text}\n\n${url}`).then(() => {
-      posthog.capture('link_copied', { screen: 'grand_wizard', sp_total: sp })
+      posthog.capture('link_copied', { screen: 'grand_wizard' })
       setCopyLabel('✓ COPIED!')
       setTimeout(() => setCopyLabel('✦ SHARE YOUR JOURNEY ✦'), 2500)
     })
@@ -510,7 +531,7 @@ export default function Home() {
 
   async function handleDownloadPlaybook() {
     if (!gwCardRef.current) return
-    posthog.capture('playbook_downloaded', { screen: 'grand_wizard', sp_total: sp })
+    posthog.capture('playbook_downloaded', { screen: 'grand_wizard' })
     try {
       const dataUrl = await toPng(gwCardRef.current, { cacheBust: true, pixelRatio: 2 })
       const link = document.createElement('a')
@@ -537,10 +558,10 @@ export default function Home() {
 
   function handleCopyPlaybookLink() {
     const archetypeNames = { V: 'Visionary', M: 'Mastermind', B: 'Builder' }
-    const text = `${displayName} has collected ${defeatedProfessors.size} spell${defeatedProfessors.size !== 1 ? 's' : ''} so far in Spellcraft as a ${archetypeNames[archetype]} — earning ${sp.toLocaleString()} SP. Still duelling. Can you keep up?`
+    const text = `${displayName} has collected ${defeatedProfessors.size} spell${defeatedProfessors.size !== 1 ? 's' : ''} so far in Spellcraft as a ${archetypeNames[archetype]}. Still duelling. Can you keep up?`
     const url = window.location.href.split('?')[0]
     navigator.clipboard.writeText(`${text}\n\n${url}`).then(() => {
-      posthog.capture('link_copied', { screen: 'playbook', sp_total: sp, spells_collected: defeatedProfessors.size })
+      posthog.capture('link_copied', { screen: 'playbook', spells_collected: defeatedProfessors.size })
       setPbCopyLabel('✓ COPIED!')
       setTimeout(() => setPbCopyLabel('COPY LINK'), 2500)
     })
@@ -548,7 +569,7 @@ export default function Home() {
 
   async function handleDownloadPlaybookCard() {
     if (!pbCardRef.current) return
-    posthog.capture('playbook_downloaded', { screen: 'playbook', sp_total: sp, spells_collected: defeatedProfessors.size })
+    posthog.capture('playbook_downloaded', { screen: 'playbook', spells_collected: defeatedProfessors.size })
     try {
       const dataUrl = await toPng(pbCardRef.current, { cacheBust: true, pixelRatio: 2 })
       const link = document.createElement('a')
@@ -565,11 +586,10 @@ export default function Home() {
   const displayName = playerName.trim() || ARCHETYPE_FALLBACK_NAMES[archetype]
 
   const arc = ARCHETYPES[archetype]
-  const rank = getRank(sp)
   const currentQ = duelQs[qIndex]
   const allProfessors = Object.values(TOWERS).flatMap(t => t.professors)
-  const currentProf: ProfessorDef | null = (finalBossActive || isLennyDuel) ? LENNY_PROF : (allProfessors.find(p => p.key === activeProfKey) ?? null)
-  const currentTower = (finalBossActive || isLennyDuel || !currentProf) ? null : TOWERS[currentProf.tower]
+  const currentProf: ProfessorDef | null = isLennyDuel ? LENNY_PROF : (allProfessors.find(p => p.key === activeProfKey) ?? null)
+  const currentTower = (isLennyDuel || !currentProf) ? null : TOWERS[currentProf.tower]
   const panelTower = TOWERS[activeTowerKey]
   const panelNonBossProfs = panelTower?.professors.filter(p => !p.isBoss) ?? []
   const panelDefeatedNonBoss = panelNonBossProfs.filter(p => defeatedProfessors.has(p.key)).length
@@ -604,8 +624,6 @@ export default function Home() {
     setQIndex(0)
     setAnsweredIndex(null)
     setLastResult(null)
-    setLastSpGained(0)
-    setDuelTotalSp(0)
     setCorrectInDuel(0)
     setDuelLoading(true)
     setDuelError(false)
@@ -633,8 +651,6 @@ export default function Home() {
     setQIndex(0)
     setAnsweredIndex(null)
     setLastResult(null)
-    setLastSpGained(0)
-    setDuelTotalSp(0)
     setCorrectInDuel(0)
     setDuelLoading(true)
     setDuelError(false)
@@ -668,44 +684,21 @@ export default function Home() {
     setAnsweredIndex(optionIndex)
 
     let newHearts = hearts
-    let newLennyHearts = lennyHearts
-    let newSp = sp
-    let gained = 0
 
     if (isCorrect) {
-      gained = currentQ.difficulty === 'advanced' ? 200 : 100
-      newSp = sp + gained
-      const oldRank = getRank(sp)
-      const newRank = getRank(newSp)
-      setSp(newSp)
-      setDuelTotalSp(prev => prev + gained)
       setCorrectInDuel(prev => prev + 1)
       setLastResult('correct')
-      if (newRank !== oldRank && newRank !== 'Grand Wizard') {
-        setRankUpInfo({ label: newRank, color: RANK_COLORS[newRank] ?? '#f0c060' })
-        setTimeout(() => setRankUpInfo(null), 5000)
-      }
+      playSfx('/assets/sounds/sfx/correct.ogg')
     } else {
-      if (isLennyDuel) {
-        // Lenny duel: no heart cost — it's about learning, not competing
-      } else if (finalBossActive) {
-        newLennyHearts = lennyHearts - 1
-        setLennyHearts(newLennyHearts)
-        posthog.capture('heart_lost', { professor: currentProf.key, hearts_remaining: newLennyHearts, difficulty: currentQ.difficulty })
-      } else {
+      if (!isLennyDuel) {
         newHearts = hearts - 1
         setHearts(newHearts)
-        if (!hasShownHeartHint) {
-          setHasShownHeartHint(true)
-          setHeartHintVisible(true)
-          setTimeout(() => setHeartHintVisible(false), 4000)
-        }
         posthog.capture('heart_lost', { professor: currentProf.key, hearts_remaining: newHearts, difficulty: currentQ.difficulty })
       }
       setLastResult('wrong')
+      playSfx('/assets/sounds/sfx/wrong.ogg')
     }
-    posthog.capture('answer_submitted', { professor: currentProf.key, correct: isCorrect, difficulty: currentQ.difficulty, sp_total: newSp })
-    setLastSpGained(gained)
+    posthog.capture('answer_submitted', { professor: currentProf.key, correct: isCorrect, difficulty: currentQ.difficulty })
 
     // Snapshot values used inside timeout to avoid stale closures
     const nextQIndex = qIndex + 1
@@ -713,35 +706,25 @@ export default function Home() {
     const isBoss = currentProf.isBoss ?? false
 
     setTimeout(() => {
-      if (finalBossActive && newLennyHearts <= 0) {
-        setScreen('lenny_loss')
-        return
-      }
-      if (!finalBossActive && !isLennyDuel && newHearts <= 0) {
-        posthog.capture('game_over', { professor: profKey, sp_total: newSp, spells_collected: defeatedProfessors.size })
+      if (!isLennyDuel && newHearts <= 0) {
+        posthog.capture('game_over', { professor: profKey, spells_collected: defeatedProfessors.size })
         setGameOverProfKey(profKey)
         setScreen('game_over')
         return
       }
       if (nextQIndex < duelQs.length) {
-        // Next question in same duel
         setQIndex(nextQIndex)
         setAnsweredIndex(null)
         setLastResult(null)
-        setLastSpGained(0)
         return
       }
-      // All 5 answered — professor defeated
-      if (finalBossActive) {
-        posthog.capture('grand_wizard', { archetype, sp_total: newSp })
-        setScreen('grand')
-        return
-      }
-      posthog.capture('spell_won', { professor: profKey, is_boss: isBoss, sp_total: newSp })
-      setDefeatedProfessors(prev => new Set([...prev, profKey]))
-      setWonSpell(SPELL_NAMES[profKey] ?? 'Unknown Spell')
+      // All 5 answered
+      posthog.capture('spell_won', { professor: profKey, is_boss: isBoss, is_lenny: isLennyDuel })
+      if (!isLennyDuel) setDefeatedProfessors(prev => new Set([...prev, profKey]))
+      setWonSpell(SPELL_NAMES[profKey] ?? 'The Product Lore')
       setWonProfKey(profKey)
       setWonProfIsBoss(isBoss)
+      playSfx('/assets/sounds/sfx/spell_win.wav')
       setScreen('spellwin')
     }, isCorrect ? 2000 : 7000)
   }
@@ -774,8 +757,7 @@ export default function Home() {
     const isCorrect = blessing.q.displayOptions[optionIndex].isCorrect
     setBlessing(prev => prev ? { ...prev, phase: 'result', answeredIndex: optionIndex, isCorrect } : null)
     if (isCorrect) {
-      setSp(prev => prev + 500)
-      posthog.capture('lenny_blessing_correct', { sp_gained: 500 })
+      posthog.capture('lenny_blessing_correct', {})
     } else {
       posthog.capture('lenny_blessing_wrong', {})
     }
@@ -788,11 +770,26 @@ export default function Home() {
 
   // ── Tower progression ─────────────────────────────────────────────────────────
   function advanceAfterSpellWin() {
-    // Lenny duel — just return to selecting, no tower logic
+    // Lenny win: +3 hearts (cap 8), add to playbook, check completion
     if (wonProfKey === 'lenny_rachitsky') {
       setIsLennyDuel(false)
-      setDuelPhase('selecting')
-      setScreen('duel')
+      setHearts(prev => Math.min(prev + 3, 8))
+      const newDefeated = new Set([...defeatedProfessors, 'lenny_rachitsky'])
+      setDefeatedProfessors(newDefeated)
+      if (newDefeated.size >= 19) {
+        posthog.capture('grand_wizard', { archetype })
+        setScreen('grand')
+      } else {
+        setDuelPhase('selecting')
+        setScreen('duel')
+      }
+      return
+    }
+
+    // All 19 collected (18 profs already in defeatedProfessors + Lenny already added above)
+    if (defeatedProfessors.size >= 19) {
+      posthog.capture('grand_wizard', { archetype })
+      setScreen('grand')
       return
     }
 
@@ -800,18 +797,9 @@ export default function Home() {
     const towerKey = wonProf?.tower ?? activeTowerKey
 
     if (wonProfIsBoss) {
-      // Check if all 3 bosses are now defeated (include wonProfKey explicitly to guard against batching edge cases)
-      const allBossKeys = Object.values(TOWERS).flatMap(t => t.professors.filter(p => p.isBoss).map(p => p.key))
-      const allBossesDefeated = allBossKeys.every(k => defeatedProfessors.has(k) || k === wonProfKey)
-      if (allBossesDefeated) {
-        openSummonsPrefinal()
-        return
-      }
-      // Just this tower's boss — show tower cleared (user clicks CTA to continue)
-      posthog.capture('tower_cleared', { tower: towerKey, sp_total: sp })
+      posthog.capture('tower_cleared', { tower: towerKey })
       setScreen('tower_cleared')
     } else {
-      // Non-boss defeated — maybe Lenny's Blessing, then return to duel in selecting mode
       if (Math.random() < 0.1) {
         triggerBlessing()
       } else {
@@ -824,24 +812,11 @@ export default function Home() {
   // ── Summons handlers ──────────────────────────────────────────────────────────
   function openSummonsEasterEgg() {
     setSummonsVariant('easter_egg')
-    setScreen('summons')
-  }
-
-  function openSummonsPrefinal() {
-    setSummonsVariant('prefinal')
-    setScreen('summons')
+    setSummonsOpen(true)
   }
 
   function dismissSummons() {
-    setSummonsClosing(true)
-    setTimeout(() => {
-      setSummonsClosing(false)
-      if (summonsVariant === 'easter_egg') {
-        setScreen('landing')
-      } else {
-        setScreen('final')
-      }
-    }, 480)
+    setSummonsOpen(false)
   }
 
   // ── Playbook handlers ─────────────────────────────────────────────────────────
@@ -862,7 +837,7 @@ export default function Home() {
       {/* ══════════════════════════════════
           S1 — LANDING
       ══════════════════════════════════ */}
-      <div id="s-landing" className={`screen${screen === 'landing' || screen === 'summons' ? ' active' : ''}${screen === 'summons' ? ' landing-under' : ''}`}>
+      <div id="s-landing" className={`screen${screen === 'landing' ? ' active' : ''}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="bg" src="/assets/Landing_Page_Background.avif" alt="" />
         <div style={{ position:'absolute', inset:0, zIndex:1, pointerEvents:'none',
@@ -881,8 +856,8 @@ export default function Home() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="prof-card-img" src={getProfCardImg(p.key)} alt={p.name} />
               <div className="prof-card-overlay">
-                <div className="pname">{p.name.toUpperCase()}</div>
-                <div className="ptitle">{p.title.toUpperCase()}</div>
+                <div className="pname">{p.name}</div>
+                <div className="ptitle">{p.title}</div>
               </div>
             </div>
           ))}
@@ -890,13 +865,13 @@ export default function Home() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="prof-card-img" src="/assets/professors/lenny_rachitsky_card.png" alt="Lenny Rachitsky" />
             <div className="prof-card-overlay">
-              <div className="pname">LENNY RACHITSKY</div>
-              <div className="ptitle">KEEPER OF THE PRODUCT LORE</div>
+              <div className="pname">Lenny Rachitsky</div>
+              <div className="keeper-badge">⚜ The Keeper ⚜</div>
             </div>
           </div>
           <div className="prof-card more">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="prof-card-img" src="/assets/professor_placeholder.png" alt="" style={{ opacity:.8 }} />
+            <img className="prof-card-img" src="/assets/professor_placeholder.png" alt="" style={{ opacity:.8, objectFit:'contain', objectPosition:'center center' }} />
             <div className="prof-card-overlay" />
           </div>
         </div>
@@ -912,15 +887,6 @@ export default function Home() {
         </div>
 
         <div className="orb-wrap">
-          <input
-            className="orb-name-input"
-            type="text"
-            placeholder="What shall we call you, mage?"
-            maxLength={30}
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') beginOracle() }}
-          />
           <div className="orb-assembly" onClick={beginOracle}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="orb-btn-img" src="/assets/orb_button_transparent.avif" alt="Begin" />
@@ -929,7 +895,7 @@ export default function Home() {
 
         <div className="curator-bar">
           <div className="curator-bar-text">
-            Curated from <strong>LENNY&apos;S</strong>&nbsp; Newsletter &amp; Podcast
+            Curated from <span style={{ fontWeight: 700 }}>Lenny&apos;s</span>{' '}Newsletter &amp; Podcast
           </div>
         </div>
 
@@ -1021,6 +987,9 @@ export default function Home() {
         <img className="bg" loading="lazy" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
         <div className="du-overlay" />
 
+        {/* Rules of the Academy button */}
+        <button className="rules-btn" onClick={() => setRulesModalOpen(true)} aria-label="Rules of the Academy">ℹ</button>
+
         {/* Top status bar */}
         <div className="du-topbar">
           {/* Professor side */}
@@ -1046,27 +1015,27 @@ export default function Home() {
           <div className="du-title-center">
             <div className="du-duel-title">Spellcraft</div>
             <div className="du-round-tag">
-              {duelPhase === 'selecting' ? 'SELECT YOUR OPPONENT' : `QUESTION ${qIndex + 1} OF ${duelQs.length || 5}`}
+              {duelPhase === 'selecting' ? 'Select your opponent' : `Question ${qIndex + 1} of ${duelQs.length || 5}`}
             </div>
           </div>
           {/* Player side */}
           <div className="du-hud-side du-hud-right">
             <div className="du-hud-info" style={{ textAlign: 'right' }}>
-              <div className="du-hud-name">{rank}</div>
-              <div className="du-hud-sub">{sp.toLocaleString()} SP · {currentTower?.name ?? 'Final Duel'}</div>
+              <div className="du-hud-name">{arc.name}</div>
               {(() => {
-                const maxH = finalBossActive ? 3 : 5
-                const curH = finalBossActive ? lennyHearts : hearts
-                const playerHp = Math.round((curH / maxH) * 100)
+                const displayMax = Math.max(5, hearts)
+                const playerHp = Math.round((hearts / displayMax) * 100)
                 return (
-                  <div className="du-hp-wrap" style={{ justifyContent: 'flex-end' }}>
-                    <span className="du-hp-label">
-                      {Array.from({ length: maxH }).map((_, i) => (
-                        <span key={i} style={{ color: i < curH ? '#e83030' : 'rgba(100,60,60,.4)' }}>♥</span>
+                  <>
+                    <div className="du-hud-sub" style={{ textAlign: 'right' }}>
+                      {Array.from({ length: displayMax }).map((_, i) => (
+                        <span key={i} style={{ fontSize: '14px', color: i < hearts ? (i >= 5 ? '#f0c060' : '#e83030') : 'rgba(100,60,60,.4)' }}>♥</span>
                       ))}
-                    </span>
-                    <div className="du-hp-track"><div className="du-hp-fill blue" style={{ width: `${playerHp}%` }} /></div>
-                  </div>
+                    </div>
+                    <div className="du-hp-wrap" style={{ justifyContent: 'flex-end' }}>
+                      <div className="du-hp-track"><div className="du-hp-fill blue" style={{ width: `${playerHp}%` }} /></div>
+                    </div>
+                  </>
                 )
               })()}
             </div>
@@ -1140,7 +1109,7 @@ export default function Home() {
 
             {/* Divider */}
             <div className="du-category-tag">
-              <span className="du-cat-label">{currentTower?.name.toUpperCase() ?? 'PRODUCT'}</span>
+              <span className="du-cat-label">{currentTower?.name ?? 'Product'}</span>
             </div>
 
             {/* Answer cards — fill remaining space */}
@@ -1176,9 +1145,9 @@ export default function Home() {
                 <div className="du-sb-header-label">Playbook</div>
                 <div className="du-sb-header-icon">📜</div>
                 <div className="du-sb-header-bottom">
-                  <span className="du-sb-header-count">{defeatedProfessors.size}<span className="du-sb-header-total"> / 19 SPELLS</span></span>
+                  <span className="du-sb-header-count">{defeatedProfessors.size}<span className="du-sb-header-total"> / 19 spells</span></span>
                 </div>
-                <div className="du-sb-header-bottom" style={{ fontSize: 8, color: 'rgba(160,130,70,.7)', fontStyle: 'italic', marginTop: 1 }}>
+                <div className="du-sb-header-bottom" style={{ fontFamily: "'EB Garamond', serif", fontSize: 11, color: 'rgba(200,165,90,.85)', fontStyle: 'italic', marginTop: 1 }}>
                   18 professors · The Keeper
                 </div>
               </div>
@@ -1195,30 +1164,24 @@ export default function Home() {
         {/* Feedback toast */}
         {lastResult && (
           <div className={`duel-feedback visible ${lastResult}`}>
-            {lastResult === 'correct' ? `✓ Correct! +${lastSpGained} SP` : isLennyDuel ? '✗ Incorrect — no heart lost' : `✗ Wrong! −1 Heart`}
+            {lastResult === 'correct' ? '✓ Correct!' : isLennyDuel ? '✗ Incorrect — no heart lost' : '✗ Wrong! −1 Heart'}
           </div>
         )}
 
-        {/* First heart lost hint */}
-        {heartHintVisible && (
-          <div className="heart-hint-toast">
-            💡 Lose all 5 hearts? Spend 500 SP to refill and keep going.
-          </div>
-        )}
 
         {/* Playbook modal — bottom sheet (same style as tower select) */}
         {playbookModalOpen && (
           <div className="pbm-overlay" onClick={() => setPlaybookModalOpen(false)}>
             <div className="pbm-sheet" onClick={e => e.stopPropagation()}>
               <div className="pbm-header">
-                <span className="pbm-title">✦ Your Spellbook ✦</span>
+                <span className="pbm-title">✦ Your Playbook ✦</span>
                 <button className="pbm-close-btn" onClick={() => setPlaybookModalOpen(false)}>✕ CLOSE</button>
               </div>
               <div className="pbm-body">
                 <div className="pb-wrap">
                     <div className="pb-header">
-                      <div className="pb-title">Spell Card Collection Playbook</div>
-                      <div className="pb-subtitle">✦ MAX SPELLS: 19 &nbsp;·&nbsp; 1 PER PROFESSOR ✦</div>
+                      <div className="pb-title">Your Playbook</div>
+                      <div className="pb-subtitle">✦ Max spells: 19 · 1 per professor ✦</div>
                     </div>
 
                     {/* Lenny's spell card */}
@@ -1230,14 +1193,14 @@ export default function Home() {
                         {(() => {
                           const collected = defeatedProfessors.has('lenny_rachitsky')
                           return (
-                            <div className={`pb-card${collected ? '' : ' locked'}`}>
-                              {collected && <div className="pb-ribbon">COLLECTED</div>}
-                              <div className="pb-icon" style={{ background: collected ? 'linear-gradient(180deg,rgba(240,192,96,.22),rgba(240,192,96,.06))' : undefined }}>
-                                📖
-                              </div>
-                              <div className="pb-body">
-                                <div className="pb-spell" style={{ color: collected ? 'var(--gold)' : undefined }}>The Product Lore</div>
-                                <div className="pb-prof">— Lenny Rachitsky</div>
+                            <div className={`pb-card${collected ? '' : ' locked'} boss-collected`} style={collected ? { borderColor: 'rgba(240,192,96,.65)' } : { borderColor: 'rgba(180,30,20,.4)' }}>
+                              {collected && <div className="pb-ribbon">Collected</div>}
+                              <div className="pb-card-emoji">📖</div>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img className="pb-card-img" src="/assets/professors/lenny_rachitsky_card.png" alt="Lenny Rachitsky" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                              <div className="pb-card-footer">
+                                <div className="pb-spell" style={collected ? { color: 'var(--gold)' } : { color: '#e08070' }}>The Product Lore</div>
+                                <div className="pb-prof">Lenny Rachitsky</div>
                               </div>
                               {!collected && (
                                 <div className="pb-lock">
@@ -1268,30 +1231,21 @@ export default function Home() {
                                     key={prof.key}
                                     className={`pb-card${collected ? '' : ' locked'}${prof.isBoss ? (collected ? ' boss-collected' : ' boss') : ''}`}
                                   >
-                                    {collected && <div className="pb-ribbon">COLLECTED</div>}
-                                    <div
-                                      className={`pb-icon ${towerKey}`}
-                                      style={prof.isBoss ? (collected
-                                        ? { background: 'linear-gradient(180deg,rgba(240,192,96,.22),rgba(240,192,96,.06))' }
-                                        : { background: 'linear-gradient(180deg,rgba(180,30,20,.18),rgba(180,30,20,.05))' }
-                                      ) : undefined}
-                                    >
-                                      {SPELL_EMOJIS[prof.key]}
-                                    </div>
-                                    <div className="pb-body">
-                                      <div
-                                        className="pb-spell"
-                                        style={prof.isBoss ? (collected ? { color: 'var(--gold)' } : { color: '#e08070' }) : undefined}
-                                      >
+                                    {collected && <div className="pb-ribbon">Collected</div>}
+                                    <div className="pb-card-emoji">{SPELL_EMOJIS[prof.key]}</div>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img className="pb-card-img" src={getProfCardImg(prof.key)} alt={prof.name} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                    <div className="pb-card-footer">
+                                      <div className="pb-spell" style={prof.isBoss ? (collected ? { color: 'var(--gold)' } : { color: '#e08070' }) : undefined}>
                                         {SPELL_NAMES[prof.key]}
                                       </div>
-                                      <div className="pb-prof">— {prof.name}</div>
+                                      <div className="pb-prof">{prof.name}</div>
                                     </div>
                                     {!collected && (
                                       <div className="pb-lock">
                                         <div className="pb-lock-icon">🔒</div>
                                         <div className="pb-lock-text">
-                                          {prof.isBoss ? 'Defeat the Tower Boss to unlock' : `Defeat ${prof.name} to unlock`}
+                                          {prof.isBoss ? 'Defeat Tower Boss' : `Defeat ${prof.name.split(' ')[0]}`}
                                         </div>
                                       </div>
                                     )}
@@ -1323,7 +1277,7 @@ export default function Home() {
                 <div className="tm-section" style={{ borderBottom: '1px solid rgba(240,192,96,.2)', marginBottom: 12, paddingBottom: 12 }}>
                   <div className="tm-section-hdr">
                     <span className="tm-section-name" style={{ color: '#f0c060' }}>📖 Keeper of Product Lore</span>
-                    <span className="tm-section-prog" style={{ color: '#a08040' }}>Always available · No hearts at stake</span>
+                    <span className="tm-section-prog" style={{ color: '#f0c060' }}>♥♥♥ Win to earn +3 hearts</span>
                   </div>
                   <div className="tm-prof-grid">
                     <div
@@ -1350,15 +1304,16 @@ export default function Home() {
                 {(['pm', 'strategy', 'ai'] as TowerKey[]).map(tk => {
                   const tower = TOWERS[tk]
                   const nonBossProfs = tower.professors.filter(p => !p.isBoss)
-                  const defeatedInTower = nonBossProfs.filter(p => defeatedProfessors.has(p.key)).length
-                  const bossUnlocked = defeatedInTower >= 3
+                  const defeatedNonBoss = nonBossProfs.filter(p => defeatedProfessors.has(p.key)).length
+                  const defeatedInTower = tower.professors.filter(p => defeatedProfessors.has(p.key)).length
+                  const bossUnlocked = defeatedNonBoss >= 3
                   return (
                     <div key={tk} id={`tm-section-${tk}`} className="tm-section">
                       <div className="tm-section-hdr">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={TOWER_ICON[tk]} alt="" className="tm-section-icon" />
                         <span className="tm-section-name" style={{color: tk === 'pm' ? '#6090f0' : tk === 'strategy' ? '#e08030' : '#a070e0'}}>{tower.name}</span>
-                        <span className="tm-section-prog">{defeatedInTower} / {nonBossProfs.length} Defeated</span>
+                        <span className="tm-section-prog">{defeatedInTower} / {tower.professors.length} Defeated</span>
                       </div>
                       <div className="tm-prof-grid">
                         {tower.professors.map(prof => {
@@ -1398,6 +1353,54 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* Rules of the Academy modal */}
+        {rulesModalOpen && (
+          <div className="rules-overlay" onClick={() => setRulesModalOpen(false)}>
+            <div className="rules-modal" onClick={e => e.stopPropagation()}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="rules-bg" src="/assets/Summo_letter_background.jpg" alt="" />
+              <div className="rules-inner">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="rules-crest" src="/assets/Lorethron_crest_transparent.avif" alt="" />
+                <div className="rules-title">Rules of the Academy</div>
+                <div className="rules-scroll">
+                  <div className="rules-sections">
+                    <div className="rules-section">
+                      <div className="rules-section-title">♥ Hearts</div>
+                      <div className="rules-section-body">You have 5 hearts. Lose one for every wrong answer. Run out and it&apos;s Game Over — but you can always try again for free.</div>
+                    </div>
+                    <div className="rules-section">
+                      <div className="rules-section-title">⚔ Duels</div>
+                      <div className="rules-section-body">Each duel is 5 questions, two choices each — the correct answer and one expert-curated distractor. Think carefully.</div>
+                    </div>
+                    <div className="rules-section">
+                      <div className="rules-section-title">✦ Winning a Duel</div>
+                      <div className="rules-section-body">Answer all 5 questions — you don&apos;t need to get them all right, just survive with at least 1 heart remaining. Win and you earn a Spell Card for your Playbook.</div>
+                    </div>
+                    <div className="rules-section">
+                      <div className="rules-section-title">🏰 Towers</div>
+                      <div className="rules-section-body">There are 3 towers — PM, Strategy, and AI. Defeat at least 3 professors in a tower to unlock its Boss.</div>
+                    </div>
+                    <div className="rules-section">
+                      <div className="rules-section-title">📖 Lenny Rachitsky</div>
+                      <div className="rules-section-body">Available to duel at any time. No hearts at stake — wrong answers won&apos;t cost you. Win and earn +3 bonus hearts (gold ♥).</div>
+                    </div>
+                    <div className="rules-section">
+                      <div className="rules-section-title">★ Grand Wizard</div>
+                      <div className="rules-section-body">Collect all 19 spell cards to become Grand Wizard of Product.</div>
+                    </div>
+                  </div>
+                  <div className="rules-sig-wrap">
+                    <div className="rules-sig">— Lenny Rachitsky</div>
+                    <div className="rules-sig-byline">Keeper of Product Lore · Lorethorn Academy</div>
+                  </div>
+                </div>
+                <button className="rules-close" onClick={() => setRulesModalOpen(false)}>✦ Begin your duel ✦</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ══════════════════════════════════
@@ -1414,15 +1417,13 @@ export default function Home() {
             <div className="sw-card-tag">DEFEATED</div>
             <div className="sw-prof-icon">{SPELL_EMOJIS[wonProfKey] ?? '🧙'}</div>
             <div className="sw-prof-name">
-              {(wonProfKey === 'lenny_rachitsky' ? LENNY_PROF : Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey))?.name.toUpperCase() ?? wonProfKey.toUpperCase()}
+              {(wonProfKey === 'lenny_rachitsky' ? LENNY_PROF : Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey))?.name ?? wonProfKey}
             </div>
             <div className="sw-prof-title">
               {(wonProfKey === 'lenny_rachitsky' ? LENNY_PROF : Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey))?.title ?? ''}
             </div>
-            <div style={{ borderTop: '1px solid rgba(160,120,50,.35)', width: '100%', margin: '4px 0' }} />
-            <div className="sw-xp">+{duelTotalSp > 0 ? duelTotalSp : lastSpGained || 100} SP</div>
-            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 9, color: 'rgba(180,150,90,.7)', fontStyle: 'italic', textAlign: 'center' }}>
-              Earned this duel · Spell added to your Playbook
+            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 9, color: 'rgba(180,150,90,.7)', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>
+              {wonProfKey === 'lenny_rachitsky' ? '♥♥♥ +3 Hearts awarded — The Keeper rewards you' : 'Spell added to your Playbook'}
             </div>
           </div>
 
@@ -1453,7 +1454,7 @@ export default function Home() {
                 const count = tower.professors.filter(p => defeatedProfessors.has(p.key)).length
                 return (
                   <div key={key} className="sw-tower-row">
-                    <span className="sw-tower-name">{tower.name.toUpperCase()}</span>
+                    <span className="sw-tower-name">{tower.name}</span>
                     <span className="sw-tower-count">{count} / {tower.professors.length}</span>
                   </div>
                 )
@@ -1466,9 +1467,8 @@ export default function Home() {
 
           {/* FOOTER: buttons */}
           <div className="sw-footer">
-            <div className="sw-btn-sp">+ {sp.toLocaleString()} SP</div>
             <button className="sw-btn-cont" onClick={advanceAfterSpellWin}>
-              {wonProfKey === 'lenny_rachitsky' ? 'RETURN TO THE ACADEMY →' : wonProfIsBoss ? 'TOWER CLEARED — ONWARD ✦' : 'CONTINUE DUEL →'}
+              {wonProfKey === 'lenny_rachitsky' ? 'Return to the Academy →' : wonProfIsBoss ? 'Tower Cleared — Onward ✦' : 'Continue Duel →'}
             </button>
           </div>
         </div>
@@ -1492,15 +1492,15 @@ export default function Home() {
             <div className="tc-bg-overlay" />
             <div className="tc-stars" />
             <div className="tc-wrap">
-              <div className="tc-badge">{towerDisplayName.toUpperCase()} CLEARED</div>
+              <div className="tc-badge">{towerDisplayName} Cleared</div>
               <div className="tc-title">The {towerDisplayName} Falls.</div>
               <div className="tc-next">
                 You&apos;ve bested the masters of this tower. Your knowledge grows.
                 {nextTowerName && <> The {nextTowerName} has opened its gates.</>}
               </div>
-              {nextTowerName && <div className="tc-next-badge">NEXT: {nextTowerName.toUpperCase()}</div>}
+              {nextTowerName && <div className="tc-next-badge">Next: {nextTowerName}</div>}
               <button className="tc-cta" onClick={() => { setActiveTowerKey(nextTowerKey); setDuelPhase('selecting'); setScreen('duel') }}>
-                {nextTowerName ? `ENTER ${nextTowerName.toUpperCase()} →` : 'CONTINUE →'}
+                {nextTowerName ? `Enter ${nextTowerName} →` : 'Continue →'}
               </button>
             </div>
           </div>
@@ -1518,16 +1518,53 @@ export default function Home() {
         <div className="pb-scroll-inner" ref={pbCardRef}>
           <div className="pb-wrap">
             <div className="pb-header">
-              <div className="pb-title">Spell Card Collection Playbook</div>
-              <div className="pb-subtitle">✦ MAX SPELLS: 19 &nbsp;·&nbsp; 1 PER PROFESSOR ✦</div>
+              <div className="pb-title">Your Playbook</div>
+              <div className="pb-subtitle">✦ {defeatedProfessors.size} / 19 spells collected ✦</div>
             </div>
+
+            {/* Lenny — always at top */}
+            <div style={{ borderBottom: '1px solid rgba(240,192,96,.2)', marginBottom: 4, paddingBottom: 14 }}>
+              <div className="pb-tower-head" style={{ color: '#f0c060', borderColor: 'rgba(240,192,96,.35)' }}>
+                📖 Keeper of Product Lore
+                <span className="pb-tower-head-prog">{defeatedProfessors.has('lenny_rachitsky') ? '1 / 1 Collected' : '0 / 1 Collected'}</span>
+              </div>
+              <div className="pb-cards">
+                {(() => {
+                  const collected = defeatedProfessors.has('lenny_rachitsky')
+                  return (
+                    <div className={`pb-card${collected ? '' : ' locked'}`} style={collected ? { borderColor: 'rgba(240,192,96,.65)' } : { borderColor: 'rgba(180,30,20,.4)' }}>
+                      {collected && <div className="pb-ribbon">Collected</div>}
+                      <div className="pb-card-emoji">📖</div>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img className="pb-card-img" src="/assets/professors/lenny_rachitsky_card.png" alt="Lenny Rachitsky" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      <div className="pb-card-footer">
+                        <div className="pb-spell" style={collected ? { color: 'var(--gold)' } : { color: '#e08070' }}>The Product Lore</div>
+                        <div className="pb-prof">Lenny Rachitsky</div>
+                      </div>
+                      {!collected && (
+                        <div className="pb-lock">
+                          <div className="pb-lock-icon">🔒</div>
+                          <div className="pb-lock-text">Duel Lenny to unlock</div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
+              </div>
+            </div>
+
             <div className="pb-towers">
               {(['pm', 'strategy', 'ai'] as TowerKey[]).map((towerKey) => {
                 const tower = TOWERS[towerKey]
-                const towerLabel = towerKey === 'pm' ? '🏰 PM TOWER' : towerKey === 'strategy' ? '⚔️ STRATEGY TOWER' : '🤖 AI TOWER'
+                const collectedInTower = tower.professors.filter(p => defeatedProfessors.has(p.key)).length
                 return (
                   <div key={towerKey}>
-                    <div className={`pb-tower-head ${towerKey}`}>{towerLabel}</div>
+                    <div className={`pb-tower-head ${towerKey}`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={TOWER_ICON[towerKey]} alt="" style={{ width: 22, height: 22, objectFit: 'contain', mixBlendMode: 'screen', opacity: .95 }} />
+                      {towerKey === 'pm' ? 'PM Tower' : towerKey === 'strategy' ? 'Strategy Tower' : 'AI Tower'}
+                      <span className="pb-tower-head-prog">{collectedInTower} / {tower.professors.length} Collected</span>
+                    </div>
                     <div className="pb-cards">
                       {tower.professors.map((prof) => {
                         const collected = defeatedProfessors.has(prof.key)
@@ -1536,30 +1573,21 @@ export default function Home() {
                             key={prof.key}
                             className={`pb-card${collected ? '' : ' locked'}${prof.isBoss ? (collected ? ' boss-collected' : ' boss') : ''}`}
                           >
-                            {collected && <div className="pb-ribbon">COLLECTED</div>}
-                            <div
-                              className={`pb-icon ${towerKey}`}
-                              style={prof.isBoss ? (collected
-                                ? { background: 'linear-gradient(180deg,rgba(240,192,96,.22),rgba(240,192,96,.06))' }
-                                : { background: 'linear-gradient(180deg,rgba(180,30,20,.18),rgba(180,30,20,.05))' }
-                              ) : undefined}
-                            >
-                              {SPELL_EMOJIS[prof.key]}
-                            </div>
-                            <div className="pb-body">
-                              <div
-                                className="pb-spell"
-                                style={prof.isBoss ? (collected ? { color: 'var(--gold)' } : { color: '#e08070' }) : undefined}
-                              >
+                            {collected && <div className="pb-ribbon">Collected</div>}
+                            <div className="pb-card-emoji">{SPELL_EMOJIS[prof.key]}</div>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img className="pb-card-img" src={getProfCardImg(prof.key)} alt={prof.name} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                            <div className="pb-card-footer">
+                              <div className="pb-spell" style={prof.isBoss ? (collected ? { color: 'var(--gold)' } : { color: '#e08070' }) : undefined}>
                                 {SPELL_NAMES[prof.key]}
                               </div>
-                              <div className="pb-prof">— {prof.name}</div>
+                              <div className="pb-prof">{prof.name}</div>
                             </div>
                             {!collected && (
                               <div className="pb-lock">
                                 <div className="pb-lock-icon">🔒</div>
                                 <div className="pb-lock-text">
-                                  {prof.isBoss ? 'Defeat the Tower Boss to unlock' : `Defeat ${prof.name} to unlock`}
+                                  {prof.isBoss ? 'Defeat Tower Boss' : `Defeat ${prof.name.split(' ')[0]}`}
                                 </div>
                               </div>
                             )}
@@ -1581,61 +1609,56 @@ export default function Home() {
       </div>
 
       {/* ══════════════════════════════════
-          S8 — SUMMONS LETTER
-          Tap anywhere to dismiss
+          S8 — SUMMONS LETTER (modal overlay)
       ══════════════════════════════════ */}
-      <div
-        id="s-summons"
-        className={`screen${screen === 'summons' ? ' active' : ''} ${screen === 'summons' ? (summonsClosing ? 'sl-slide-down' : 'sl-slide-up') : ''}`}
-        onClick={dismissSummons}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" loading="lazy" src="/assets/Summo_letter_background_1775007534371.jpg" alt="" />
-        <div className="sl-tint" />
-
-        <div className="sl-scroll-inner">
-          <div className="sl-card">
+      {summonsOpen && (
+        <div className="sl-overlay" onClick={dismissSummons}>
+          <div className="sl-modal" onClick={(e) => e.stopPropagation()}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="sl-crest" src="/assets/Lorethron_crest_transparent.avif" alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-            <div className="sl-school">Lorethorn Academy</div>
-            <div className="sl-school-sub">of Product Spellcraft</div>
-            <div className="sl-rule" />
+            <img className="bg" src="/assets/Summo_letter_background_1775007534371.jpg" alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', borderRadius:'4px' }} />
+            <div className="sl-tint" />
 
-            {summonsVariant === 'easter_egg' ? (
-              <div className="sl-body">
-                <p>You weren&apos;t supposed to find this.</p>
-                <p>Most mages pass through Lorethorn without ever looking for me. You did.</p>
-                <p>That&apos;s either curiosity or ambition. I haven&apos;t decided which yet.</p>
-                <p>Finish what you started. Then we&apos;ll talk.</p>
-              </div>
-            ) : (
-              <div className="sl-body">
-                <p>You&apos;ve done it.</p>
-                <p>Nineteen professors. Three towers. Every framework, every model, every hard question the Academy could throw at you.</p>
-                <p>I&apos;ve been watching. They all told me you were different.</p>
-                <p>There is one duel left. Not a test of what you know — a test of what you believe.</p>
-                <p>Come find me.</p>
-              </div>
-            )}
+            <div className="sl-modal-inner">
+              <button className="sl-close-btn" onClick={dismissSummons}>✕ Close</button>
 
-            <div className="sl-sig-wrap">
-              <div className="sl-sig">
-                {summonsVariant === 'easter_egg' ? '— L.R.' : '— Lenny Rachitsky'}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="sl-crest" src="/assets/Lorethron_crest_transparent.avif" alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              <div className="sl-school">Lorethorn Academy</div>
+              <div className="sl-school-sub">of Product Spellcraft</div>
+              <div className="sl-rule" />
+
+              {summonsVariant === 'easter_egg' ? (
+                <div className="sl-body">
+                  <p>You weren&apos;t supposed to find this.</p>
+                  <p>Most mages pass through Lorethorn without ever looking for me. You did.</p>
+                  <p>That&apos;s either curiosity or ambition. I haven&apos;t decided which yet.</p>
+                  <p>Finish what you started. Then we&apos;ll talk.</p>
+                </div>
+              ) : (
+                <div className="sl-body">
+                  <p>You&apos;ve done it.</p>
+                  <p>Nineteen professors. Three towers. Every framework, every model, every hard question the Academy could throw at you.</p>
+                  <p>I&apos;ve been watching. They all told me you were different.</p>
+                  <p>There is one duel left. Not a test of what you know — a test of what you believe.</p>
+                  <p>Come find me.</p>
+                </div>
+              )}
+
+              <div className="sl-sig-wrap">
+                <div className="sl-sig">
+                  {summonsVariant === 'easter_egg' ? '— L.R.' : '— Lenny Rachitsky'}
+                </div>
+              </div>
+              <div className="sl-footer">
+                Author, Lenny&apos;s Newsletter · Host, Lenny&apos;s Podcast · Keeper of Product Lore
               </div>
             </div>
-            <div className="sl-footer">
-              AUTHOR, LENNY&apos;S NEWSLETTER · HOST, LENNY&apos;S PODCAST · KEEPER OF PRODUCT LORE
-            </div>
-            <div className="sl-tap-hint">TAP ANYWHERE TO {summonsVariant === 'easter_egg' ? 'DISMISS' : 'PROCEED'}</div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ══════════════════════════════════
-          S9 — FINAL REVELATION
-          No HUD — pure cinematic
-      ══════════════════════════════════ */}
-      <div id="s-final" className={`screen${screen === 'final' ? ' active' : ''}`}>
+      {/* Final Revelation — removed in v1 (Lenny is always available, not an endgame unlock) */}
+      <div id="s-final" style={{ display: 'none' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="bg" loading="lazy" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
         <div className="fr-vignette" />
@@ -1651,7 +1674,7 @@ export default function Home() {
             <div className="fr-rune" style={{ top:'14%', right:'10%', animationDelay:'1.3s' }}>⚡</div>
             <div className="fr-rune" style={{ bottom:'22%', left:'12%', animationDelay:'2.1s' }}>🎯</div>
             <div className="fr-silhouette" />
-            <div className="fr-player-label">{rank.toUpperCase()}</div>
+            <div className="fr-player-label">{arc.name}</div>
           </div>
 
           {/* Center — energy orb + beams */}
@@ -1692,15 +1715,11 @@ export default function Home() {
           <button
             className="fr-cta"
             onClick={async () => {
-              setFinalBossActive(true)
-              setLennyHearts(3)
               setDuelPhase('active')
               setDuelQs([])
               setQIndex(0)
               setAnsweredIndex(null)
               setLastResult(null)
-              setLastSpGained(0)
-              setDuelTotalSp(0)
               setCorrectInDuel(0)
               setDuelLoading(true)
               setDuelError(false)
@@ -1731,7 +1750,7 @@ export default function Home() {
 
         <div className="gw-inner" ref={gwCardRef}>
           <div className="gw-grand-title">Grand Wizard of Product</div>
-          <div className="gw-grand-sub">✦ {displayName.toUpperCase()}&apos;S PLAYBOOK &nbsp;·&nbsp; 19 / 19 SPELLS COLLECTED ✦</div>
+          <div className="gw-grand-sub">✦ {displayName}&apos;s Playbook &nbsp;·&nbsp; 19 / 19 Spells Collected ✦</div>
 
           {/* 3-column spell roster */}
           <div className="gw-columns">
@@ -1744,7 +1763,7 @@ export default function Home() {
                 </div>
                 {TOWERS[key].professors.map((prof) => (
                   <div key={prof.key} className={`gw-card${prof.isBoss ? ' boss' : ''}`}>
-                    <div className="gw-card-ribbon">COLLECTED</div>
+                    <div className="gw-card-ribbon">Collected</div>
                     <div className={`gw-card-icon ${prof.isBoss ? 'boss' : key}`}>{SPELL_EMOJIS[prof.key]}</div>
                     <div className="gw-card-body">
                       <div className={`gw-card-spell${prof.isBoss ? ' boss' : ''}`}>{SPELL_NAMES[prof.key]}</div>
@@ -1759,7 +1778,7 @@ export default function Home() {
           {/* Footer */}
           <div className="gw-footer">
             <div className="gw-stats-line">
-              {sp.toLocaleString()} SP &nbsp;·&nbsp; 19 Professors Defeated &nbsp;·&nbsp; 3 Towers Cleared
+              19 Professors Defeated &nbsp;·&nbsp; 3 Towers Cleared
             </div>
             <div className="gw-lenny-quote">
               &ldquo;Most PMs read one framework and call it wisdom. You read nineteen.<br />
@@ -1769,9 +1788,7 @@ export default function Home() {
               <button className="gw-btn-primary" onClick={handleCopyLink}>{copyLabel}</button>
               <button className="gw-btn-secondary" onClick={handleDownloadPlaybook}>DOWNLOAD YOUR PLAYBOOK</button>
               <button className="gw-btn-text" onClick={() => {
-                setFinalBossActive(false)
                 setHearts(5)
-                setSp(0)
                 setDefeatedProfessors(new Set())
                 setActiveTowerKey('pm')
                 setActiveProfKey('gibson_biddle')
@@ -1786,52 +1803,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════
-          LENNY LOSS
-      ══════════════════════════════════ */}
-      <div id="s-lenny-loss" className={`screen${screen === 'lenny_loss' ? ' active' : ''}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bg" loading="lazy" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
-        <div className="spellwin-center">
-          <div className="spellwin-eyebrow" style={{ color: '#c8922a' }}>✦ THE KEEPER PREVAILS ✦</div>
-          <div className="spellwin-spell" style={{ fontSize: 28 }}>The archive remembers.</div>
-          <div className="spellwin-sub" style={{ fontStyle: 'italic', color: 'rgba(240,192,96,.75)' }}>
-            &ldquo;Come back when you&apos;re ready — I&apos;ll have different questions.&rdquo;
-          </div>
-          <div className="spellwin-sub" style={{ fontSize: 12, marginTop: 4 }}>
-            {sp.toLocaleString()} SP &nbsp;·&nbsp; {defeatedProfessors.size} Spells earned
-          </div>
-          <button
-            className="ar-cta"
-            onClick={async () => {
-              setLennyHearts(3)
-              setDuelPhase('active')
-              setDuelQs([])
-              setQIndex(0)
-              setAnsweredIndex(null)
-              setLastResult(null)
-              setLastSpGained(0)
-              setDuelTotalSp(0)
-              setCorrectInDuel(0)
-              setDuelLoading(true)
-              setDuelError(false)
-              setScreen('duel')
-              try {
-                const res = await fetch('/api/questions?professor=lenny_oracle')
-                const data = await res.json()
-                const qs = Array.isArray(data) ? data : []
-                setDuelQs(qs.map((q: Omit<DuelQuestion, 'displayOptions'>) => ({ ...q, displayOptions: buildDisplayOptions(q) })))
-              } catch {
-                setDuelQs([])
-              } finally {
-                setDuelLoading(false)
-              }
-            }}
-          >
-            ✦ Face the Keeper Again ✦
-          </button>
-        </div>
-      </div>
 
       {/* ══════════════════════════════════
           GAME OVER
@@ -1848,36 +1819,25 @@ export default function Home() {
             </div>
           )}
           <div className="spellwin-sub">
-            You earned <strong style={{ color:'var(--gold)' }}>{sp.toLocaleString()} SP</strong> and
-            collected <strong style={{ color:'var(--gold)' }}>{defeatedProfessors.size}</strong> spell
+            You collected <strong style={{ color:'var(--gold)' }}>{defeatedProfessors.size}</strong> spell
             {defeatedProfessors.size !== 1 ? 's' : ''}.<br />
             The Academy awaits your return.
           </div>
           <button
-            className={`go-refill-btn${sp < 500 ? ' go-refill-disabled' : ''}`}
-            disabled={sp < 500}
+            className="go-refill-btn"
             onClick={() => {
-              if (sp < 500) return
-              setSp(prev => prev - 500)
               setHearts(5)
               const prof = allProfessors.find(p => p.key === activeProfKey)
               if (prof) launchDuel(prof.tower, prof.key)
             }}
           >
-            ✦ Continue Your Journey — 500 SP ✦
+            ✦ Try Again ✦
           </button>
-          {sp < 500 && (
-            <div className="go-refill-hint">
-              Earn {(500 - sp).toLocaleString()} more SP to unlock this
-            </div>
-          )}
           <div className="go-divider" />
           <div className="go-actions">
             <button className="gw-btn-secondary" onClick={handleDownloadGameOver}>DOWNLOAD YOUR PROGRESS</button>
             <button className="gw-btn-text" onClick={() => {
-              setFinalBossActive(false)
               setHearts(5)
-              setSp(0)
               setDefeatedProfessors(new Set())
               setActiveTowerKey('pm')
               setActiveProfKey('gibson_biddle')
@@ -1917,7 +1877,7 @@ export default function Home() {
                   &ldquo;I have one question. From the archive. No one else gets this — just you, right now.&rdquo;
                 </div>
                 <div className="blessing-question-panel">
-                  <div className="blessing-eyebrow">✦ THE KEEPER&apos;S QUESTION ✦</div>
+                  <div className="blessing-eyebrow">✦ The Keeper&apos;s Question ✦</div>
                   <div className="blessing-question-text">{blessing.q.question}</div>
                 </div>
                 <div className="blessing-answers">
@@ -1937,7 +1897,7 @@ export default function Home() {
                   })}
                 </div>
                 {blessing.phase === 'result' && blessing.isCorrect && (
-                  <div className="blessing-sp-reward">+500 SP</div>
+                  <div className="blessing-sp-reward">✦ Lenny Nods ✦</div>
                 )}
               </>
             )}
@@ -1946,18 +1906,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Rank Up Ceremony Overlay ── */}
-      {rankUpInfo && (
-        <div className="rank-up-overlay" style={{ '--rank-color': rankUpInfo.color } as React.CSSProperties}>
-          <div className="rank-up-rays" />
-          <div className="rank-up-content">
-            <div className="rank-up-eyebrow">✦ RANK ACHIEVED ✦</div>
-            <div className="rank-up-name" style={{ color: rankUpInfo.color }}>{rankUpInfo.label.toUpperCase()}</div>
-            <div className="rank-up-divider" style={{ background: rankUpInfo.color }} />
-            <div className="rank-up-achievement">{RANK_ACHIEVEMENTS[rankUpInfo.label]}</div>
-          </div>
-        </div>
-      )}
 
     </div>
   )

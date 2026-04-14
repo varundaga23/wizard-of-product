@@ -36,11 +36,16 @@ const lora = Lora({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://wizard-of-product.vercel.app'),
   title: 'Spellcraft — Wizard of Product',
-  description: 'Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Face Lenny in the final duel.',
+  description: 'A wizarding school for product people. Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Guided by Lenny Rachitsky, Keeper of Product Lore.',
+  icons: {
+    icon: '/assets/Lorethron_crest.png',
+    apple: '/assets/Lorethron_crest.png',
+  },
   openGraph: {
     title: 'Spellcraft — Wizard of Product',
-    description: 'Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Face Lenny in the final duel.',
+    description: 'A wizarding school for product people. Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Guided by Lenny Rachitsky, Keeper of Product Lore.',
     url: 'https://spellcraft.game',
     siteName: 'Spellcraft',
     images: [
@@ -56,14 +61,40 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Spellcraft — Wizard of Product',
-    description: 'Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Face Lenny in the final duel.',
+    description: 'A wizarding school for product people. Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Guided by Lenny Rachitsky, Keeper of Product Lore.',
     images: ['/og-image.png'],
+  },
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'VideoGame',
+  name: 'Spellcraft — Wizard of Product',
+  description: 'A wizarding school for product people. Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Guided by Lenny Rachitsky, Keeper of Product Lore.',
+  url: 'https://wizard-of-product.vercel.app',
+  genre: ['Educational', 'Trivia', 'Strategy'],
+  applicationCategory: 'Game',
+  operatingSystem: 'Web Browser',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+  author: {
+    '@type': 'Organization',
+    name: 'Lorethorn Academy',
   },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${cinzel.variable} ${cinzelDecorative.variable} ${ebGaramond.variable} ${pinyonScript.variable} ${lora.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body><PostHogProvider>{children}</PostHogProvider></body>
     </html>
   )
