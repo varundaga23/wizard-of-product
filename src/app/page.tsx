@@ -109,6 +109,28 @@ const SPELL_SUBTITLES: Record<string, string> = {
   lenny_rachitsky:       'Consistency, Craft, Community',
 }
 
+const SPELL_CARD_IMAGES: Record<string, string> = {
+  gibson_biddle:         '/assets/spell-cards/DHM_Principle_Gibson_Biddle_SpellCard.png',
+  julie_zhuo:            '/assets/spell-cards/The_Design_Mirror_Julie_Zhuo_SpellCard.png',
+  shreyas_doshi:         '/assets/spell-cards/Upstream_Thinking_Shreyas_Doshi_SpellCard.png',
+  jules_walter:          '/assets/spell-cards/The_Influence_Pact_Jules_Walter_SpellCard.png',
+  april_dunford:         '/assets/spell-cards/The_Positioning_Code_April_Dunford_SpellCard.png',
+  marty_cagan:           '/assets/spell-cards/The_Empowered_Team_Marty_Cagan_SpellCard.png',
+  chandra_janakiraman:   '/assets/spell-cards/The_Strategy_Block_Chandra_Janakiraman_SpellCard.png',
+  roger_martin:          '/assets/spell-cards/The_Winning_Wager_Roger_Martin_SpellCard.png',
+  christopher_lochhead:  '/assets/spell-cards/Category_Design_Christopher_Lochhead_SpellCard.png',
+  marc_andreessen:       '/assets/spell-cards/The_Contrarian_Lens_Marc_Andreessen_SpellCard.png',
+  hamilton_helmer:       '/assets/spell-cards/The_7_Powers_Hamilton_Helmer_SpellCard.png',
+  tal_raviv:             '/assets/spell-cards/The_Modern_Toolkit_Tal_Raviv_SpellCard.png',
+  aman_khan:             '/assets/spell-cards/The_Eval_Rite_Aman_Khan_SpellCard.png',
+  claire_vo:             '/assets/spell-cards/The_Agentic_Art_Claire_Vo_SpellCard.png',
+  nick_turley:           '/assets/spell-cards/The_Trust_Protocol_Nick_Turley_SpellCard.png',
+  hamel_husain:          '/assets/spell-cards/The_Eval_Stack_Hamel_Husain_SpellCard.png',
+  chip_huyen:            '/assets/spell-cards/Systems_Sight_Chip_Huyen_SpellCard.png',
+  fei_fei_li:            '/assets/spell-cards/The_Intelligence_Arc_Fei_Fei_Li_SpellCard.png',
+  lenny_rachitsky:       '/assets/spell-cards/The_Product_Lore_Lenny_Rachitsky_SpellCard.png',
+}
+
 const SPELL_NAMES: Record<string, string> = {
   gibson_biddle:         'DHM Principle',
   julie_zhuo:            'The Design Mirror',
@@ -1199,7 +1221,7 @@ export default function Home() {
                               {collected && <div className="pb-ribbon">Collected</div>}
                               <div className="pb-card-emoji">📖</div>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img className="pb-card-img" src="/assets/professors/lenny_rachitsky_card.png" alt="Lenny Rachitsky" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                              <img className="pb-card-img" src={SPELL_CARD_IMAGES['lenny_rachitsky']} alt="Lenny Rachitsky" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                               <div className="pb-card-footer">
                                 <div className="pb-spell" style={collected ? { color: 'var(--gold)' } : { color: '#e08070' }}>The Product Lore</div>
                                 <div className="pb-prof">Lenny Rachitsky</div>
@@ -1236,7 +1258,7 @@ export default function Home() {
                                     {collected && <div className="pb-ribbon">Collected</div>}
                                     <div className="pb-card-emoji">{SPELL_EMOJIS[prof.key]}</div>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img className="pb-card-img" src={getProfCardImg(prof.key)} alt={prof.name} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                    <img className="pb-card-img" src={SPELL_CARD_IMAGES[prof.key]} alt={prof.name} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                                     <div className="pb-card-footer">
                                       <div className="pb-spell" style={prof.isBoss ? (collected ? { color: 'var(--gold)' } : { color: '#e08070' }) : undefined}>
                                         {SPELL_NAMES[prof.key]}
@@ -1538,7 +1560,7 @@ export default function Home() {
                       {collected && <div className="pb-ribbon">Collected</div>}
                       <div className="pb-card-emoji">📖</div>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img className="pb-card-img" src="/assets/professors/lenny_rachitsky_card.png" alt="Lenny Rachitsky" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      <img className="pb-card-img" src={SPELL_CARD_IMAGES['lenny_rachitsky']} alt="Lenny Rachitsky" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                       <div className="pb-card-footer">
                         <div className="pb-spell" style={collected ? { color: 'var(--gold)' } : { color: '#e08070' }}>The Product Lore</div>
                         <div className="pb-prof">Lenny Rachitsky</div>
@@ -1578,7 +1600,7 @@ export default function Home() {
                             {collected && <div className="pb-ribbon">Collected</div>}
                             <div className="pb-card-emoji">{SPELL_EMOJIS[prof.key]}</div>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img className="pb-card-img" src={getProfCardImg(prof.key)} alt={prof.name} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                            <img className="pb-card-img" src={SPELL_CARD_IMAGES[prof.key]} alt={prof.name} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                             <div className="pb-card-footer">
                               <div className="pb-spell" style={prof.isBoss ? (collected ? { color: 'var(--gold)' } : { color: '#e08070' }) : undefined}>
                                 {SPELL_NAMES[prof.key]}
