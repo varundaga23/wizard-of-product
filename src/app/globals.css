@@ -3077,6 +3077,9 @@ body {
   border-bottom:1px solid rgba(180,140,50,.5);flex-shrink:0;gap:12px;
 }
 .tm-title { font-family:'EB Garamond',serif;font-size:16px;font-weight:600;letter-spacing:.04em;color:#c8a050;flex:1; }
+.tm-tower-title { display:flex;align-items:center;gap:10px;flex:1; }
+.tm-tower-title-icon { width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(200,160,60,.4)); }
+.tm-tower-title-name { font-family:'EB Garamond',serif;font-size:20px;font-weight:700;letter-spacing:.04em; }
 .tm-close {
   font-family:'EB Garamond',serif;font-size:10px;letter-spacing:.1em;
   background:rgba(30,15,3,.9);border:1.5px solid rgba(180,130,40,.7);

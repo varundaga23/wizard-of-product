@@ -450,6 +450,7 @@ export default function Home() {
 
   // Tower select modal
   const [towerModalOpen, setTowerModalOpen] = useState(false)
+  const [modalFocusTower, setModalFocusTower] = useState<TowerKey | null>(null)
   const pendingScrollTowerRef = useRef<TowerKey | null>(null)
   const towerModalBodyRef = useRef<HTMLDivElement>(null)
 
@@ -1121,7 +1122,7 @@ export default function Home() {
                   <button
                     key={tk}
                     className={`du-left-tower-btn${activeTowerKey === tk ? ' active' : ''}`}
-                    onClick={() => { setActiveTowerKey(tk); pendingScrollTowerRef.current = tk; setTowerModalOpen(true); }}
+                    onClick={() => { setActiveTowerKey(tk); pendingScrollTowerRef.current = tk; setModalFocusTower(tk); setTowerModalOpen(true); }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={TOWER_ICON[tk]} alt="" />
@@ -1349,11 +1350,21 @@ export default function Home() {
 
         {/* Tower select modal — bottom sheet */}
         {towerModalOpen && (
-          <div className="tm-overlay" onClick={() => setTowerModalOpen(false)}>
+          <div className="tm-overlay" onClick={() => { setTowerModalOpen(false); setModalFocusTower(null); }}>
             <div className="tm-sheet" onClick={e => e.stopPropagation()}>
               <div className="tm-header">
-                <span className="tm-title">✦ Select your opponent ✦</span>
-                <button className="tm-close" onClick={() => setTowerModalOpen(false)}>✕ CLOSE</button>
+                {modalFocusTower ? (
+                  <div className="tm-tower-title">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={TOWER_ICON[modalFocusTower]} alt="" className="tm-tower-title-icon" />
+                    <span className="tm-tower-title-name" style={{color: modalFocusTower === 'pm' ? '#6090f0' : modalFocusTower === 'strategy' ? '#e08030' : '#a070e0'}}>
+                      {TOWERS[modalFocusTower].name}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="tm-title">✦ Select your opponent ✦</span>
+                )}
+                <button className="tm-close" onClick={() => { setTowerModalOpen(false); setModalFocusTower(null); }}>✕ CLOSE</button>
               </div>
               <div className="tm-body" ref={towerModalBodyRef}>
 
