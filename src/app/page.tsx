@@ -1478,12 +1478,11 @@ export default function Home() {
           <div className="sw-center">
             <div className="sw-header">SPELL UNLOCKED</div>
             <div className="sw-glow">
-              <div className="sw-scroll-circle">
-                <div className="sw-spell-icon">{SPELL_EMOJIS[wonProfKey] ?? '✦'}</div>
-                <div className="sw-spell-name">{wonSpell}</div>
-                <div className="sw-spell-sub">{SPELL_SUBTITLES[wonProfKey] ?? ''}</div>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="sw-spell-card-img" src={SPELL_CARD_IMAGES[wonProfKey] ?? ''} alt={wonSpell} />
             </div>
+            <div className="sw-spell-name">{wonSpell}</div>
+            <div className="sw-spell-sub">{SPELL_SUBTITLES[wonProfKey] ?? ''}</div>
             <div className="sw-quote-row">
               <div className="sw-quote">&ldquo;{PROFESSOR_WIN_LINES[wonProfKey] ?? ''}&rdquo;</div>
               <div className="sw-by">— {(wonProfKey === 'lenny_rachitsky' ? LENNY_PROF : Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey))?.name ?? ''}</div>

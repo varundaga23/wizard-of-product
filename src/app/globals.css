@@ -2257,11 +2257,10 @@ body {
 .sw-tower-locked{color:#7a6040 !important;-webkit-text-fill-color:#7a6040 !important;font-size:10px}
 .sw-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 10px}
 .sw-header{font-family:'Cinzel Decorative',serif;font-size:24px;font-weight:900;letter-spacing:5px;color:#f2cc38;text-shadow:0 0 24px rgba(240,200,48,.65),0 2px 8px rgba(0,0,0,.9),0 0 2px rgba(255,230,100,.3);margin-bottom:2px}
-.sw-glow{width:226px;height:226px;border-radius:50%;box-shadow:0 0 0 5px rgba(80,255,80,.85),0 0 30px rgba(80,255,80,.6),0 0 65px rgba(80,255,80,.3),0 0 100px rgba(60,200,60,.15);display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 45% 42%,rgba(220,200,140,.25),rgba(140,100,40,.1))}
-.sw-scroll-circle{width:212px;height:212px;border-radius:50%;background:radial-gradient(circle at 44% 40%,#f0e4c0,#d4be88 60%,#b8a068);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px;box-shadow:inset 0 3px 12px rgba(0,0,0,.25)}
-.sw-spell-icon{font-size:40px;margin-bottom:6px;filter:drop-shadow(0 1px 4px rgba(0,0,0,.4))}
-.sw-spell-name{font-family:'EB Garamond',serif;font-size:13.5px;font-weight:700;color:#2a1600;line-height:1.3;margin-bottom:3px}
-.sw-spell-sub{font-family:'EB Garamond',serif;font-size:10px;color:rgba(60,38,8,.72);font-style:italic;line-height:1.4}
+.sw-glow{width:140px;height:210px;border-radius:8px;box-shadow:0 0 0 3px rgba(80,255,80,.85),0 0 20px rgba(80,255,80,.6),0 0 50px rgba(80,255,80,.3),0 0 90px rgba(60,200,60,.15);overflow:hidden;flex-shrink:0}
+.sw-spell-card-img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.sw-spell-name{font-family:'EB Garamond',serif;font-size:13px;font-weight:700;color:#f0d080;line-height:1.3;margin-top:8px;text-align:center}
+.sw-spell-sub{font-family:'EB Garamond',serif;font-size:10px;color:rgba(220,185,100,.72);font-style:italic;line-height:1.4;text-align:center}
 .sw-quote-row{text-align:center;max-width:340px}
 .sw-quote{font-family:'EB Garamond',serif;font-style:italic;font-size:12px;color:rgba(230,210,175,.92);line-height:1.6;margin-bottom:3px}
 .sw-by{font-family:'EB Garamond',serif;font-size:9px;letter-spacing:1px;color:rgba(200,165,90,.85)}
