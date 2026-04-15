@@ -36,7 +36,7 @@ const lora = Lora({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://wizard-of-product.vercel.app'),
+  metadataBase: new URL('https://wizardofproduct.com'),
   title: 'Spellcraft — Wizard of Product',
   description: 'A wizarding school for product people. Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Guided by Lenny Rachitsky, Keeper of Product Lore.',
   icons: {
@@ -46,11 +46,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Spellcraft — Wizard of Product',
     description: 'A wizarding school for product people. Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Guided by Lenny Rachitsky, Keeper of Product Lore.',
-    url: 'https://spellcraft.game',
-    siteName: 'Spellcraft',
+    url: 'https://wizardofproduct.com',
+    siteName: 'Wizard of Product',
     images: [
       {
-        url: '/og-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'Spellcraft — Wizard of Product',
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Spellcraft — Wizard of Product',
     description: 'A wizarding school for product people. Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Guided by Lenny Rachitsky, Keeper of Product Lore.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
 }
 
@@ -71,7 +71,7 @@ const jsonLd = {
   '@type': 'VideoGame',
   name: 'Spellcraft — Wizard of Product',
   description: 'A wizarding school for product people. Get sorted. Duel real product legends. Earn Spells. Build your Playbook. Guided by Lenny Rachitsky, Keeper of Product Lore.',
-  url: 'https://wizard-of-product.vercel.app',
+  url: 'https://wizardofproduct.com',
   genre: ['Educational', 'Trivia', 'Strategy'],
   applicationCategory: 'Game',
   operatingSystem: 'Web Browser',

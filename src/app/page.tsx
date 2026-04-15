@@ -450,6 +450,7 @@ export default function Home() {
 
   // Tower select modal
   const [towerModalOpen, setTowerModalOpen] = useState(false)
+  const pendingScrollTowerRef = useRef<TowerKey | null>(null)
   const towerModalBodyRef = useRef<HTMLDivElement>(null)
 
   // Rules of the Academy modal
@@ -459,9 +460,23 @@ export default function Home() {
   const hintsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingAdvanceRef = useRef<(() => void) | null>(null)
 
-  // Modal always opens at top so Lenny is visible first
+  // Scroll modal to the right section on open
   useEffect(() => {
-    if (towerModalOpen && towerModalBodyRef.current) {
+    if (!towerModalOpen || !towerModalBodyRef.current) return
+    const tower = pendingScrollTowerRef.current
+    pendingScrollTowerRef.current = null
+    if (tower) {
+      // Double rAF ensures modal has fully rendered before measuring
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const body = towerModalBodyRef.current
+        const section = document.getElementById(`tm-section-${tower}`)
+        if (!body || !section) return
+        // Use getBoundingClientRect for accurate position within scroll container
+        const bodyRect = body.getBoundingClientRect()
+        const sectionRect = section.getBoundingClientRect()
+        body.scrollTop += sectionRect.top - bodyRect.top - 8
+      }))
+    } else {
       towerModalBodyRef.current.scrollTop = 0
     }
   }, [towerModalOpen])
@@ -544,7 +559,6 @@ export default function Home() {
   // Share / download
   const gwCardRef = useRef<HTMLDivElement>(null)
   const goCardRef = useRef<HTMLDivElement>(null)
-  const goShareRef = useRef<HTMLDivElement>(null)
   const pbCardRef = useRef<HTMLDivElement>(null)
   const [copyLabel, setCopyLabel] = useState('✦ SHARE YOUR JOURNEY ✦')
   const [pbCopyLabel, setPbCopyLabel] = useState('COPY LINK')
@@ -575,23 +589,74 @@ export default function Home() {
   }
 
   async function handleDownloadGameOver() {
-    if (!goShareRef.current) return
-    const el = goShareRef.current
-    // Bring into viewport (opacity 0) so html-to-image can resolve images
-    const prev = el.style.cssText
-    el.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;z-index:-1;'
-    await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())))
-    try {
-      const dataUrl = await toPng(el, { cacheBust: true, pixelRatio: 2 })
-      const link = document.createElement('a')
-      link.download = 'spellcraft-run.png'
-      link.href = dataUrl
-      link.click()
-    } catch (e) {
-      console.error('Download failed', e)
-    } finally {
-      el.style.cssText = prev
+    const collected = Array.from(defeatedProfessors)
+
+    const CARD_W = 90, CARD_H = 135, GAP = 10, COLS = 4, PAD = 28, SCALE = 2
+    const rows = Math.max(1, Math.ceil(collected.length / COLS))
+    const gridW = Math.min(collected.length, COLS) * (CARD_W + GAP) - GAP
+    const CW = Math.max(360, gridW + PAD * 2)
+    const CH = PAD + 72 + (collected.length > 0 ? rows * (CARD_H + GAP) - GAP + GAP : 32) + 28 + PAD
+
+    const canvas = document.createElement('canvas')
+    canvas.width = CW * SCALE; canvas.height = CH * SCALE
+    const ctx = canvas.getContext('2d')!
+    ctx.scale(SCALE, SCALE)
+
+    // Background
+    const bg = ctx.createLinearGradient(0, 0, 0, CH)
+    bg.addColorStop(0, '#1a1008'); bg.addColorStop(1, '#0d0804')
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, CW, CH)
+
+    // Border
+    ctx.strokeStyle = '#7a5515'; ctx.lineWidth = 2
+    ctx.strokeRect(1, 1, CW - 2, CH - 2)
+
+    // Load HarryP font (already in page CSS, should be cached)
+    await document.fonts.load('32px HarryP').catch(() => {})
+
+    // Title
+    ctx.fillStyle = '#f0c060'; ctx.textAlign = 'center'
+    ctx.font = '32px HarryP, cursive'
+    ctx.fillText('Spellcraft', CW / 2, PAD + 34)
+
+    // Subtitle
+    ctx.fillStyle = '#c8922a'; ctx.font = '600 15px "EB Garamond", Georgia, serif'
+    ctx.fillText(
+      collected.length === 0 ? 'No spells collected yet' : `${collected.length} Spell${collected.length !== 1 ? 's' : ''} Collected`,
+      CW / 2, PAD + 58
+    )
+
+    // Load and draw spell card images
+    if (collected.length > 0) {
+      const startX = (CW - (Math.min(collected.length, COLS) * (CARD_W + GAP) - GAP)) / 2
+      const startY = PAD + 72 + GAP
+
+      const imgs = await Promise.allSettled(collected.map(key => new Promise<{ img: HTMLImageElement; key: string }>((resolve, reject) => {
+        const src = SPELL_CARD_IMAGES[key]
+        if (!src) { reject(new Error('no src')); return }
+        const img = new Image(); img.crossOrigin = 'anonymous'
+        img.onload = () => resolve({ img, key })
+        img.onerror = reject
+        img.src = src
+      })))
+
+      imgs.forEach((result, i) => {
+        const col = i % COLS, row = Math.floor(i / COLS)
+        const x = startX + col * (CARD_W + GAP), y = startY + row * (CARD_H + GAP)
+        ctx.strokeStyle = 'rgba(200,160,60,.6)'; ctx.lineWidth = 1
+        ctx.strokeRect(x, y, CARD_W, CARD_H)
+        if (result.status === 'fulfilled') ctx.drawImage(result.value.img, x, y, CARD_W, CARD_H)
+      })
     }
+
+    // Footer
+    ctx.fillStyle = 'rgba(200,160,80,.45)'; ctx.font = '11px "EB Garamond", Georgia, serif'
+    ctx.fillText('wizardofproduct.com', CW / 2, CH - PAD / 2)
+
+    const link = document.createElement('a')
+    link.download = 'spellcraft-run.png'
+    link.href = canvas.toDataURL('image/png')
+    link.click()
   }
 
   function handleCopyPlaybookLink() {
@@ -1056,7 +1121,7 @@ export default function Home() {
                   <button
                     key={tk}
                     className={`du-left-tower-btn${activeTowerKey === tk ? ' active' : ''}`}
-                    onClick={() => { setActiveTowerKey(tk); setTowerModalOpen(true); }}
+                    onClick={() => { setActiveTowerKey(tk); pendingScrollTowerRef.current = tk; setTowerModalOpen(true); }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={TOWER_ICON[tk]} alt="" />
@@ -1868,41 +1933,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hidden share card for game-over download — kept in layout so images pre-load */}
-      <div ref={goShareRef} style={{
-        position: 'fixed', left: 0, top: 0, visibility: 'hidden', pointerEvents: 'none',
-        background: 'linear-gradient(180deg, #1a1008 0%, #0d0804 100%)',
-        border: '2px solid #7a5515',
-        borderRadius: 10,
-        padding: '28px 28px 24px',
-        width: 480,
-        fontFamily: "'EB Garamond', serif",
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: 18 }}>
-          <div style={{ fontFamily: "'HarryP', cursive", fontSize: 32, color: '#f0c060', letterSpacing: 1 }}>
-            Spellcraft
-          </div>
-          <div style={{ color: '#c8922a', fontSize: 16, marginTop: 6 }}>
-            {defeatedProfessors.size} Spell{defeatedProfessors.size !== 1 ? 's' : ''} Collected
-          </div>
-        </div>
-        {defeatedProfessors.size === 0 ? (
-          <div style={{ textAlign: 'center', color: 'rgba(200,170,100,.6)', fontSize: 14, padding: '20px 0' }}>
-            No spells collected yet — the Academy awaits.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center' }}>
-            {Array.from(defeatedProfessors).map(key => (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img key={key} src={SPELL_CARD_IMAGES[key] ?? ''} alt={key}
-                style={{ width: 88, height: 132, borderRadius: 6, border: '1px solid rgba(200,160,60,.5)', objectFit: 'cover' }} />
-            ))}
-          </div>
-        )}
-        <div style={{ textAlign: 'center', marginTop: 16, color: 'rgba(200,160,80,.5)', fontSize: 11 }}>
-          wizard-of-product.vercel.app
-        </div>
-      </div>
 
     </div>
   )
