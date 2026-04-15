@@ -859,6 +859,8 @@ export default function Home() {
         posthog.capture('grand_wizard', { archetype })
         setScreen('grand')
       } else {
+        setAnsweredIndex(null)
+        setLastResult(null)
         setDuelPhase('selecting')
         setScreen('duel')
       }
@@ -875,6 +877,8 @@ export default function Home() {
     const wonProf = allProfessors.find(p => p.key === wonProfKey)
     const towerKey = wonProf?.tower ?? activeTowerKey
 
+    setAnsweredIndex(null)
+    setLastResult(null)
     setDuelPhase('selecting')
     setScreen('duel')
   }
