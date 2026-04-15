@@ -49,6 +49,17 @@ body {
 }
 
 /* ── Game container — fixed 960×540 centred, scales to fit any screen ── */
+.game-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(ellipse at bottom right, rgba(0,0,0,.85) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 9999;
+}
 .game-container {
   position: fixed;
   top: 50%;
