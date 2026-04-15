@@ -594,11 +594,12 @@ export default function Home() {
   async function handleDownloadGameOver() {
     const collected = Array.from(defeatedProfessors)
 
-    const CARD_W = 90, CARD_H = 135, GAP = 10, COLS = 4, PAD = 28, SCALE = 2
+    const CARD_W = 90, CARD_H = 135, LABEL_H = 34, GAP = 14, COLS = 4, PAD = 28, SCALE = 2
+    const SLOT_H = CARD_H + LABEL_H
     const rows = Math.max(1, Math.ceil(collected.length / COLS))
     const gridW = Math.min(collected.length, COLS) * (CARD_W + GAP) - GAP
     const CW = Math.max(360, gridW + PAD * 2)
-    const CH = PAD + 72 + (collected.length > 0 ? rows * (CARD_H + GAP) - GAP + GAP : 32) + 28 + PAD
+    const CH = PAD + 72 + (collected.length > 0 ? rows * (SLOT_H + GAP) - GAP + GAP : 32) + 28 + PAD
 
     const canvas = document.createElement('canvas')
     canvas.width = CW * SCALE; canvas.height = CH * SCALE
@@ -643,12 +644,27 @@ export default function Home() {
         img.src = src
       })))
 
+      const allProfs = [...Object.values(TOWERS).flatMap(t => t.professors), LENNY_PROF]
       imgs.forEach((result, i) => {
+        const key = collected[i]
         const col = i % COLS, row = Math.floor(i / COLS)
-        const x = startX + col * (CARD_W + GAP), y = startY + row * (CARD_H + GAP)
+        const x = startX + col * (CARD_W + GAP), y = startY + row * (SLOT_H + GAP)
+
+        // Card image
         ctx.strokeStyle = 'rgba(200,160,60,.6)'; ctx.lineWidth = 1
         ctx.strokeRect(x, y, CARD_W, CARD_H)
         if (result.status === 'fulfilled') ctx.drawImage(result.value.img, x, y, CARD_W, CARD_H)
+
+        // Spell name
+        const spellName = SPELL_NAMES[key] ?? ''
+        const profName = allProfs.find(p => p.key === key)?.name ?? ''
+        ctx.textAlign = 'center'
+        ctx.fillStyle = '#f0c060'
+        ctx.font = 'bold 9px "EB Garamond", Georgia, serif'
+        ctx.fillText(spellName, x + CARD_W / 2, y + CARD_H + 13, CARD_W)
+        ctx.fillStyle = 'rgba(210,180,130,.75)'
+        ctx.font = '8px "EB Garamond", Georgia, serif'
+        ctx.fillText(profName, x + CARD_W / 2, y + CARD_H + 26, CARD_W)
       })
     }
 
