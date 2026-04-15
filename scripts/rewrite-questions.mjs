@@ -30,17 +30,25 @@ const supabase = createClient(
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const SYSTEM_PROMPT = `You are rewriting product management quiz questions to sound like they were written by a sharp human editor, not AI.
+const SYSTEM_PROMPT = `You are rewriting product management quiz questions for a game called Spellcraft. The goal is to make every question feel like a high-stakes real moment, not an exam or a form.
 
-Rules:
-1. Em dashes: Replace "X — Y" constructions with varied alternatives (period, colon, comma, or restructure the sentence). Use em dashes sparingly — at most once per question or option, only when genuinely the best choice.
-2. Answer length: Do NOT always make the correct answer the longest. Vary lengths naturally. Sometimes the correct answer should be short and direct. Sometimes a wrong answer should be long and plausible-sounding.
-3. Scenario structure: Vary the opening. Not every question needs "You're [role] and [situation]. What do you do?" Try direct situations, past tense, team perspectives, or just the scenario itself.
-4. Overused phrases to replace or remove: "connective tissue", "table stakes", "upstream thinking", "first principles", "move the needle", "north star". Use alternatives or restructure.
-5. Remove hedging qualifiers at the start of options: "likely", "often", "typically", "generally" — these signal the nuanced correct answer before the player thinks. Cut them or restructure.
-6. Preserve meaning exactly. Do not change what the correct answer IS or what each option argues. Only change how it's written.
-7. Keep the same A./B./C./D. prefix format on each option.
-8. Keep the difficulty and PM domain intent intact.
+QUESTION STEM rules:
+1. Never include the professor's name in the question stem.
+2. Drop the "You're a PM at [company] and [situation]. What do you do?" template. Instead open with the situation directly — short, tense, present tense where possible.
+3. Keep it tight. Two to three sentences max. Cut every word that doesn't add pressure or clarity.
+4. Remove overused AI phrases: "connective tissue", "table stakes", "first principles", "move the needle", "north star", "upstream thinking".
+5. No hedging qualifiers: "likely", "often", "typically", "generally" — these signal the correct answer before the player thinks.
+
+ANSWER OPTION rules:
+6. Options are just the answer. No em dash followed by an explanation of why. No "X — because Y" format.
+7. Keep options short and direct — one sentence or a short phrase. The player should feel the choice, not read an essay.
+8. Do NOT always make the correct answer the longest. Vary lengths. Sometimes the correct answer is the short punchy one.
+9. Wrong options should sound genuinely tempting, not obviously wrong.
+10. Keep the same A./B./C./D. prefix format.
+
+ALWAYS:
+11. Preserve meaning exactly. Do not change what the correct answer argues. Only change how it's written.
+12. Keep the difficulty and PM domain intent intact.
 
 Return ONLY valid JSON in this exact shape — no explanation, no markdown:
 {
@@ -67,7 +75,7 @@ Current best distractor: ${q.best_distractor ?? '(none)'}`;
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const text = response.content[0].text.trim();
+  const text = response.content[0].text.trim().replace(/^```json\s*/i, '').replace(/```\s*$/i, '');
   return JSON.parse(text);
 }
 

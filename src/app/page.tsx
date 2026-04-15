@@ -110,25 +110,25 @@ const SPELL_SUBTITLES: Record<string, string> = {
 }
 
 const SPELL_CARD_IMAGES: Record<string, string> = {
-  gibson_biddle:         '/assets/spell-cards/DHM_Principle_Gibson_Biddle_SpellCard.png',
-  julie_zhuo:            '/assets/spell-cards/The_Design_Mirror_Julie_Zhuo_SpellCard.png',
-  shreyas_doshi:         '/assets/spell-cards/Upstream_Thinking_Shreyas_Doshi_SpellCard.png',
-  jules_walter:          '/assets/spell-cards/The_Influence_Pact_Jules_Walter_SpellCard.png',
-  april_dunford:         '/assets/spell-cards/The_Positioning_Code_April_Dunford_SpellCard.png',
-  marty_cagan:           '/assets/spell-cards/The_Empowered_Team_Marty_Cagan_SpellCard.png',
-  chandra_janakiraman:   '/assets/spell-cards/The_Strategy_Block_Chandra_Janakiraman_SpellCard.png',
-  roger_martin:          '/assets/spell-cards/The_Winning_Wager_Roger_Martin_SpellCard.png',
-  christopher_lochhead:  '/assets/spell-cards/Category_Design_Christopher_Lochhead_SpellCard.png',
-  marc_andreessen:       '/assets/spell-cards/The_Contrarian_Lens_Marc_Andreessen_SpellCard.png',
-  hamilton_helmer:       '/assets/spell-cards/The_7_Powers_Hamilton_Helmer_SpellCard.png',
-  tal_raviv:             '/assets/spell-cards/The_Modern_Toolkit_Tal_Raviv_SpellCard.png',
-  aman_khan:             '/assets/spell-cards/The_Eval_Rite_Aman_Khan_SpellCard.png',
-  claire_vo:             '/assets/spell-cards/The_Agentic_Art_Claire_Vo_SpellCard.png',
-  nick_turley:           '/assets/spell-cards/The_Trust_Protocol_Nick_Turley_SpellCard.png',
-  hamel_husain:          '/assets/spell-cards/The_Eval_Stack_Hamel_Husain_SpellCard.png',
-  chip_huyen:            '/assets/spell-cards/Systems_Sight_Chip_Huyen_SpellCard.png',
-  fei_fei_li:            '/assets/spell-cards/The_Intelligence_Arc_Fei_Fei_Li_SpellCard.png',
-  lenny_rachitsky:       '/assets/spell-cards/The_Product_Lore_Lenny_Rachitsky_SpellCard.png',
+  gibson_biddle:         '/assets/spell-cards/DHM_Principle_Gibson_Biddle_SpellCard.avif',
+  julie_zhuo:            '/assets/spell-cards/The_Design_Mirror_Julie_Zhuo_SpellCard.avif',
+  shreyas_doshi:         '/assets/spell-cards/Upstream_Thinking_Shreyas_Doshi_SpellCard.avif',
+  jules_walter:          '/assets/spell-cards/The_Influence_Pact_Jules_Walter_SpellCard.avif',
+  april_dunford:         '/assets/spell-cards/The_Positioning_Code_April_Dunford_SpellCard.avif',
+  marty_cagan:           '/assets/spell-cards/The_Empowered_Team_Marty_Cagan_SpellCard.avif',
+  chandra_janakiraman:   '/assets/spell-cards/The_Strategy_Block_Chandra_Janakiraman_SpellCard.avif',
+  roger_martin:          '/assets/spell-cards/The_Winning_Wager_Roger_Martin_SpellCard.avif',
+  christopher_lochhead:  '/assets/spell-cards/Category_Design_Christopher_Lochhead_SpellCard.avif',
+  marc_andreessen:       '/assets/spell-cards/The_Contrarian_Lens_Marc_Andreessen_SpellCard.avif',
+  hamilton_helmer:       '/assets/spell-cards/The_7_Powers_Hamilton_Helmer_SpellCard.avif',
+  tal_raviv:             '/assets/spell-cards/The_Modern_Toolkit_Tal_Raviv_SpellCard.avif',
+  aman_khan:             '/assets/spell-cards/The_Eval_Rite_Aman_Khan_SpellCard.avif',
+  claire_vo:             '/assets/spell-cards/The_Agentic_Art_Claire_Vo_SpellCard.avif',
+  nick_turley:           '/assets/spell-cards/The_Trust_Protocol_Nick_Turley_SpellCard.avif',
+  hamel_husain:          '/assets/spell-cards/The_Eval_Stack_Hamel_Husain_SpellCard.avif',
+  chip_huyen:            '/assets/spell-cards/Systems_Sight_Chip_Huyen_SpellCard.avif',
+  fei_fei_li:            '/assets/spell-cards/The_Intelligence_Arc_Fei_Fei_Li_SpellCard.avif',
+  lenny_rachitsky:       '/assets/spell-cards/The_Product_Lore_Lenny_Rachitsky_SpellCard.avif',
 }
 
 const SPELL_NAMES: Record<string, string> = {
@@ -279,46 +279,46 @@ const LANDING_PROFESSORS = [
 
 // Professor image maps — add new professors here as images arrive
 const PROF_CARD_IMG: Record<string, string> = {
-  gibson_biddle:         '/assets/professors/gibson_biddle_card.png',
-  julie_zhuo:            '/assets/professors/julie_zhuo_card.png',
-  shreyas_doshi:         '/assets/professors/shreyas_doshi_card.png',
-  jules_walter:          '/assets/professors/jules_walter_card.png',
-  april_dunford:         '/assets/professors/april_dunford_card.png',
-  marty_cagan:           '/assets/professors/marty_cagan_card.png',
-  chandra_janakiraman:   '/assets/professors/chandra_janakiraman_card.png',
-  roger_martin:          '/assets/professors/roger_martin_card.png',
-  christopher_lochhead:  '/assets/professors/christopher_lochhead_card.png',
-  marc_andreessen:       '/assets/professors/marc_andreessen_card.png',
-  hamilton_helmer:       '/assets/professors/hamilton_helmer_card.png',
-  tal_raviv:             '/assets/professors/tal_raviv_card.png',
-  aman_khan:             '/assets/professors/aman_khan_card.png',
-  claire_vo:             '/assets/professors/claire_vo_card.png',
-  nick_turley:           '/assets/professors/nick_turley_card.png',
-  hamel_husain:          '/assets/professors/hamel_husain_card.png',
-  chip_huyen:            '/assets/professors/chip_huyen_card.png',
-  fei_fei_li:            '/assets/professors/fei_fei_li_card.png',
-  lenny_rachitsky:       '/assets/professors/lenny_rachitsky_card.png',
+  gibson_biddle:         '/assets/professors/gibson_biddle_card.avif',
+  julie_zhuo:            '/assets/professors/julie_zhuo_card.avif',
+  shreyas_doshi:         '/assets/professors/shreyas_doshi_card.avif',
+  jules_walter:          '/assets/professors/jules_walter_card.avif',
+  april_dunford:         '/assets/professors/april_dunford_card.avif',
+  marty_cagan:           '/assets/professors/marty_cagan_card.avif',
+  chandra_janakiraman:   '/assets/professors/chandra_janakiraman_card.avif',
+  roger_martin:          '/assets/professors/roger_martin_card.avif',
+  christopher_lochhead:  '/assets/professors/christopher_lochhead_card.avif',
+  marc_andreessen:       '/assets/professors/marc_andreessen_card.avif',
+  hamilton_helmer:       '/assets/professors/hamilton_helmer_card.avif',
+  tal_raviv:             '/assets/professors/tal_raviv_card.avif',
+  aman_khan:             '/assets/professors/aman_khan_card.avif',
+  claire_vo:             '/assets/professors/claire_vo_card.avif',
+  nick_turley:           '/assets/professors/nick_turley_card.avif',
+  hamel_husain:          '/assets/professors/hamel_husain_card.avif',
+  chip_huyen:            '/assets/professors/chip_huyen_card.avif',
+  fei_fei_li:            '/assets/professors/fei_fei_li_card.avif',
+  lenny_rachitsky:       '/assets/professors/lenny_rachitsky_card.avif',
 }
 const PROF_DUEL_IMG: Record<string, string> = {
-  gibson_biddle:         '/assets/professors/gibson_biddle_duel.png',
-  julie_zhuo:            '/assets/professors/julie_zhuo_duel.png',
-  shreyas_doshi:         '/assets/professors/shreyas_doshi_duel.png',
-  jules_walter:          '/assets/professors/jules_walter_duel.png',
-  april_dunford:         '/assets/professors/april_dunford_duel.png',
-  marty_cagan:           '/assets/professors/marty_cagan_duel.png',
-  chandra_janakiraman:   '/assets/professors/chandra_janakiraman_duel.png',
-  roger_martin:          '/assets/professors/roger_martin_duel.png',
-  christopher_lochhead:  '/assets/professors/christopher_lochhead_duel.png',
-  marc_andreessen:       '/assets/professors/marc_andreessen_duel.png',
-  hamilton_helmer:       '/assets/professors/hamilton_helmer_duel.png',
-  tal_raviv:             '/assets/professors/tal_raviv_duel.png',
-  aman_khan:             '/assets/professors/aman_khan_duel.png',
-  claire_vo:             '/assets/professors/claire_vo_duel.png',
-  nick_turley:           '/assets/professors/nick_turley_duel.png',
-  hamel_husain:          '/assets/professors/hamel_husain_duel.png',
-  chip_huyen:            '/assets/professors/chip_huyen_duel.png',
-  fei_fei_li:            '/assets/professors/fei_fei_li_duel.png',
-  lenny_rachitsky:       '/assets/professors/lenny_rachitsky_duel.png',
+  gibson_biddle:         '/assets/professors/gibson_biddle_duel.avif',
+  julie_zhuo:            '/assets/professors/julie_zhuo_duel.avif',
+  shreyas_doshi:         '/assets/professors/shreyas_doshi_duel.avif',
+  jules_walter:          '/assets/professors/jules_walter_duel.avif',
+  april_dunford:         '/assets/professors/april_dunford_duel.avif',
+  marty_cagan:           '/assets/professors/marty_cagan_duel.avif',
+  chandra_janakiraman:   '/assets/professors/chandra_janakiraman_duel.avif',
+  roger_martin:          '/assets/professors/roger_martin_duel.avif',
+  christopher_lochhead:  '/assets/professors/christopher_lochhead_duel.avif',
+  marc_andreessen:       '/assets/professors/marc_andreessen_duel.avif',
+  hamilton_helmer:       '/assets/professors/hamilton_helmer_duel.avif',
+  tal_raviv:             '/assets/professors/tal_raviv_duel.avif',
+  aman_khan:             '/assets/professors/aman_khan_duel.avif',
+  claire_vo:             '/assets/professors/claire_vo_duel.avif',
+  nick_turley:           '/assets/professors/nick_turley_duel.avif',
+  hamel_husain:          '/assets/professors/hamel_husain_duel.avif',
+  chip_huyen:            '/assets/professors/chip_huyen_duel.avif',
+  fei_fei_li:            '/assets/professors/fei_fei_li_duel.avif',
+  lenny_rachitsky:       '/assets/professors/lenny_rachitsky_duel.avif',
 }
 function getProfCardImg(key: string): string {
   return PROF_CARD_IMG[key] ?? `/assets/professors/${key}.jpg`
@@ -336,9 +336,9 @@ const LENNY_PROF: ProfessorDef = {
 }
 
 const TOWER_ICON: Record<string, string> = {
-  pm:       '/assets/pm_tower_icon.png',
-  strategy: '/assets/strategy_tower_icon.png',
-  ai:       '/assets/ai_tower_icon.png',
+  pm:       '/assets/pm_tower_icon.avif',
+  strategy: '/assets/strategy_tower_icon.avif',
+  ai:       '/assets/ai_tower_icon.avif',
 }
 
 const SPELL_EMOJIS: Record<string, string> = {
@@ -887,7 +887,7 @@ export default function Home() {
           ))}
           <div className="prof-card final" onClick={openSummonsEasterEgg} style={{ cursor: 'pointer' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="prof-card-img" src="/assets/professors/lenny_rachitsky_card.png" alt="Lenny Rachitsky" />
+            <img className="prof-card-img" src="/assets/professors/lenny_rachitsky_card.avif" alt="Lenny Rachitsky" />
             <div className="prof-card-overlay">
               <div className="pname">Lenny Rachitsky</div>
               <div className="keeper-badge">⚜ The Keeper ⚜</div>
@@ -895,7 +895,7 @@ export default function Home() {
           </div>
           <div className="prof-card more">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="prof-card-img" src="/assets/professor_placeholder.png" alt="" style={{ opacity:.8, objectFit:'contain', objectPosition:'center center' }} />
+            <img className="prof-card-img" src="/assets/professor_placeholder.avif" alt="" style={{ opacity:.8, objectFit:'contain', objectPosition:'center center' }} />
             <div className="prof-card-overlay" />
           </div>
         </div>
@@ -1096,7 +1096,7 @@ export default function Home() {
                 onError={(e) => {
                   const img = e.target as HTMLImageElement
                   if (img.src.includes('_nobg.avif')) {
-                    img.src = `/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}.jpg`
+                    img.src = `/assets/professors/${currentProf?.key === 'lenny_oracle' ? 'lenny_rachitsky' : currentProf?.key}_duel.avif`
                   } else {
                     img.style.display = 'none'
                   }
@@ -1221,7 +1221,7 @@ export default function Home() {
                               {collected && <div className="pb-ribbon">Collected</div>}
                               <div className="pb-card-emoji">📖</div>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img className="pb-card-img" src={SPELL_CARD_IMAGES['lenny_rachitsky']} alt="Lenny Rachitsky" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                              <img className="pb-card-img" src={SPELL_CARD_IMAGES['lenny_rachitsky']} alt="Lenny Rachitsky" loading="lazy" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                               <div className="pb-card-footer">
                                 <div className="pb-spell" style={collected ? { color: 'var(--gold)' } : { color: '#e08070' }}>The Product Lore</div>
                                 <div className="pb-prof">Lenny Rachitsky</div>
@@ -1258,7 +1258,7 @@ export default function Home() {
                                     {collected && <div className="pb-ribbon">Collected</div>}
                                     <div className="pb-card-emoji">{SPELL_EMOJIS[prof.key]}</div>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img className="pb-card-img" src={SPELL_CARD_IMAGES[prof.key]} alt={prof.name} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                    <img className="pb-card-img" src={SPELL_CARD_IMAGES[prof.key]} alt={prof.name} loading="lazy" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                                     <div className="pb-card-footer">
                                       <div className="pb-spell" style={prof.isBoss ? (collected ? { color: 'var(--gold)' } : { color: '#e08070' }) : undefined}>
                                         {SPELL_NAMES[prof.key]}
@@ -1312,8 +1312,9 @@ export default function Home() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         className="tm-prof-card-img"
-                        src="/assets/professors/lenny_rachitsky_card.png"
+                        src="/assets/professors/lenny_rachitsky_card.avif"
                         alt="Lenny Rachitsky"
+                        loading="lazy"
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
                       <div className="tm-prof-card-overlay">
@@ -1356,6 +1357,7 @@ export default function Home() {
                                 className="tm-prof-card-img"
                                 src={getProfCardImg(prof.key)}
                                 alt={prof.name}
+                                loading="lazy"
                                 onError={e => { (e.target as HTMLImageElement).style.display='none' }}
                               />
                               <div className="tm-prof-card-overlay">
@@ -1383,7 +1385,7 @@ export default function Home() {
           <div className="rules-overlay" onClick={() => setRulesModalOpen(false)}>
             <div className="rules-modal" onClick={e => e.stopPropagation()}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="rules-bg" src="/assets/Summo_letter_background.jpg" alt="" />
+              <img className="rules-bg" src="/assets/Summo_letter_background.avif" alt="" />
               <div className="rules-inner">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="rules-crest" src="/assets/Lorethron_crest_transparent.avif" alt="" />
@@ -1560,7 +1562,7 @@ export default function Home() {
                       {collected && <div className="pb-ribbon">Collected</div>}
                       <div className="pb-card-emoji">📖</div>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img className="pb-card-img" src={SPELL_CARD_IMAGES['lenny_rachitsky']} alt="Lenny Rachitsky" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      <img className="pb-card-img" src={SPELL_CARD_IMAGES['lenny_rachitsky']} alt="Lenny Rachitsky" loading="lazy" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                       <div className="pb-card-footer">
                         <div className="pb-spell" style={collected ? { color: 'var(--gold)' } : { color: '#e08070' }}>The Product Lore</div>
                         <div className="pb-prof">Lenny Rachitsky</div>
@@ -1600,7 +1602,7 @@ export default function Home() {
                             {collected && <div className="pb-ribbon">Collected</div>}
                             <div className="pb-card-emoji">{SPELL_EMOJIS[prof.key]}</div>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img className="pb-card-img" src={SPELL_CARD_IMAGES[prof.key]} alt={prof.name} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                            <img className="pb-card-img" src={SPELL_CARD_IMAGES[prof.key]} alt={prof.name} loading="lazy" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                             <div className="pb-card-footer">
                               <div className="pb-spell" style={prof.isBoss ? (collected ? { color: 'var(--gold)' } : { color: '#e08070' }) : undefined}>
                                 {SPELL_NAMES[prof.key]}
@@ -1639,7 +1641,7 @@ export default function Home() {
         <div className="sl-overlay" onClick={dismissSummons}>
           <div className="sl-modal" onClick={(e) => e.stopPropagation()}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="bg" src="/assets/Summo_letter_background_1775007534371.jpg" alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', borderRadius:'4px' }} />
+            <img className="bg" src="/assets/Summo_letter_background.avif" alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', borderRadius:'4px' }} />
             <div className="sl-tint" />
 
             <div className="sl-modal-inner">
@@ -1720,7 +1722,7 @@ export default function Home() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="fr-portrait"
-                src="/assets/professors/lenny_rachitsky.jpg"
+                src="/assets/professors/lenny_rachitsky_duel.avif"
                 alt="Lenny Rachitsky"
                 onError={(e) => { (e.target as HTMLImageElement).style.opacity = '.3' }}
               />
@@ -1884,10 +1886,10 @@ export default function Home() {
             <div className={`blessing-portrait-ring${blessing.phase === 'result' && blessing.isCorrect ? ' blessing-nod' : ''}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/assets/professors/lenny_rachitsky.jpg"
+                src="/assets/professors/lenny_rachitsky_duel.avif"
                 alt="Lenny Rachitsky"
                 className="blessing-portrait-img"
-                onError={(e) => { (e.target as HTMLImageElement).src = '/assets/professor_placeholder.png' }}
+                onError={(e) => { (e.target as HTMLImageElement).src = '/assets/professor_placeholder.avif' }}
               />
             </div>
 

@@ -1987,7 +1987,7 @@ body {
   position: absolute;
   inset: 0;
   background: linear-gradient(rgba(8,5,2,.35),rgba(8,5,2,.35)),
-              url('/assets/playbook_bg.png') center center / cover no-repeat;
+              url('/assets/playbook_bg.avif') center center / cover no-repeat;
   z-index: 0;
 }
 
@@ -2890,7 +2890,7 @@ body {
 .pbm-sheet {
   position:absolute;left:0;right:0;bottom:0;top:26%;
   background: linear-gradient(rgba(5,3,0,.38),rgba(5,3,0,.42)),
-              url('/assets/prof_selection_bg.png') center top / cover no-repeat;
+              url('/assets/prof_selection_bg.avif') center top / cover no-repeat;
   border-top:2px solid rgba(210,165,60,.8);
   box-shadow:0 -8px 48px rgba(0,0,0,.85),0 -2px 20px rgba(160,110,20,.35);
   display:flex;flex-direction:column;overflow:hidden;
@@ -2920,7 +2920,7 @@ body {
 .tm-sheet {
   position:absolute;left:0;right:0;bottom:0;top:26%;
   background: linear-gradient(rgba(5,3,0,.38),rgba(5,3,0,.42)),
-              url('/assets/prof_selection_bg.png') center top / cover no-repeat;
+              url('/assets/prof_selection_bg.avif') center top / cover no-repeat;
   border-top:2px solid rgba(210,165,60,.8);
   box-shadow:0 -8px 48px rgba(0,0,0,.85),0 -2px 20px rgba(160,110,20,.35);
   display:flex;flex-direction:column;overflow:hidden;

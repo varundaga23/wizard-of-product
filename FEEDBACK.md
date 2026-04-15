@@ -15,6 +15,14 @@ Add raw notes as you play. Tell Claude "address the feedback file" when ready fo
 
 ## Open
 
+**TODO — PostHog dashboard setup**
+**Screen:** PostHog
+**Issue:** No dashboard configured yet. Need to set up "Spellcraft Daily" dashboard with 6 insights: (1) Players today - pageview trend, (2) Funnel: pageview → game_started → duel_started → spell_won, (3) Most popular professors - duel_started by professor, (4) Game over rate - game_over vs spell_won, (5) How far players get - spell_won by is_boss, (6) Grand Wizard completions count. Then subscribe to daily email digest.
+**Priority:** medium
+**Status:** open
+
+---
+
 **TODO — SEO: Domain + canonical URL**
 **Screen:** layout.tsx metadata
 **Issue:** `og:url` currently placeholder `https://spellcraft.game`. Once domain decided, update: `openGraph.url`, `openGraph.siteName`, `alternates.canonical` in layout.tsx.
