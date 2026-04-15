@@ -1411,19 +1411,15 @@ export default function Home() {
                   <div className="rules-sections">
                     <div className="rules-section">
                       <div className="rules-section-title">♥ Hearts</div>
-                      <div className="rules-section-body">5 hearts. Lose one per wrong answer. Reach zero and it&apos;s Game Over — retry is always free.</div>
+                      <div className="rules-section-body">5 hearts. Lose one per wrong answer. Zero = Game Over, but retry is free.</div>
                     </div>
                     <div className="rules-section">
                       <div className="rules-section-title">⚔ Duels</div>
-                      <div className="rules-section-body">5 questions. 2 choices each. One is right, one is designed to tempt you.</div>
-                    </div>
-                    <div className="rules-section">
-                      <div className="rules-section-title">✦ Winning a Duel</div>
-                      <div className="rules-section-body">Survive all 5 with at least 1 heart left. Win and you earn a Spell Card.</div>
+                      <div className="rules-section-body">5 questions, 2 choices. Survive with 1 heart left and earn a Spell Card.</div>
                     </div>
                     <div className="rules-section">
                       <div className="rules-section-title">🏰 Towers</div>
-                      <div className="rules-section-body">Three towers: PM, Strategy, AI. Defeat 3 professors to unlock the Tower Boss.</div>
+                      <div className="rules-section-body">Three towers: PM, Strategy, AI. Beat 3 professors to unlock the Boss.</div>
                     </div>
                     <div className="rules-section">
                       <div className="rules-section-title">
@@ -1431,15 +1427,15 @@ export default function Home() {
                         <img src="/assets/professors/lenny_rachitsky_card.avif" alt="" style={{ width:20, height:20, borderRadius:'50%', objectFit:'cover', objectPosition:'center top', verticalAlign:'middle', marginRight:6, display:'inline-block' }} />
                         Lenny Rachitsky
                       </div>
-                      <div className="rules-section-body">Always available. Wrong answers won&apos;t cost you hearts. Win and earn +3 gold hearts.</div>
+                      <div className="rules-section-body">Always available. No heart cost. Win = +3 gold hearts.</div>
                     </div>
                     <div className="rules-section">
                       <div className="rules-section-title">📜 Your Playbook</div>
-                      <div className="rules-section-body">Every Spell Card you earn is saved in your Playbook — tap the scroll to see your collection.</div>
+                      <div className="rules-section-body">Tap the scroll to see every Spell Card you&apos;ve earned.</div>
                     </div>
                     <div className="rules-section">
                       <div className="rules-section-title">★ Grand Wizard</div>
-                      <div className="rules-section-body">Collect all 19 Spell Cards to become Grand Wizard of Product.</div>
+                      <div className="rules-section-body">Collect all 19 Spell Cards to become Grand Wizard.</div>
                     </div>
                   </div>
                   <div className="rules-sig-wrap">
