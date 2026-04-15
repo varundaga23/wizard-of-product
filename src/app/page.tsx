@@ -466,16 +466,17 @@ export default function Home() {
     const tower = pendingScrollTowerRef.current
     pendingScrollTowerRef.current = null
     if (tower) {
-      // Double rAF ensures modal has fully rendered before measuring
-      requestAnimationFrame(() => requestAnimationFrame(() => {
+      // Use setTimeout to allow card images to load before measuring positions.
+      // Targeting the section header (text-only, no images) avoids layout-shift errors.
+      setTimeout(() => {
         const body = towerModalBodyRef.current
         const section = document.getElementById(`tm-section-${tower}`)
         if (!body || !section) return
-        // Use getBoundingClientRect for accurate position within scroll container
+        const hdr = section.querySelector<HTMLElement>('.tm-section-hdr') ?? section
         const bodyRect = body.getBoundingClientRect()
-        const sectionRect = section.getBoundingClientRect()
-        body.scrollTop += sectionRect.top - bodyRect.top - 8
-      }))
+        const hdrRect = hdr.getBoundingClientRect()
+        body.scrollTop += hdrRect.top - bodyRect.top - 6
+      }, 120)
     } else {
       towerModalBodyRef.current.scrollTop = 0
     }
