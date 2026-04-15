@@ -1394,27 +1394,35 @@ export default function Home() {
                   <div className="rules-sections">
                     <div className="rules-section">
                       <div className="rules-section-title">♥ Hearts</div>
-                      <div className="rules-section-body">You have 5 hearts. Lose one for every wrong answer. Run out and it&apos;s Game Over — but you can always try again for free.</div>
+                      <div className="rules-section-body">5 hearts. Lose one per wrong answer. Reach zero and it&apos;s Game Over — retry is always free.</div>
                     </div>
                     <div className="rules-section">
                       <div className="rules-section-title">⚔ Duels</div>
-                      <div className="rules-section-body">Each duel is 5 questions, two choices each — the correct answer and one expert-curated distractor. Think carefully.</div>
+                      <div className="rules-section-body">5 questions. 2 choices each. One is right, one is designed to tempt you.</div>
                     </div>
                     <div className="rules-section">
                       <div className="rules-section-title">✦ Winning a Duel</div>
-                      <div className="rules-section-body">Answer all 5 questions — you don&apos;t need to get them all right, just survive with at least 1 heart remaining. Win and you earn a Spell Card for your Playbook.</div>
+                      <div className="rules-section-body">Survive all 5 with at least 1 heart left. Win and you earn a Spell Card.</div>
                     </div>
                     <div className="rules-section">
                       <div className="rules-section-title">🏰 Towers</div>
-                      <div className="rules-section-body">There are 3 towers — PM, Strategy, and AI. Defeat at least 3 professors in a tower to unlock its Boss.</div>
+                      <div className="rules-section-body">Three towers: PM, Strategy, AI. Defeat 3 professors to unlock the Tower Boss.</div>
                     </div>
                     <div className="rules-section">
-                      <div className="rules-section-title">📖 Lenny Rachitsky</div>
-                      <div className="rules-section-body">Available to duel at any time. No hearts at stake — wrong answers won&apos;t cost you. Win and earn +3 bonus hearts (gold ♥).</div>
+                      <div className="rules-section-title">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/assets/professors/lenny_rachitsky_card.avif" alt="" style={{ width:20, height:20, borderRadius:'50%', objectFit:'cover', objectPosition:'center top', verticalAlign:'middle', marginRight:6, display:'inline-block' }} />
+                        Lenny Rachitsky
+                      </div>
+                      <div className="rules-section-body">Always available. Wrong answers won&apos;t cost you hearts. Win and earn +3 gold hearts.</div>
+                    </div>
+                    <div className="rules-section">
+                      <div className="rules-section-title">📜 Your Playbook</div>
+                      <div className="rules-section-body">Every Spell Card you earn is saved in your Playbook — tap the scroll to see your collection.</div>
                     </div>
                     <div className="rules-section">
                       <div className="rules-section-title">★ Grand Wizard</div>
-                      <div className="rules-section-body">Collect all 19 spell cards to become Grand Wizard of Product.</div>
+                      <div className="rules-section-body">Collect all 19 Spell Cards to become Grand Wizard of Product.</div>
                     </div>
                   </div>
                   <div className="rules-sig-wrap">
