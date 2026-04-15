@@ -851,6 +851,35 @@ body {
   transform: translateY(-1px);
 }
 
+/* ── Onboarding hints — pulse glow + floating label ── */
+@keyframes hint-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(240,192,96,.5), 0 0 14px 4px rgba(240,192,96,.25); }
+  50%       { box-shadow: 0 0 0 2px rgba(240,192,96,.9), 0 0 24px 8px rgba(240,192,96,.55); }
+}
+@keyframes hint-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hint-glow {
+  border-radius: 6px;
+  animation: hint-pulse 1.4s ease-in-out infinite;
+}
+.hint-label {
+  position: absolute;
+  top: -28px;
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: #f0c060;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  animation: hint-fade-in .4s ease forwards;
+  text-shadow: 0 1px 6px rgba(0,0,0,.9);
+}
+.hint-label-left  { left: 8px; }
+.hint-label-right { right: 8px; }
+
 /* ═══════════════════════════════════════════════
    S4 — DUEL SCREEN
 ═══════════════════════════════════════════════ */

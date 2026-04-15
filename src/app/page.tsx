@@ -460,6 +460,8 @@ export default function Home() {
   // Rules of the Academy modal
   const [rulesModalOpen, setRulesModalOpen] = useState(false)
   const hasShownRulesRef = useRef(false)
+  const [showHints, setShowHints] = useState(false)
+  const hintsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Modal always opens at top so Lenny is visible first
   useEffect(() => {
@@ -505,6 +507,19 @@ export default function Home() {
       setRulesModalOpen(true)
     }
   }, [screen])
+
+  function closeRules(wasAutoShow: boolean) {
+    setRulesModalOpen(false)
+    if (wasAutoShow) {
+      setShowHints(true)
+      if (hintsTimerRef.current) clearTimeout(hintsTimerRef.current)
+      hintsTimerRef.current = setTimeout(() => setShowHints(false), 4000)
+    }
+  }
+  function dismissHints() {
+    setShowHints(false)
+    if (hintsTimerRef.current) clearTimeout(hintsTimerRef.current)
+  }
 
   useEffect(() => {
     const src = SCREEN_MUSIC[screen]
@@ -1070,7 +1085,8 @@ export default function Home() {
         <div className="du-main">
           {/* LEFT: Switch towers + Professor figure + Possible Rewards */}
           <div className="du-left-col">
-            <div className="du-tower-panel">
+            <div className={`du-tower-panel${showHints ? ' hint-glow' : ''}`} onClick={showHints ? dismissHints : undefined}>
+              {showHints && <div className="hint-label hint-label-left">Choose your opponent</div>}
               <div className="du-panel-title" onClick={() => setTowerModalOpen(true)} style={{cursor:'pointer'}}>Select professors</div>
               <div className="du-left-tower-btns">
                 {(['pm', 'strategy', 'ai'] as TowerKey[]).map(tk => (
@@ -1164,8 +1180,9 @@ export default function Home() {
           {/* RIGHT: Spellbook + Player */}
           <div className="du-right-col">
             {/* Playbook panel — click opens modal like Switch Towers */}
-            <div className="du-spellbook-panel" style={{ position: 'relative', zIndex: 5 }}>
-              <div className="du-sb-header" onClick={() => setPlaybookModalOpen(true)}>
+            <div className={`du-spellbook-panel${showHints ? ' hint-glow' : ''}`} style={{ position: 'relative', zIndex: 5 }} onClick={showHints ? dismissHints : undefined}>
+              {showHints && <div className="hint-label hint-label-right">Your spell collection</div>}
+              <div className="du-sb-header" onClick={() => { dismissHints(); setPlaybookModalOpen(true) }}>
                 <div className="du-sb-header-label">Playbook</div>
                 <div className="du-sb-header-icon">📜</div>
                 <div className="du-sb-header-bottom">
@@ -1382,7 +1399,7 @@ export default function Home() {
 
         {/* Rules of the Academy modal */}
         {rulesModalOpen && (
-          <div className="rules-overlay" onClick={() => setRulesModalOpen(false)}>
+          <div className="rules-overlay" onClick={() => closeRules(hasShownRulesRef.current && screen === 'duel')}>
             <div className="rules-modal" onClick={e => e.stopPropagation()}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="rules-bg" src="/assets/Summo_letter_background.avif" alt="" />
@@ -1430,7 +1447,7 @@ export default function Home() {
                     <div className="rules-sig-byline">Keeper of Product Lore · Lorethorn Academy</div>
                   </div>
                 </div>
-                <button className="rules-close" onClick={() => setRulesModalOpen(false)}>✦ Begin your duel ✦</button>
+                <button className="rules-close" onClick={() => closeRules(true)}>✦ Begin your duel ✦</button>
               </div>
             </div>
           </div>
