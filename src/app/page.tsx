@@ -1152,6 +1152,9 @@ export default function Home() {
                   </button>
                 ))}
               </div>
+              <button className="du-lenny-challenge-btn" onClick={() => { setTowerModalOpen(false); launchLennyDuel() }}>
+                ⚔ Challenge the Keeper
+              </button>
             </div>
             <div className="du-prof-frame">
               {/* eslint-disable-next-line @next/next/no-img-element */}

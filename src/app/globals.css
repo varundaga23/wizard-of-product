@@ -900,6 +900,8 @@ body {
 .du-left-tower-btn img { width:22px;height:22px;object-fit:contain;mix-blend-mode:screen;opacity:.9; }
 .du-left-tower-btn.active { border-color:rgba(225,182,58,.9);color:#e6cc82;box-shadow:0 0 8px rgba(220,172,38,.35);background:rgba(48,32,7,.9); }
 .du-left-tower-btn:hover:not(.active) { border-color:rgba(200,160,50,.7);color:#d4b86a;background:rgba(35,20,5,.85); }
+.du-lenny-challenge-btn { width:100%;margin-top:8px;padding:6px 8px;font-family:'EB Garamond',serif;font-size:11px;font-weight:700;letter-spacing:.04em;color:#f0c060;background:linear-gradient(180deg,rgba(60,38,8,.95),rgba(30,18,4,.98));border:1.5px solid rgba(185,148,50,.7);border-radius:10px;cursor:pointer;transition:all .2s; }
+.du-lenny-challenge-btn:hover { border-color:#f0c060;color:#ffd87a;box-shadow:0 0 10px rgba(200,160,50,.3); }
 /* Crest icon — clickable */
 .du-crest { cursor:pointer; transition:box-shadow .2s,border-color .2s; }
 .du-crest:hover { border-color:rgba(220,175,60,.9);box-shadow:0 0 14px rgba(210,170,50,.5); }
@@ -974,7 +976,7 @@ body {
 
 /* RIGHT COLUMN — tower + player */
 .du-right-col { position:relative; }
-.du-tower-panel { background:linear-gradient(160deg,rgba(10,6,1,.96),rgba(6,3,0,.98));border-bottom:1.5px solid rgba(180,140,50,.45);padding:8px 8px 12px;position:relative;z-index:5;height:130px;overflow:hidden;cursor:pointer; }
+.du-tower-panel { background:linear-gradient(160deg,rgba(10,6,1,.96),rgba(6,3,0,.98));border-bottom:1.5px solid rgba(180,140,50,.45);padding:8px 8px 10px;position:relative;z-index:5;height:158px;overflow:hidden;cursor:pointer; }
 .du-tower-panel::after { content:'';position:absolute;inset:0;background:rgba(122,85,21,.18);opacity:0;transition:opacity .15s;pointer-events:none; }
 .du-tower-panel:hover::after { opacity:1; }
 .du-tower-progress { font-family:'EB Garamond',serif;font-size:10px;color:rgba(195,170,125,.82);text-align:center;font-style:italic;margin-bottom:8px; }
