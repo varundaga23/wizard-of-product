@@ -475,7 +475,9 @@ export default function Home() {
         const hdr = section.querySelector<HTMLElement>('.tm-section-hdr') ?? section
         const bodyRect = body.getBoundingClientRect()
         const hdrRect = hdr.getBoundingClientRect()
-        body.scrollTop += hdrRect.top - bodyRect.top - 6
+        // getBoundingClientRect returns physical (scaled) px; scrollTop is layout px — divide by game scale
+        const scale = parseFloat(document.documentElement.style.getPropertyValue('--game-scale') || '1') || 1
+        body.scrollTop += (hdrRect.top - bodyRect.top - 6) / scale
       }, 120)
     } else {
       towerModalBodyRef.current.scrollTop = 0
@@ -1240,7 +1242,7 @@ export default function Home() {
 
         {/* Continue button — centered at bottom */}
         {answeredIndex !== null && (
-          <button className="duel-continue-btn" onClick={handleContinue}>Continue →</button>
+          <button className="duel-continue-btn" onClick={handleContinue}>✦ Continue ✦</button>
         )}
 
         {/* Sparkle burst on correct answer */}
