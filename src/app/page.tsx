@@ -1541,7 +1541,7 @@ export default function Home() {
             <div className="sw-card-tag">PLAYBOOK PROGRESS</div>
             <div className="sw-pb-count">{defeatedProfessors.size} / 19</div>
             <div className="sw-pb-sub">Spells Collected</div>
-            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 8.5, color: '#5a3010', fontStyle: 'italic', textAlign: 'center', marginTop: -2 }}>18 Professors + The Keeper</div>
+            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 11, color: '#5a3010', fontStyle: 'italic', textAlign: 'center', marginTop: -2 }}>18 Professors + The Keeper</div>
             <div style={{ borderTop: '1px solid rgba(160,120,50,.35)', width: '100%', margin: '4px 0' }} />
             <div className="sw-towers-wrap">
               {Object.entries(TOWERS).map(([key, tower]) => {
@@ -1558,7 +1558,7 @@ export default function Home() {
                 <span className="sw-tower-count">{defeatedProfessors.has('lenny_rachitsky') ? '1 / 1' : '0 / 1'}</span>
               </div>
             </div>
-            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 9, color: '#4a2810', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>
+            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 12, color: '#4a2810', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>
               Collect all 19 to become Grand Wizard
             </div>
           </div>
@@ -1566,7 +1566,7 @@ export default function Home() {
           {/* FOOTER: buttons */}
           <div className="sw-footer">
             <button className="sw-btn-cont" onClick={advanceAfterSpellWin}>
-              {wonProfKey === 'lenny_rachitsky' ? 'Return to the Academy →' : 'Continue Duel →'}
+              {wonProfKey === 'lenny_rachitsky' ? '✦ Return to the Academy ✦' : '✦ Continue Duel ✦'}
             </button>
           </div>
         </div>
