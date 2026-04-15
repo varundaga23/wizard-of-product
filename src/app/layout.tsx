@@ -91,6 +91,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${cinzel.variable} ${cinzelDecorative.variable} ${ebGaramond.variable} ${pinyonScript.variable} ${lora.variable}`}>
       <head>
         <script
+          dangerouslySetInnerHTML={{ __html: `(function(){var s=Math.min(window.innerWidth/960,window.innerHeight/540);document.documentElement.style.setProperty('--game-scale',String(s));})();` }}
+        />
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
