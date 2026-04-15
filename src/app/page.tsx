@@ -1159,7 +1159,7 @@ export default function Home() {
               {duelPhase === 'selecting' ? (
                 <div className="du-selecting">
                   <div className="du-selecting-title">Choose Your Opponent</div>
-                  <div className="du-selecting-desc">Select a professor from the panel →</div>
+                  <div className="du-selecting-desc">← Select a professor from the panel</div>
                   <button className="du-browse-all-btn" onClick={() => setTowerModalOpen(true)}>✦ Browse All Professors ✦</button>
                 </div>
               ) : duelError ? (
