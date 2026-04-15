@@ -917,6 +917,11 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="curator-bar">
+          <div className="curator-bar-text">
+            Curated from <span style={{ fontWeight: 700 }}>Lenny&apos;s</span>{' '}Newsletter &amp; Podcast
+          </div>
+        </div>
 
       </div>
 
