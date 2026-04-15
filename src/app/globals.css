@@ -926,8 +926,8 @@ body {
 .du-main { position:absolute;top:68px;left:0;right:0;bottom:0;z-index:10;display:grid;grid-template-columns:215px 1fr 215px;grid-template-rows:100%;overflow:hidden; }
 
 /* LEFT + RIGHT COLUMN */
-.du-left-col,.du-right-col { display:flex;flex-direction:column;position:relative; }
-.du-prof-frame { position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;background:transparent;overflow:visible;pointer-events:none; }
+.du-left-col,.du-right-col { display:flex;flex-direction:column;position:relative;overflow:hidden; }
+.du-prof-frame { position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;background:transparent;overflow:hidden;pointer-events:none; }
 .du-prof-img { height:100%;width:100%;object-fit:contain;object-position:bottom center;filter:drop-shadow(0 4px 28px rgba(200,140,30,.32)) drop-shadow(0 0 12px rgba(120,70,5,.45)) brightness(1.1);position:relative;z-index:2;mask-image:radial-gradient(ellipse 80% 88% at 45% 95%, black 45%, transparent 100%);-webkit-mask-image:radial-gradient(ellipse 80% 88% at 45% 95%, black 45%, transparent 100%); }
 .du-prof-name-bar { position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(4,2,1,.88));padding:6px 10px 5px;text-align:center;pointer-events:none; }
 .du-prof-name-bar span { font-family:'EB Garamond',serif;font-size:11px;font-weight:700;letter-spacing:.02em;color:#e8d090; }
