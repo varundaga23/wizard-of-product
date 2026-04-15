@@ -5,15 +5,9 @@ import { toPng } from 'html-to-image'
 import posthog from 'posthog-js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Screen = 'landing' | 'oracle' | 'archetype' | 'duel' | 'spellwin' | 'tower_cleared' | 'game_over' | 'playbook' | 'grand'
+type Screen = 'landing' | 'oracle' | 'archetype' | 'duel' | 'spellwin' | 'game_over' | 'playbook' | 'grand'
 type SummonsVariant = 'easter_egg' | 'prefinal'
 
-type BlessingState = {
-  phase: 'loading' | 'question' | 'result'
-  q: DuelQuestion | null
-  answeredIndex: number | null
-  isCorrect: boolean | null
-}
 type ArchetypeKey = 'V' | 'M' | 'B'
 type TowerKey = 'pm' | 'strategy' | 'ai'
 
@@ -442,6 +436,7 @@ export default function Home() {
   const [qIndex, setQIndex] = useState(0)
   const [answeredIndex, setAnsweredIndex] = useState<number | null>(null)
   const [lastResult, setLastResult] = useState<'correct' | 'wrong' | null>(null)
+  const [showSparkle, setShowSparkle] = useState(false)
 
   // Spell win state
   const [wonSpell, setWonSpell] = useState('')
@@ -462,6 +457,7 @@ export default function Home() {
   const hasShownRulesRef = useRef(false)
   const [showHints, setShowHints] = useState(false)
   const hintsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingAdvanceRef = useRef<(() => void) | null>(null)
 
   // Modal always opens at top so Lenny is visible first
   useEffect(() => {
@@ -479,8 +475,6 @@ export default function Home() {
 
   const [gameOverProfKey, setGameOverProfKey] = useState('')
 
-  // Lenny's Blessing
-  const [blessing, setBlessing] = useState<BlessingState | null>(null)
 
   // ── Audio ─────────────────────────────────────────────────────────────────────
   const [muted, setMuted] = useState(false)
@@ -493,7 +487,6 @@ export default function Home() {
     archetype:     '/assets/sounds/ambient_archetype.mp3',
     duel:          '/assets/sounds/ambient_duel.mp3',
     spellwin:      '/assets/sounds/ambient_spellwin.mp3',
-    tower_cleared: '/assets/sounds/ambient_spellwin.mp3',
     grand:         '/assets/sounds/ambient_spellwin.mp3',
     game_over:     '/assets/sounds/ambient_landing.mp3',
   }
@@ -551,6 +544,7 @@ export default function Home() {
   // Share / download
   const gwCardRef = useRef<HTMLDivElement>(null)
   const goCardRef = useRef<HTMLDivElement>(null)
+  const goShareRef = useRef<HTMLDivElement>(null)
   const pbCardRef = useRef<HTMLDivElement>(null)
   const [copyLabel, setCopyLabel] = useState('✦ SHARE YOUR JOURNEY ✦')
   const [pbCopyLabel, setPbCopyLabel] = useState('COPY LINK')
@@ -581,15 +575,22 @@ export default function Home() {
   }
 
   async function handleDownloadGameOver() {
-    if (!goCardRef.current) return
+    if (!goShareRef.current) return
+    const el = goShareRef.current
+    // Bring into viewport (opacity 0) so html-to-image can resolve images
+    const prev = el.style.cssText
+    el.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;z-index:-1;'
+    await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())))
     try {
-      const dataUrl = await toPng(goCardRef.current, { cacheBust: true, pixelRatio: 2 })
+      const dataUrl = await toPng(el, { cacheBust: true, pixelRatio: 2 })
       const link = document.createElement('a')
       link.download = 'spellcraft-run.png'
       link.href = dataUrl
       link.click()
     } catch (e) {
       console.error('Download failed', e)
+    } finally {
+      el.style.cssText = prev
     }
   }
 
@@ -727,6 +728,8 @@ export default function Home() {
     if (isCorrect) {
       setCorrectInDuel(prev => prev + 1)
       setLastResult('correct')
+      setShowSparkle(true)
+      setTimeout(() => setShowSparkle(false), 1100)
       playSfx('/assets/sounds/sfx/correct.ogg')
     } else {
       if (!isLennyDuel) {
@@ -739,12 +742,16 @@ export default function Home() {
     }
     posthog.capture('answer_submitted', { professor: currentProf.key, correct: isCorrect, difficulty: currentQ.difficulty })
 
-    // Snapshot values used inside timeout to avoid stale closures
+    // Fade out the feedback label after 4s — Continue button stays
+    setTimeout(() => setLastResult(null), 4000)
+
+    // Snapshot values to avoid stale closures in the continue handler
     const nextQIndex = qIndex + 1
     const profKey = currentProf.key
     const isBoss = currentProf.isBoss ?? false
 
-    setTimeout(() => {
+    pendingAdvanceRef.current = () => {
+      pendingAdvanceRef.current = null
       if (!isLennyDuel && newHearts <= 0) {
         posthog.capture('game_over', { professor: profKey, spells_collected: defeatedProfessors.size })
         setGameOverProfKey(profKey)
@@ -759,53 +766,20 @@ export default function Home() {
       }
       // All 5 answered
       posthog.capture('spell_won', { professor: profKey, is_boss: isBoss, is_lenny: isLennyDuel })
-      if (!isLennyDuel) setDefeatedProfessors(prev => new Set([...prev, profKey]))
+      setDefeatedProfessors(prev => new Set([...prev, profKey]))
       setWonSpell(SPELL_NAMES[profKey] ?? 'The Product Lore')
       setWonProfKey(profKey)
       setWonProfIsBoss(isBoss)
       playSfx('/assets/sounds/sfx/spell_win.wav')
       setScreen('spellwin')
-    }, isCorrect ? 2000 : 7000)
+    }
+  }
+
+  function handleContinue() {
+    pendingAdvanceRef.current?.()
   }
 
   // ── Lenny's Blessing ──────────────────────────────────────────────────────────
-  function triggerBlessing() {
-    setBlessing({ phase: 'loading', q: null, answeredIndex: null, isCorrect: null })
-    fetch('/api/questions?professor=lenny_oracle')
-      .then(r => r.json())
-      .then((data: DuelQuestion[]) => {
-        const qs = Array.isArray(data) ? data : []
-        if (qs.length === 0) {
-          setBlessing(null)
-          setDuelPhase('selecting')
-          setScreen('duel')
-          return
-        }
-        const q = { ...qs[0], displayOptions: buildDisplayOptions(qs[0]) }
-        setBlessing(prev => prev ? { ...prev, phase: 'question', q } : null)
-      })
-      .catch(() => {
-        setBlessing(null)
-        setDuelPhase('selecting')
-        setScreen('duel')
-      })
-  }
-
-  function handleBlessingAnswer(optionIndex: number) {
-    if (!blessing || blessing.answeredIndex !== null || !blessing.q) return
-    const isCorrect = blessing.q.displayOptions[optionIndex].isCorrect
-    setBlessing(prev => prev ? { ...prev, phase: 'result', answeredIndex: optionIndex, isCorrect } : null)
-    if (isCorrect) {
-      posthog.capture('lenny_blessing_correct', {})
-    } else {
-      posthog.capture('lenny_blessing_wrong', {})
-    }
-    setTimeout(() => {
-      setBlessing(null)
-      setDuelPhase('selecting')
-      setScreen('duel')
-    }, isCorrect ? 2500 : 1200)
-  }
 
   // ── Tower progression ─────────────────────────────────────────────────────────
   function advanceAfterSpellWin() {
@@ -813,9 +787,7 @@ export default function Home() {
     if (wonProfKey === 'lenny_rachitsky') {
       setIsLennyDuel(false)
       setHearts(prev => Math.min(prev + 3, 8))
-      const newDefeated = new Set([...defeatedProfessors, 'lenny_rachitsky'])
-      setDefeatedProfessors(newDefeated)
-      if (newDefeated.size >= 19) {
+      if (defeatedProfessors.size >= 19) {
         posthog.capture('grand_wizard', { archetype })
         setScreen('grand')
       } else {
@@ -835,17 +807,8 @@ export default function Home() {
     const wonProf = allProfessors.find(p => p.key === wonProfKey)
     const towerKey = wonProf?.tower ?? activeTowerKey
 
-    if (wonProfIsBoss) {
-      posthog.capture('tower_cleared', { tower: towerKey })
-      setScreen('tower_cleared')
-    } else {
-      if (Math.random() < 0.1) {
-        triggerBlessing()
-      } else {
-        setDuelPhase('selecting')
-        setScreen('duel')
-      }
-    }
+    setDuelPhase('selecting')
+    setScreen('duel')
   }
 
   // ── Summons handlers ──────────────────────────────────────────────────────────
@@ -1202,10 +1165,25 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Feedback toast */}
+        {/* Feedback toast — top of screen, auto-fades */}
         {lastResult && (
           <div className={`duel-feedback visible ${lastResult}`}>
-            {lastResult === 'correct' ? '✓ Correct!' : isLennyDuel ? '✗ Incorrect — no heart lost' : '✗ Wrong! −1 Heart'}
+            {lastResult === 'correct' ? '✓ Correct!' : isLennyDuel ? '✗ Incorrect — no heart lost' : '✗ Wrong 💔'}
+          </div>
+        )}
+
+        {/* Continue button — centered at bottom */}
+        {answeredIndex !== null && (
+          <button className="duel-continue-btn" onClick={handleContinue}>Continue →</button>
+        )}
+
+        {/* Sparkle burst on correct answer */}
+        {showSparkle && (
+          <div className="sparkle-container" aria-hidden="true">
+            <div className="sparkle-flash" />
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+              <div key={angle} className="sparkle-particle" style={{ '--angle': `${angle}deg`, fontSize: i % 2 === 0 ? 20 : 14 } as React.CSSProperties}>✦</div>
+            ))}
           </div>
         )}
 
@@ -1462,14 +1440,15 @@ export default function Home() {
           {/* LEFT scroll: Defeated Professor */}
           <div className="sw-side">
             <div className="sw-card-tag">DEFEATED</div>
-            <div className="sw-prof-icon">{SPELL_EMOJIS[wonProfKey] ?? '🧙'}</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="sw-prof-card-img" src={PROF_CARD_IMG[wonProfKey] ?? ''} alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
             <div className="sw-prof-name">
               {(wonProfKey === 'lenny_rachitsky' ? LENNY_PROF : Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey))?.name ?? wonProfKey}
             </div>
             <div className="sw-prof-title">
               {(wonProfKey === 'lenny_rachitsky' ? LENNY_PROF : Object.values(TOWERS).flatMap(t => t.professors).find(p => p.key === wonProfKey))?.title ?? ''}
             </div>
-            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 9, color: 'rgba(180,150,90,.7)', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>
+            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 9, color: wonProfKey === 'lenny_rachitsky' ? '#2a6e1a' : '#2a601a', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>
               {wonProfKey === 'lenny_rachitsky' ? '♥♥♥ +3 Hearts awarded — The Keeper rewards you' : 'Spell added to your Playbook'}
             </div>
           </div>
@@ -1494,6 +1473,7 @@ export default function Home() {
             <div className="sw-card-tag">PLAYBOOK PROGRESS</div>
             <div className="sw-pb-count">{defeatedProfessors.size} / 19</div>
             <div className="sw-pb-sub">Spells Collected</div>
+            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 8.5, color: '#5a3010', fontStyle: 'italic', textAlign: 'center', marginTop: -2 }}>18 Professors + The Keeper</div>
             <div style={{ borderTop: '1px solid rgba(160,120,50,.35)', width: '100%', margin: '4px 0' }} />
             <div className="sw-towers-wrap">
               {Object.entries(TOWERS).map(([key, tower]) => {
@@ -1505,16 +1485,20 @@ export default function Home() {
                   </div>
                 )
               })}
+              <div className="sw-tower-row" style={{ borderColor: 'rgba(200,165,60,.45)', background: 'rgba(220,180,80,.12)' }}>
+                <span className="sw-tower-name">The Keeper</span>
+                <span className="sw-tower-count">{defeatedProfessors.has('lenny_rachitsky') ? '1 / 1' : '0 / 1'}</span>
+              </div>
             </div>
-            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 9, color: 'rgba(180,150,90,.7)', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>
-              19 total spells (1 per professor)
+            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 9, color: '#4a2810', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>
+              Collect all 19 to become Grand Wizard
             </div>
           </div>
 
           {/* FOOTER: buttons */}
           <div className="sw-footer">
             <button className="sw-btn-cont" onClick={advanceAfterSpellWin}>
-              {wonProfKey === 'lenny_rachitsky' ? 'Return to the Academy →' : wonProfIsBoss ? 'Tower Cleared — Onward ✦' : 'Continue Duel →'}
+              {wonProfKey === 'lenny_rachitsky' ? 'Return to the Academy →' : 'Continue Duel →'}
             </button>
           </div>
         </div>
@@ -1534,7 +1518,7 @@ export default function Home() {
         const nextTowerKey = nextTowerEntry ? nextTowerEntry[0] as TowerKey : clearedTowerKey as TowerKey
         const towerDisplayName = clearedTower?.name ?? 'Tower'
         return (
-          <div id="s-tower-cleared" className={`screen${screen === 'tower_cleared' ? ' active' : ''}`}>
+          <div id="s-tower-cleared" className="screen" style={{ display: 'none' }}>
             <div className="tc-bg-overlay" />
             <div className="tc-stars" />
             <div className="tc-wrap">
@@ -1857,8 +1841,8 @@ export default function Home() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="bg" loading="lazy" src="/assets/Landing_Page_Background_1774611504383.avif" alt="" />
         <div className="spellwin-center" ref={goCardRef}>
-          <div className="spellwin-eyebrow" style={{ color:'#e84030' }}>✦ DEFEATED ✦</div>
-          <div className="spellwin-spell" style={{ fontSize: 36 }}>Your Hearts Run Out</div>
+          <div className="spellwin-eyebrow" style={{ color:'#e84030' }}>Defeated</div>
+          <div className="spellwin-spell">Your Hearts Run Out</div>
           {gameOverProfKey && PROFESSOR_LOSS_LINES[gameOverProfKey] && (
             <div className="spellwin-sub" style={{ fontStyle:'italic', color:'rgba(240,192,96,.7)', marginBottom: 4 }}>
               &ldquo;{PROFESSOR_LOSS_LINES[gameOverProfKey]}&rdquo;
@@ -1880,78 +1864,45 @@ export default function Home() {
             ✦ Try Again ✦
           </button>
           <div className="go-divider" />
-          <div className="go-actions">
-            <button className="gw-btn-secondary" onClick={handleDownloadGameOver}>DOWNLOAD YOUR PROGRESS</button>
-            <button className="gw-btn-text" onClick={() => {
-              setHearts(5)
-              setDefeatedProfessors(new Set())
-              setActiveTowerKey('pm')
-              setActiveProfKey('gibson_biddle')
-              setDuelPhase('selecting')
-              setArchetype('V')
-              setScreen('landing')
-            }}>
-              Return to the Academy
-            </button>
-          </div>
+          <button className="sw-btn-cont" style={{ width: '100%' }} onClick={handleDownloadGameOver}>Download your progress</button>
         </div>
       </div>
 
-      {/* ── Lenny's Blessing Overlay ── */}
-      {blessing && (
-        <div className={`blessing-overlay${blessing.phase === 'result' && !blessing.isCorrect ? ' blessing-dismiss' : ''}`}>
-          <div className="blessing-burst" />
-          <div className="blessing-content">
-
-            <div className={`blessing-portrait-ring${blessing.phase === 'result' && blessing.isCorrect ? ' blessing-nod' : ''}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/assets/professors/lenny_rachitsky_duel.avif"
-                alt="Lenny Rachitsky"
-                className="blessing-portrait-img"
-                onError={(e) => { (e.target as HTMLImageElement).src = '/assets/professor_placeholder.avif' }}
-              />
-            </div>
-
-            {blessing.phase === 'loading' && (
-              <div className="blessing-loading-text">A message from the Keeper…</div>
-            )}
-
-            {(blessing.phase === 'question' || blessing.phase === 'result') && blessing.q && (
-              <>
-                <div className="blessing-opening">
-                  &ldquo;I have one question. From the archive. No one else gets this — just you, right now.&rdquo;
-                </div>
-                <div className="blessing-question-panel">
-                  <div className="blessing-eyebrow">✦ The Keeper&apos;s Question ✦</div>
-                  <div className="blessing-question-text">{blessing.q.question}</div>
-                </div>
-                <div className="blessing-answers">
-                  {blessing.q.displayOptions.map((opt, i) => {
-                    let cls = 'blessing-ans'
-                    if (blessing.answeredIndex !== null) {
-                      if (i === blessing.answeredIndex) cls += opt.isCorrect ? ' b-correct' : ' b-wrong'
-                      else if (opt.isCorrect) cls += ' b-reveal'
-                      else cls += ' b-answered'
-                    }
-                    return (
-                      <div key={i} className={cls} onClick={() => handleBlessingAnswer(i)}>
-                        <div className="blessing-ans-letter">{LETTERS[i]}</div>
-                        <div className="blessing-ans-text">{opt.text}</div>
-                      </div>
-                    )
-                  })}
-                </div>
-                {blessing.phase === 'result' && blessing.isCorrect && (
-                  <div className="blessing-sp-reward">✦ Lenny Nods ✦</div>
-                )}
-              </>
-            )}
-
+      {/* Hidden share card for game-over download — kept in layout so images pre-load */}
+      <div ref={goShareRef} style={{
+        position: 'fixed', left: 0, top: 0, visibility: 'hidden', pointerEvents: 'none',
+        background: 'linear-gradient(180deg, #1a1008 0%, #0d0804 100%)',
+        border: '2px solid #7a5515',
+        borderRadius: 10,
+        padding: '28px 28px 24px',
+        width: 480,
+        fontFamily: "'EB Garamond', serif",
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 18 }}>
+          <div style={{ fontFamily: "'HarryP', cursive", fontSize: 32, color: '#f0c060', letterSpacing: 1 }}>
+            Spellcraft
+          </div>
+          <div style={{ color: '#c8922a', fontSize: 16, marginTop: 6 }}>
+            {defeatedProfessors.size} Spell{defeatedProfessors.size !== 1 ? 's' : ''} Collected
           </div>
         </div>
-      )}
-
+        {defeatedProfessors.size === 0 ? (
+          <div style={{ textAlign: 'center', color: 'rgba(200,170,100,.6)', fontSize: 14, padding: '20px 0' }}>
+            No spells collected yet — the Academy awaits.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center' }}>
+            {Array.from(defeatedProfessors).map(key => (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img key={key} src={SPELL_CARD_IMAGES[key] ?? ''} alt={key}
+                style={{ width: 88, height: 132, borderRadius: 6, border: '1px solid rgba(200,160,60,.5)', objectFit: 'cover' }} />
+            ))}
+          </div>
+        )}
+        <div style={{ textAlign: 'center', marginTop: 16, color: 'rgba(200,160,80,.5)', fontSize: 11 }}>
+          wizard-of-product.vercel.app
+        </div>
+      </div>
 
     </div>
   )
